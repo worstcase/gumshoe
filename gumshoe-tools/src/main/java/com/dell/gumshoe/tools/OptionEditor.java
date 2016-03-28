@@ -1,0 +1,126 @@
+package com.dell.gumshoe.tools;
+
+import com.dell.gumshoe.stack.Filter;
+import com.dell.gumshoe.tools.FlameGraph.IOStat;
+import com.dell.gumshoe.tools.FlameGraph.IOUnit;
+import com.dell.gumshoe.tools.FlameGraph.Options;
+import com.dell.gumshoe.tools.FlameGraph.Order;
+import com.dell.gumshoe.tools.FlameGraph.WidthScale;
+
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.border.TitledBorder;
+
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class OptionEditor extends JPanel {
+    final JRadioButton readStat = new JRadioButton("read", true);
+    final JRadioButton writeStat = new JRadioButton("write");
+    final JRadioButton bothStat = new JRadioButton("read+write");
+    final JRadioButton opsUnit = new JRadioButton("ops", true);
+    final JRadioButton bytesUnit = new JRadioButton("bytes");
+    final JRadioButton timeUnit = new JRadioButton("time(ms)");
+    final JRadioButton byCaller = new JRadioButton("show callers (root graph)", true);
+    final JRadioButton byCalled = new JRadioButton("show called methods (flame graph)");
+    final JRadioButton valueWidth = new JRadioButton("statistic value", true);
+    final JRadioButton logWidth = new JRadioButton("log(value)");
+    final JRadioButton equalWidth = new JRadioButton("equal width");
+    final JCheckBox byValue = new JCheckBox("arrange by value");
+    final JButton apply = new JButton("Apply");
+
+    public OptionEditor() {
+        final ButtonGroup statGroup = new ButtonGroup();
+        statGroup.add(readStat);
+        statGroup.add(writeStat);
+        statGroup.add(bothStat);
+
+        final JPanel statPanel = new JPanel();
+        statPanel.setLayout(new GridLayout(1,3));
+        statPanel.add(readStat);
+        statPanel.add(writeStat);
+        statPanel.add(bothStat);
+        statPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Operation", TitledBorder.LEFT, TitledBorder.TOP));
+
+
+        final ButtonGroup unitGroup = new ButtonGroup();
+        unitGroup.add(opsUnit);
+        unitGroup.add(bytesUnit);
+        unitGroup.add(timeUnit);
+
+        final JPanel unitPanel = new JPanel();
+        unitPanel.setLayout(new GridLayout(1,3));
+        unitPanel.add(opsUnit);
+        unitPanel.add(bytesUnit);
+        unitPanel.add(timeUnit);
+        unitPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Measurement", TitledBorder.LEFT, TitledBorder.TOP));
+
+        final ButtonGroup widthGroup = new ButtonGroup();
+        widthGroup.add(valueWidth);
+        widthGroup.add(logWidth);
+        widthGroup.add(equalWidth);
+
+        final JPanel widthPanel = new JPanel();
+        widthPanel.setLayout(new GridLayout(1,3));
+        widthPanel.add(valueWidth);
+        widthPanel.add(logWidth);
+        widthPanel.add(equalWidth);
+        widthPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Cell width", TitledBorder.LEFT, TitledBorder.TOP));
+
+        final ButtonGroup directionGroup = new ButtonGroup();
+        directionGroup.add(byCalled);
+        directionGroup.add(byCaller);
+
+        final JPanel directionPanel = new JPanel();
+        directionPanel.setLayout(new GridLayout(1,2));
+        directionPanel.add(byCalled);
+        directionPanel.add(byCaller);
+        directionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Direction", TitledBorder.LEFT, TitledBorder.TOP));
+
+        final JPanel otherPanel = new JPanel();
+        otherPanel.setLayout(new FlowLayout());
+        otherPanel.add(byValue);
+        otherPanel.add(apply);
+
+        setLayout(new GridLayout(5,1));
+        add(statPanel);
+        add(unitPanel);
+        add(directionPanel);
+        add(widthPanel);
+        add(otherPanel);
+    }
+
+    public void addActionListener(ActionListener listener) {
+        apply.addActionListener(listener);
+        listener.actionPerformed(new ActionEvent(this, 0, ""));
+    }
+
+    public Options getOptions() {
+        final IOStat stat;
+        if(readStat.isSelected()) stat = IOStat.READ;
+        else if(writeStat.isSelected()) stat = IOStat.WRITE;
+        else stat = IOStat.READ_PLUS_WRITE;
+
+        final IOUnit unit;
+        if(opsUnit.isSelected()) unit = IOUnit.OPS;
+        else if(bytesUnit.isSelected()) unit = IOUnit.BYTES;
+        else unit = IOUnit.TIME;
+
+        final Order order = byValue.isSelected() ? Order.BY_VALUE : Order.BY_NAME;
+
+        final WidthScale width;
+        if(valueWidth.isSelected()) width = WidthScale.VALUE;
+        else if(logWidth.isSelected()) width = WidthScale.LOG_VALUE;
+        else width = WidthScale.EQUAL;
+
+        final boolean isInverted = byCalled.isSelected();
+        return new Options(isInverted, Filter.NONE, stat, unit, order, width);
+    }
+}
