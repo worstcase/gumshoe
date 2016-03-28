@@ -1,6 +1,5 @@
 package com.dell.gumshoe;
 
-import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import com.dell.gumshoe.socket.SocketIOAccumulator;

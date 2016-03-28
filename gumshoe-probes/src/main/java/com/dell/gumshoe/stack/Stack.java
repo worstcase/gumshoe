@@ -3,6 +3,7 @@ package com.dell.gumshoe.stack;
 import java.util.Arrays;
 
 public class Stack {
+    public static final String FRAME_PREFIX = "    at ";
     private final StackTraceElement[] frames;
 
     public Stack() {
@@ -24,7 +25,7 @@ public class Stack {
     }
 
     public StackTraceElement[] getFrames() {
-        return frames;
+        return frames.clone();
     }
 
     @Override
@@ -43,7 +44,7 @@ public class Stack {
     public String toString() {
         final StringBuilder out = new StringBuilder();
         for(StackTraceElement frame : frames) {
-            out.append("    at ").append(frame).append("\n");
+            out.append(FRAME_PREFIX).append(frame).append("\n");
         }
         return out.toString();
     }
@@ -52,4 +53,32 @@ public class Stack {
         return frames.length==0;
     }
 
+    public static StackTraceElement parseFrame(String line) {
+
+        final String filename;
+        final int lineNumber;
+        if(line.endsWith("(Unknown Source)")) {
+            filename = null;
+            lineNumber = -1;
+        } else if(line.endsWith("(Native Method)")) {
+            filename = null;
+            lineNumber = -2;
+        } else if(line.contains(":")) {
+            final String[] parts = line.split("[(:)]");
+            filename = parts[1];
+            lineNumber = Integer.parseInt(parts[2]);
+        } else {
+            final String[] parts = line.split("[(:)]");
+            filename = parts[1];
+            lineNumber = -1;
+        }
+
+        String[] parts = line.split("[ (]+");
+        final String classAndMethod = parts[2];
+        parts = classAndMethod.split("\\.");
+        final String methodName = parts[parts.length-1];
+        final String className = classAndMethod.substring(0, classAndMethod.length()-methodName.length()-1);
+
+        return new StackTraceElement(className, methodName, filename, lineNumber);
+    }
 }

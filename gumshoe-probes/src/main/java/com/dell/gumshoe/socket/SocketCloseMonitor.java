@@ -4,7 +4,6 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -15,7 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;

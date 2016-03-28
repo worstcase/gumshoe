@@ -7,8 +7,8 @@ Overview
 
 This tool profiles I/O operations and presents statistics over time per calling stack as a flame graph or root tree.
 
-The tool was first created initially for internal use at Dell and source code has been released
-for public use under :doc:`these terms<LICENSE.rst>`.  
+Gumshoe was first created initially for internal use in the Dell Cloud Manager application but
+source code has since been released for public use under [these terms](LICENSE.rst).  
 
 Packages
 --------
@@ -35,5 +35,7 @@ Filter stack frames at capture and/or during visualization, modify on the fly.
 Documentation
 -------------
 
-* :doc:`Quick start guide<QUICK-START.rst>` walks through using with a sample application.
+* [Quick start guide](QUICK-START.md) walks through using with a sample application.
+
+* Short screencast demo on [youtube](https://www.youtube.com/watch?v=GGJFZfwXJ44) (or the [boring version](https://www.youtube.com/watch?v=1M9GX4ENMeI))
 

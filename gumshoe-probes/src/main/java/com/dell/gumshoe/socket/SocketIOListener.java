@@ -5,12 +5,16 @@ import com.dell.gumshoe.socket.SocketIOMonitor.Listener;
 import com.dell.gumshoe.socket.SocketIOMonitor.RW;
 
 import java.net.InetAddress;
+import java.text.MessageFormat;
+import java.text.ParseException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public interface SocketIOListener extends Listener {
+    public static final MessageFormat FORMAT =
+        new MessageFormat("{0,number} read ops {1,number} bytes in {2,number} ms, {3,number} write ops {4,number} bytes in {5,number} ms: {6}");
 
     @Override
     public void socketIOHasCompleted(Event event);
@@ -47,8 +51,9 @@ public interface SocketIOListener extends Listener {
 
         @Override
         public String toString() {
-            return String.format("%d read ops %d bytes in %d ms, %d write ops %d bytes in %d ms: %s",
-                    readCount, readBytes, readTime, writeCount, writeBytes, writeTime, address);
+            synchronized(FORMAT) {
+                return FORMAT.format(new Object[] { readCount, readBytes, readTime, writeCount, writeBytes, writeTime, address });
+            }
         }
     }
 
@@ -103,6 +108,18 @@ public interface SocketIOListener extends Listener {
             return String.format("%d r %d bytes in %d ms, %d w %d bytes in %d ms",
                     readCount.get(), readBytes.get(), readTime.get(),
                     writeCount.get(), writeBytes.get(), writeTime.get());
+        }
+
+        public static DetailAccumulator fromString(String line) throws ParseException {
+            final Object[] args;
+            synchronized(FORMAT) {
+                args = FORMAT.parse(line);
+            }
+            final DetailAccumulator out = new DetailAccumulator();
+            final String addressField = (String)args[6];
+            final String addresses = addressField.replaceAll("[\\[\\]]", "");
+            out.add(new IODetail(addresses, (Long)args[1], (Long)args[2], ((Number)args[0]).intValue(),(Long) args[4], (Long)args[5], ((Number)args[3]).intValue()));
+            return out;
         }
     }
 }

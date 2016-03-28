@@ -2,14 +2,10 @@ package com.dell.gumshoe.socket;
 
 import com.dell.gumshoe.IoTraceAdapter;
 import com.dell.gumshoe.IoTraceUtil;
-import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Stack;
-import com.dell.gumshoe.stack.StackFilter;
 
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;

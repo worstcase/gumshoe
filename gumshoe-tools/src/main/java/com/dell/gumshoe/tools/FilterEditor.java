@@ -10,7 +10,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -25,11 +24,8 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class FilterEditor extends JPanel {
     private final JRadioButton dropZero = new JRadioButton("drop the stack");
@@ -54,7 +50,7 @@ public class FilterEditor extends JPanel {
     private final JButton generate = new JButton("Generate cmdline options");
 
     private Probe probe;
-    private FlameGraph graph;
+    private StackGraphPanel graph;
 
     public FilterEditor() {
         ButtonGroup zeroGroup = new ButtonGroup();
@@ -144,7 +140,7 @@ public class FilterEditor extends JPanel {
         }
     }
 
-    public void setGraph(FlameGraph graph) {
+    public void setGraph(StackGraphPanel graph) {
         this.graph = graph;
     }
 

@@ -1,7 +1,6 @@
 package com.dell.gumshoe.tools;
 
 import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
-import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 
@@ -13,10 +12,12 @@ import javax.swing.ToolTipManager;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,21 +33,32 @@ import java.util.Set;
  * depth shows call stack
  *
  */
-public class FlameGraph extends JPanel {
-    private Options options;
+public class StackGraphPanel extends JPanel {
+    // color boxes for: 50%, 25%, 12%, 6%, less
+    private static final Color[] BOX_COLORS = { Color.RED, Color.ORANGE, Color.YELLOW, Color.LIGHT_GRAY, Color.WHITE };
+
+    private static final int RULER_HEIGHT = 25;
+    private static final int RULER_MAJOR_HEIGHT = 15;
+    private static final int RULER_MINOR_HEIGHT = 5;
+    private static final int RULER_MAJOR = 4;
+    private static final int RULER_MINOR = 20;
+
+
+    ///// data model and public API
+
+    private DisplayOptions options;
     private Map<Stack, DetailAccumulator> values;
-    private TreeNode model;
+    private int modelRows;
+    private long modelValueTotal;
+    private transient StackFrameNode model;
     private transient List<Box> boxes;
     private OptionEditor optionEditor;
     private StackFilter filter;
     private JTextArea detailField;
     private StackTraceElement selectedFrame;
+    private BufferedImage image;
 
-    private static void debug(String msg) {
-        System.out.println(msg);
-    }
-
-    public FlameGraph() {
+    public StackGraphPanel() {
         ToolTipManager.sharedInstance().registerComponent(this);
         addMouseListener(new MouseAdapter() {
 
@@ -57,30 +69,91 @@ public class FlameGraph extends JPanel {
         });
     }
 
-    private static class TreeNode {
+    public void updateOptions(DisplayOptions o) {
+        this.options = o;
+        this.model = null;
+        this.boxes = null;
+        this.image = null;
+        repaint();
+    }
+
+    public void updateModel(Map<Stack, DetailAccumulator> values) {
+        this.values = values;
+        this.model = null;
+        this.boxes = null;
+        this.image = null;
+        repaint();
+    }
+
+    public void setFilter(StackFilter filter) {
+        this.filter = filter;
+        this.model = null;
+        this.boxes = null;
+        this.image = null;
+        repaint();
+    }
+
+    public JComponent getOptionEditor() {
+        if(optionEditor==null) {
+            optionEditor = new OptionEditor();
+            optionEditor.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    updateOptions(optionEditor.getOptions());
+                }
+            });
+        }
+        return optionEditor;
+    }
+
+    public JComponent getDetailField() {
+        if(detailField==null) {
+            detailField = new JTextArea();
+        }
+        return detailField;
+    }
+
+
+    ///// internal data model
+
+    /** temporary intermediate model
+     *
+     *  stack with associated stats is broken into stack frames,
+     *  these frames are linked in a tree structure and stats totaled per node.
+     *
+     *  the node and its position in the tree is later represented graphically by a Box
+     */
+    private static class StackFrameNode {
         private long value;
         private StackTraceElement frame;
         private DetailAccumulator detail = new DetailAccumulator();
-        private Map<StackTraceElement,TreeNode> divisions = new LinkedHashMap<>();
+        private Map<StackTraceElement,StackFrameNode> divisions = new LinkedHashMap<>();
 
-        private TreeNode() { }
+        private StackFrameNode() { }
 
-        public TreeNode(Map<Stack, DetailAccumulator> values, Options options, StackFilter filter) {
+        public StackFrameNode(Map<Stack, DetailAccumulator> values, DisplayOptions options, StackFilter filter) {
             for(Map.Entry<Stack, DetailAccumulator> entry : values.entrySet()) {
                 final Stack origStack = entry.getKey();
                 final DetailAccumulator details = entry.getValue();
                 final Stack displayStack = filter==null ? origStack : origStack.applyFilter(filter);
                 final List<StackTraceElement> frames = Arrays.asList(displayStack.getFrames());
+
+                // default is root graph -- group by top frame in stack performing the I/O.
+                // root nodes will be rendered at the top of the image.
+                //
+                // for flame graph, reverse the stack frames to process entry point first [ie- Thread.run()]
+                // child nodes in tree will be next frame up, the various things Thread.run() is calling.
+                // the roots of this tree model are rendered at the bottom of the image in Box.draw().
                 if(options.byCalled) { Collections.reverse(frames); }
 
-                TreeNode node = this;
+                StackFrameNode node = this;
                 node.detail.add(details);
                 final long nodeValue = getValue(details, options);
                 node.value += nodeValue;
                 for(StackTraceElement frame : frames) {
-                    TreeNode frameNode = node.divisions.get(frame);
+                    StackFrameNode frameNode = node.divisions.get(frame);
                     if(frameNode==null) {
-                        frameNode = new TreeNode();
+                        frameNode = new StackFrameNode();
                         frameNode.value = nodeValue;
                         frameNode.frame = frame;
                         node.divisions.put(frame, frameNode);
@@ -93,7 +166,7 @@ public class FlameGraph extends JPanel {
             }
         }
 
-        private long getValue(DetailAccumulator details, Options options) {
+        private long getValue(DetailAccumulator details, DisplayOptions options) {
             final WidthScale width = options.scale;
             switch(width) {
                 case EQUAL:     return 5;
@@ -103,7 +176,7 @@ public class FlameGraph extends JPanel {
             }
         }
 
-        private long getStatValue(DetailAccumulator details, Options options) {
+        private long getStatValue(DetailAccumulator details, DisplayOptions options) {
             final IOStat stat = options.direction;
             final IOUnit value = options.value;
             switch(stat) {
@@ -132,17 +205,20 @@ public class FlameGraph extends JPanel {
             }
         }
 
-        public int getDepth(Options options) {
+        public int getDepth(DisplayOptions options) {
+            return getDepth(options, value*options.minPercent/100f);
+        }
+        public int getDepth(DisplayOptions options, float valueLimit) {
             final long value = getValue(detail, options);
-            if(value==0) { return 0; }
+            if(value<=valueLimit) { return 0; }
             int max = -1;
-            for(TreeNode div : divisions.values()) {
-                max = Math.max(div.getDepth(options), max);
+            for(StackFrameNode div : divisions.values()) {
+                max = Math.max(div.getDepth(options, valueLimit), max);
             }
             return max + 1;
         }
 
-        private List<StackTraceElement> getDivisions(final TreeNode model, Order order) {
+        private List<StackTraceElement> getDivisions(final StackFrameNode model, Order order) {
             final List<StackTraceElement> keys = new ArrayList<>(model.divisions.keySet());
             if(order==Order.BY_VALUE) {
                 Collections.sort(keys, new Comparator<StackTraceElement>() {
@@ -155,24 +231,23 @@ public class FlameGraph extends JPanel {
             return keys;
         }
 
-        public List<Box> createBoxes(Options options) {
+        public List<Box> createBoxes(DisplayOptions options) {
             final List<Box> out = new ArrayList<Box>();
             final int depth = getDepth(options);
-            Map<TreeNode,Long> priorRowModels = Collections.singletonMap(this, 0L);
+            Map<StackFrameNode,Long> priorRowModels = Collections.singletonMap(this, 0L);
+            final float valueLimit = options.minPercent * value / 100f;
             for(int row = 0;row<depth;row++) {
-                final Map<TreeNode,Long> thisRowModels = new LinkedHashMap<>();
-                for(Map.Entry<TreeNode,Long> parentEntry : priorRowModels.entrySet()) {
+                final Map<StackFrameNode,Long> thisRowModels = new LinkedHashMap<>();
+                for(Map.Entry<StackFrameNode,Long> parentEntry : priorRowModels.entrySet()) {
                     final long parentPosition = parentEntry.getValue();
-                    final TreeNode parent = parentEntry.getKey();
+                    final StackFrameNode parent = parentEntry.getKey();
                     final List<StackTraceElement> keys = getDivisions(parent, options.order);
-                    debug("creating boxes: row " + row + " parent " + parent.value + " divs " + keys.size());
 
                     // first division left-aligned to parent position
                     long position = parentPosition;
                     for(StackTraceElement key : keys) {
-                        final TreeNode divModel = parent.divisions.get(key);
-                        debug("creating boxes: row " + row + " parent " + parent.value + " child " + key + " " + divModel.value);
-                        if(divModel.value>0)  {
+                        final StackFrameNode divModel = parent.divisions.get(key);
+                        if(divModel.value>valueLimit)  {
                             out.add(new Box(row, position, divModel, parent));
                             thisRowModels.put(divModel, position);
                             position += divModel.value;
@@ -181,7 +256,6 @@ public class FlameGraph extends JPanel {
                 }
                 priorRowModels = thisRowModels;
             }
-            debug("create " + out.size() + " boxes, depth " + depth + " from\n" + this);
             return out;
         }
 
@@ -193,7 +267,7 @@ public class FlameGraph extends JPanel {
         }
 
         private void addNode(StringBuilder builder, String indent) {
-            for(Map.Entry<StackTraceElement,TreeNode> entry : divisions.entrySet()) {
+            for(Map.Entry<StackTraceElement,StackFrameNode> entry : divisions.entrySet()) {
                 builder.append(indent)
                        .append(entry.getKey())
                        .append(" ")
@@ -204,19 +278,20 @@ public class FlameGraph extends JPanel {
         }
     }
 
+    /** cached model for individual display rectangles each showing details of a stack frame */
     private static class Box {
         private final int row;
         private final long position;
-        private final TreeNode boxNode, parentNode;
+        private final StackFrameNode boxNode, parentNode;
 
-        public Box(int row, long position, TreeNode boxNode, TreeNode parentNode) {
+        public Box(int row, long position, StackFrameNode boxNode, StackFrameNode parentNode) {
             this.row = row;
             this.position = position;
             this.boxNode = boxNode;
             this.parentNode = parentNode;
         }
 
-        public void draw(Graphics g, int displayHeight, int dispalyWidth, int rows, long total, Options o, StackTraceElement selected) {
+        public void draw(Graphics g, int displayHeight, int dispalyWidth, int rows, long total, DisplayOptions o, StackTraceElement selected) {
             final float rowHeight = displayHeight / (float)rows;
             final float unitWidth = dispalyWidth / (float)total;
             final int boxX = (int) (position * unitWidth);
@@ -238,7 +313,7 @@ public class FlameGraph extends JPanel {
             g.setClip(null);
         }
 
-        public boolean contains(int displayHeight, int dispalyWidth, int rows, long total, Options o, int x, int y) {
+        public boolean contains(int displayHeight, int dispalyWidth, int rows, long total, DisplayOptions o, int x, int y) {
             final float rowHeight = displayHeight / (float)rows;
             final float unitWidth = dispalyWidth / (float)total;
             final int boxX = (int) (position * unitWidth);
@@ -249,8 +324,8 @@ public class FlameGraph extends JPanel {
             return x>=boxX && x<boxX+boxWidth && y>=boxY && y<boxY+boxHeight;
         }
 
-        private Color getColor(long total, Options o) {
-            int index = (int) (total/boxNode.value)-2; //  >50%--> 0,  >33%-->1, >25%-->2, > (1/N)-->(N-2)
+        private Color getColor(long total, DisplayOptions o) {
+            int index = (int) (total/(boxNode.value+1))-1; //  >50%--> 0,  >33%-->1, >25%-->2, > (1/N)-->(N-2)
             if(index<0) index=0;
             if(index>=BOX_COLORS.length) index=BOX_COLORS.length-1;
             return BOX_COLORS[index];
@@ -265,14 +340,16 @@ public class FlameGraph extends JPanel {
         public String getToolTipText() {
             return String.format("<html>\n"
                                     + "%s<br>\n"
+                                    + "%d addresses<br>\n"
                                     + "read %d ops%s<br>\n"
                                     + "read %d bytes%s<br>\n"
                                     + "read time %d ms%s<br>\n"
                                     + "write %d ops%s<br>\n"
                                     + "write %d bytes%s<br>\n"
                                     + "write time %d ms%s\n"
-                                    + "<html>",
+                                    + "</html>",
                                   boxNode.frame,
+                                  boxNode.detail.addresses.size(),
                                   boxNode.detail.readCount.get(), getPercent(boxNode.detail.readCount, parentNode.detail.readCount),
                                   boxNode.detail.readBytes.get(), getPercent(boxNode.detail.readBytes, parentNode.detail.readBytes),
                                   boxNode.detail.readTime.get(), getPercent(boxNode.detail.readTime, parentNode.detail.readTime),
@@ -281,13 +358,14 @@ public class FlameGraph extends JPanel {
                                   boxNode.detail.writeTime.get(), getPercent(boxNode.detail.writeTime, parentNode.detail.writeTime));
         }
 
-        public String getDetailText(Options o) {
-
-            return String.format("Frame: %s\n"
-                                    + "Read: %d operations%s, %d bytes%s, %d ms %s\n"
+        public String getDetailText(DisplayOptions o) {
+            return String.format("Frame: %s\n\n"
+                                    + "Network:\n%d addresses: %s\n\n"
+                                    + "Traffic:\nRead: %d operations%s, %d bytes%s, %d ms %s\n"
                                     + "Write: %d operations%s, %d bytes%s, %d ms %s\n\n"
-                                    + (o.byCalled ? "Calls %d methods: %s" : "Called by %d methods: %s"),
+                                    + (o.byCalled ? "Stack:\nCalls %d methods: %s" : "Stack:\nCalled by %d methods: %s"),
                                     boxNode.frame,
+                                    boxNode.detail.addresses.size(), boxNode.detail.addresses.toString(),
                                     boxNode.detail.readCount.get(), getPercent(boxNode.detail.readCount, parentNode.detail.readCount),
                                     boxNode.detail.readBytes.get(), getPercent(boxNode.detail.readBytes, parentNode.detail.readBytes),
                                     boxNode.detail.readTime.get(), getPercent(boxNode.detail.readTime, parentNode.detail.readTime),
@@ -295,7 +373,6 @@ public class FlameGraph extends JPanel {
                                     boxNode.detail.writeBytes.get(), getPercent(boxNode.detail.writeBytes, parentNode.detail.writeBytes),
                                     boxNode.detail.writeTime.get(), getPercent(boxNode.detail.writeTime, parentNode.detail.writeTime),
                                     boxNode.divisions.size(), getFrames(boxNode.divisions.keySet()) );
-
         }
 
         private String getFrames(Set<StackTraceElement> frames) {
@@ -306,132 +383,143 @@ public class FlameGraph extends JPanel {
             return out.toString();
         }
 
-
         private String getPercent(Number num, Number div) {
             if(div.longValue()==0) { return ""; }
             return " " + (100*num.longValue()/div.longValue()) + "%";
         }
-    }
 
-    private static final Color[] BOX_COLORS = { Color.RED, Color.ORANGE, Color.YELLOW, Color.GRAY, Color.WHITE };
+        @Override
+        public String toString() {
+            return row + " " + position + " " + boxNode.frame;
+        }
+    }
 
     public enum IOStat { READ, WRITE, READ_PLUS_WRITE }
     public enum IOUnit { OPS, BYTES, TIME }
     public enum Order { BY_VALUE, BY_NAME }
     public enum WidthScale { VALUE, LOG_VALUE, EQUAL }
 
-    public static class Options {
-        private final boolean byCalled;
-        private final StackFilter stackFilter;
+    /** configurable aspects of rendering frames and boxes */
+    public static class DisplayOptions {
+        private final boolean byCalled; // true=flame graph; false=root graph
         private final IOStat direction;
         private final IOUnit value;
         private final Order order;
         private final WidthScale scale;
-        public Options() {
-            this(false, Filter.NONE, IOStat.READ, IOUnit.BYTES, Order.BY_NAME, WidthScale.VALUE);
+        private final float minPercent;
+
+        public DisplayOptions() {
+            this(false, IOStat.READ, IOUnit.BYTES, Order.BY_NAME, WidthScale.VALUE, 0f);
         }
 
-        public Options(boolean byCalled, StackFilter stackFilter, IOStat direction, IOUnit value, Order order, WidthScale scale) {
+        public DisplayOptions(boolean byCalled, IOStat direction, IOUnit value, Order order, WidthScale scale, float minPercent) {
             this.byCalled = byCalled;
-            this.stackFilter = stackFilter;
             this.direction = direction;
             this.value = value;
             this.order = order;
             this.scale = scale;
+            this.minPercent = minPercent;
         }
     }
 
-    public void updateOptions(Options o) {
-        boxes = null;
-        model = null;
-        this.options = o;
-        debug("setting options");
-        repaint();
+    ///// AWT event handling
+
+    private class Updater implements Runnable {
+        @Override
+        public void run() {
+            update();
+            repaint();
+        }
     }
 
-    public void updateModel(Map<Stack, DetailAccumulator> values) {
-        boxes = null;
-        model = null;
-        this.values = values;
-        debug("setting model " + values.size());
-        repaint();
-    }
-
-    public void setFilter(StackFilter filter) {
-        this.filter = filter;
-        boxes = null;
-        model = null;
-        repaint();
+    private void updateAsync() {
+        final Thread t = new Thread(new Updater());
+        t.setDaemon(true);
+        t.run();
     }
 
     private void update() {
-        model = new TreeNode(values, options, filter);
-        debug("updated model:\n" + model);
-        boxes = model.createBoxes(options);
-        updateDetails();
+        if(model==null) {
+            model = new StackFrameNode(values, options, filter);
+            modelRows = model.getDepth(options);
+            modelValueTotal = model.value;
+            boxes = null;
+        }
+        if(boxes==null) {
+            boxes = model.createBoxes(options);
+            updateDetails();
+        }
+        image = createImage();
     }
 
     @Override
     public void paintComponent(Graphics g) {
-        debug("painting");
+        final Dimension dim = getSize();
+        if(options==null || values==null) {
+            g.drawString("No data", 10, 10);
+        } else if(image==null || image.getHeight()!=dim.height || image.getWidth()!=dim.width) {
+            g.drawString("Rendering...", 10, 10);
+            updateAsync();
+        } else {
+            g.drawImage(image, 0, 0, null);
+        }
+    }
+
+    private BufferedImage createImage() {
+        // do we need to create new buffered image?
+        final Dimension dim = getSize();
+        final BufferedImage img = new BufferedImage(dim.width, dim.height, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g = img.createGraphics();
         try {
-            final Dimension dim = getSize();
             g.setColor(getBackground());
             g.fillRect(0, 0, dim.width, dim.height);
 
-            if(options==null || values==null) { return; }
-            if(boxes==null) {
-                update();
-            }
+            if(options==null || values==null) { return img; }
 
-            int rows = model.getDepth(options);
-            long total = model.value;
+            if(boxes.isEmpty()) {
+                g.drawString("No stack frames remain after filter", 10, 10);
+            }
             for(Box box : boxes) {
-                box.draw(g, dim.height-RULER_HEIGHT, dim.width, rows, total, options, selectedFrame);
+                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, selectedFrame);
             }
             paintRuler(g, dim.height, dim.width);
         } catch(Exception e) {
             e.printStackTrace();
+        } finally {
+            g.dispose();
         }
+        return img;
 
     }
 
+    private void updateImageSelection(StackTraceElement oldSelected, StackTraceElement newSelected) {
+        if(boxes==null || image==null) return;
+        final Dimension dim = getSize();
+        final Graphics2D g = image.createGraphics();
+        for(Box box : boxes) {
+            final StackTraceElement frame = box.boxNode.frame;
+            if(frame.equals(oldSelected) || frame.equals(newSelected)) {
+                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, newSelected);
+            }
+        }
+    }
 
-    private static final int RULER_HEIGHT = 25;
-    private static final int RULER_MAJOR_HEIGHT = 15;
-    private static final int RULER_MINOR_HEIGHT = 5;
-    private static final int RULER_MAJOR = 4;
-    private static final int RULER_MINOR = 20;
     private void paintRuler(Graphics g, int height, int width) {
-        for(int i=1; i<RULER_MINOR; i++) {
-            int x = (width-1)*i/RULER_MINOR;
-            g.drawLine(x, height-1, x, height-RULER_MINOR_HEIGHT);
+        if(options.scale==WidthScale.VALUE) {
+            for(int i=1; i<RULER_MINOR; i++) {
+                int x = (width-1)*i/RULER_MINOR;
+                g.drawLine(x, height-1, x, height-RULER_MINOR_HEIGHT);
+            }
+            for(int i=1; i<RULER_MAJOR; i++) {
+                int x = (width-1)*i/RULER_MAJOR;
+                g.drawLine(x, height-1, x, height-RULER_MAJOR_HEIGHT);
+            }
+            g.drawLine(0, height-1, width-1, height-1);
+        } else {
+            // show no ruler for other scales
+            g.setColor(getBackground());
+            g.fillRect(0, height-1, width, height-RULER_MAJOR_HEIGHT);
         }
-        for(int i=1; i<RULER_MAJOR; i++) {
-            int x = (width-1)*i/RULER_MAJOR;
-            g.drawLine(x, height-1, x, height-RULER_MAJOR_HEIGHT);
-        }
-        g.drawLine(0, height-1, width-1, height-1);
-    }
-
-    public JComponent getOptionEditor() {
-        if(optionEditor==null) {
-            optionEditor = new OptionEditor();
-            optionEditor.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    updateOptions(optionEditor.getOptions());
-                }
-            });
-        }
-        return optionEditor;
-    }
-
-    public JComponent getDetailField() {
-        if(detailField==null) {
-            detailField = new JTextArea();
-        }
-        return detailField;
     }
 
     private Box getBoxFor(MouseEvent e) {
@@ -440,10 +528,8 @@ public class FlameGraph extends JPanel {
         }
 
         final Dimension dim = getSize();
-        int rows = model.getDepth(options);
-        long total = model.value;
         for(Box box : boxes) {
-            if(box.contains(dim.height-RULER_HEIGHT, dim.width, rows, total, options, e.getX(), e.getY())) {
+            if(box.contains(dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, e.getX(), e.getY())) {
                 return box;
             }
 
@@ -470,12 +556,16 @@ public class FlameGraph extends JPanel {
         final Box box = getBoxFor(event);
         if(box!=null) {
             updateDetails(box);
+            repaint();
         }
     }
 
     private void updateDetails(Box box) {
+        final StackTraceElement oldSelection = selectedFrame;
         selectedFrame = box.boxNode.frame;
+        updateImageSelection(oldSelection, selectedFrame);
         detailField.setText(box.getDetailText(options));
-        repaint();
     }
+
+
 }

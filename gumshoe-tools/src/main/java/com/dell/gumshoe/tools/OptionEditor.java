@@ -1,20 +1,22 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.stack.Filter;
-import com.dell.gumshoe.tools.FlameGraph.IOStat;
-import com.dell.gumshoe.tools.FlameGraph.IOUnit;
-import com.dell.gumshoe.tools.FlameGraph.Options;
-import com.dell.gumshoe.tools.FlameGraph.Order;
-import com.dell.gumshoe.tools.FlameGraph.WidthScale;
+import com.dell.gumshoe.tools.StackGraphPanel.DisplayOptions;
+import com.dell.gumshoe.tools.StackGraphPanel.IOStat;
+import com.dell.gumshoe.tools.StackGraphPanel.IOUnit;
+import com.dell.gumshoe.tools.StackGraphPanel.Order;
+import com.dell.gumshoe.tools.StackGraphPanel.WidthScale;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -34,6 +36,7 @@ public class OptionEditor extends JPanel {
     final JRadioButton logWidth = new JRadioButton("log(value)");
     final JRadioButton equalWidth = new JRadioButton("equal width");
     final JCheckBox byValue = new JCheckBox("arrange by value");
+    private final JTextField statLimit = new JTextField();
     final JButton apply = new JButton("Apply");
 
     public OptionEditor() {
@@ -62,6 +65,13 @@ public class OptionEditor extends JPanel {
         unitPanel.add(timeUnit);
         unitPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Measurement", TitledBorder.LEFT, TitledBorder.TOP));
 
+        statLimit.setColumns(3);
+        final JPanel minPanel = new JPanel();
+        minPanel.setLayout(new BorderLayout());
+        minPanel.add(new JLabel("Drop frames less than"), BorderLayout.WEST);
+        minPanel.add(statLimit, BorderLayout.CENTER);
+        minPanel.add(new JLabel("%"), BorderLayout.EAST);
+
         final ButtonGroup widthGroup = new ButtonGroup();
         widthGroup.add(valueWidth);
         widthGroup.add(logWidth);
@@ -72,6 +82,7 @@ public class OptionEditor extends JPanel {
         widthPanel.add(valueWidth);
         widthPanel.add(logWidth);
         widthPanel.add(equalWidth);
+        widthPanel.add(minPanel);
         widthPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Cell width", TitledBorder.LEFT, TitledBorder.TOP));
 
         final ButtonGroup directionGroup = new ButtonGroup();
@@ -102,7 +113,7 @@ public class OptionEditor extends JPanel {
         listener.actionPerformed(new ActionEvent(this, 0, ""));
     }
 
-    public Options getOptions() {
+    public DisplayOptions getOptions() {
         final IOStat stat;
         if(readStat.isSelected()) stat = IOStat.READ;
         else if(writeStat.isSelected()) stat = IOStat.WRITE;
@@ -121,6 +132,12 @@ public class OptionEditor extends JPanel {
         else width = WidthScale.EQUAL;
 
         final boolean isInverted = byCalled.isSelected();
-        return new Options(isInverted, Filter.NONE, stat, unit, order, width);
+        float minPct = 0f;
+        try {
+            minPct = Float.parseFloat(statLimit.getText());
+        } catch(Exception ignore) {
+
+        }
+        return new DisplayOptions(isInverted, stat, unit, order, width, minPct);
     }
 }

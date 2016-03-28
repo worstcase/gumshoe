@@ -5,7 +5,6 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

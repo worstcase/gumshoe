@@ -3,8 +3,10 @@ package com.dell.gumshoe.tools;
 import com.dell.gumshoe.Probe;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -15,8 +17,23 @@ import java.awt.BorderLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/** gumshoe main window and launcher
+ *
+ *  running as an application,
+ *  this will start gumshoe GUI in a frame and then look for arguments.
+ *  first argument is the name of the target main class to run,
+ *  remaining arguments are passed as the args to that main.
+ */
 public class Gumshoe extends JPanel {
     public static void main(String[] args) throws Throwable {
+        final boolean hasMain = args.length>0;
+        launchGumshoe(hasMain);
+        if(hasMain) {
+            launchMain(args);
+        }
+    }
+
+    private static void launchGumshoe(boolean hasMain) throws Exception {
         try {
             for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -25,18 +42,26 @@ public class Gumshoe extends JPanel {
                 }
             }
         } catch (Exception e) {
-            // If Nimbus is not available, you can set the GUI to another look and feel.
+            // not available? will use default L&F
         }
 
-        Probe probe = new Probe();
-        probe.initialize();
+        final boolean forceProbe = Boolean.getBoolean("gumshoe.probe.enabled");
+        final boolean useProbe = forceProbe || hasMain;
+        final Probe probe = useProbe ? new Probe() : null;
+        if(useProbe) { probe.initialize(); }
 
-        JFrame frame = new JFrame();
+        final JFrame frame = new JFrame();
+        if( ! hasMain) {
+            // if this is the only program, click X to exit (otherwise just hide gumshoe)
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        }
+
         frame.getContentPane().add(new Gumshoe(probe));
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setSize(800,600);
         frame.setVisible(true);
+    }
 
+    private static void launchMain(String[] args) throws Throwable {
         final String mainClass = args[0];
         final String[] newArgs = new String[args.length-1];
         if(args.length>1) {
@@ -56,13 +81,15 @@ public class Gumshoe extends JPanel {
     }
 
     private Gumshoe(Probe probe) {
-        final FlameGraph graph = new FlameGraph();
-        final StatisticsRelay statsRelay = new StatisticsRelay(graph);
-        probe.getIOReporter().addListener(statsRelay);
+        final StackGraphPanel graph = new StackGraphPanel();
+        final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(graph, probe);
 
         final JPanel detailPanel = new JPanel();
         detailPanel.setLayout(new BorderLayout());
-        detailPanel.add(graph.getDetailField(), BorderLayout.CENTER);
+        final JComponent detailField = graph.getDetailField();
+        final JScrollPane scroll = new JScrollPane();
+        scroll.setViewportView(detailField);
+        detailPanel.add(scroll, BorderLayout.CENTER);
 
         final JPanel statsPanel = new JPanel();
         statsPanel.add(statsRelay);
@@ -75,8 +102,8 @@ public class Gumshoe extends JPanel {
         settings.setBorder(BorderFactory.createEmptyBorder(10,5,5,5));
         settings.addTab("Collect -->", statsPanel);
         settings.addTab("--> Filter -->", filterEditor);
-        settings.addTab("--> Display", graph.getOptionEditor());
-        settings.addTab("Examine", detailPanel);
+        settings.addTab("--> Display -->", graph.getOptionEditor());
+        settings.addTab("--> Examine", detailPanel);
 
         final JPanel graphPanel = new JPanel();
         graphPanel.setLayout(new BorderLayout());

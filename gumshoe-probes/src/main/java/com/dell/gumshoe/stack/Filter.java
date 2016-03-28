@@ -37,6 +37,9 @@ public class Filter implements StackFilter {
     public static class Builder {
         private boolean withOriginal = false;
         private final List<StackFilter> filters = new ArrayList<>();
+        private final List<String> includePatterns = new ArrayList<>();
+        private final List<String> excludePatterns = new ArrayList<>();
+        private StackFilter endFilter;
 
         private Builder() { }
 
@@ -60,28 +63,30 @@ public class Filter implements StackFilter {
         }
 
         public Builder withExcludeClasses(final String startingWith) {
-            filters.add(new FrameMatcher() {
-                @Override
-                public boolean matches(StackTraceElement frame) {
-                    return ! frame.getClassName().startsWith(startingWith);
-                } });
+            excludePatterns.add(startingWith);
+//            filters.add(new FrameMatcher() {
+//                @Override
+//                public boolean matches(StackTraceElement frame) {
+//                    return ! frame.getClassName().startsWith(startingWith);
+//                } });
             return this;
         }
 
         public Builder withOnlyClasses(final String startingWith) {
-            filters.add(new FrameMatcher() {
-                @Override
-                public boolean matches(StackTraceElement frame) {
-                    return frame.getClassName().startsWith(startingWith);
-                }
-            });
+            includePatterns.add(startingWith);
+//            filters.add(new FrameMatcher() {
+//                @Override
+//                public boolean matches(StackTraceElement frame) {
+//                    return frame.getClassName().startsWith(startingWith);
+//                }
+//            });
             return this;
         }
 
         public Builder withEndsOnly(final int topCount, final int bottomCount) {
             if(topCount==0 && bottomCount==0) { return this; }
 
-            filters.add(new StackFilter() {
+            endFilter = new StackFilter() {
                 @Override
                 public int filter(StackTraceElement[] buffer, int size) {
                     final int maxSize = topCount + bottomCount;
@@ -95,11 +100,38 @@ public class Filter implements StackFilter {
                     }
                     return frameCount;
                 }
-            });
+            };
             return this;
         }
 
         public StackFilter build() {
+            if( ! excludePatterns.isEmpty()) {
+                filters.add(new FrameMatcher() {
+                    @Override
+                    public boolean matches(StackTraceElement frame) {
+                        final String className = frame.getClassName();
+                        for(String pattern : excludePatterns) {
+                            if(className.startsWith(pattern)) { return false; }
+                        }
+                        return true;
+                    }
+                });
+            }
+            if( ! includePatterns.isEmpty()) {
+                filters.add(new FrameMatcher() {
+                    @Override
+                    public boolean matches(StackTraceElement frame) {
+                        final String className = frame.getClassName();
+                        for(String pattern : includePatterns) {
+                            if(className.startsWith(pattern)) { return true; }
+                        }
+                        return false;
+                    }
+                });
+            }
+            if(endFilter!=null) {
+                filters.add(endFilter);
+            }
             return new Filter(withOriginal, new ArrayList<>(filters));
         }
     }
