@@ -35,7 +35,8 @@ Filter stack frames at capture and/or during visualization, modify on the fly.
 Documentation
 -------------
 
+* Short intro and demo on youtube: [latest](https://www.youtube.com/watch?v=GGJFZfwXJ44) or the original [boring version](https://www.youtube.com/watch?v=1M9GX4ENMeI).
+
 * [Quick start guide](QUICK-START.md) walks through using with a sample application.
 
-* Short screencast demo on [youtube](https://www.youtube.com/watch?v=GGJFZfwXJ44) (or the [boring version](https://www.youtube.com/watch?v=1M9GX4ENMeI))
-
+* [User guide](docs/index.md)
