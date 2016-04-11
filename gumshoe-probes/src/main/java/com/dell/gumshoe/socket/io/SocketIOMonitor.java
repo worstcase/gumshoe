@@ -1,7 +1,9 @@
-package com.dell.gumshoe.socket;
+package com.dell.gumshoe.socket.io;
 
 import com.dell.gumshoe.IoTraceAdapter;
 import com.dell.gumshoe.IoTraceUtil;
+import com.dell.gumshoe.socket.SocketMatcher;
+import com.dell.gumshoe.socket.SubnetAddress;
 import com.dell.gumshoe.stack.Stack;
 
 import java.net.InetAddress;
@@ -16,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SocketIOMonitor extends IoTraceAdapter implements SocketIOMBean {
 
     private BlockingQueue<Event> queue;
-    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final List<SocketIOListener> listeners = new CopyOnWriteArrayList<>();
 
     private final AtomicInteger failCounter = new AtomicInteger();
     private final AtomicInteger successCounter = new AtomicInteger();
@@ -80,16 +82,16 @@ public class SocketIOMonitor extends IoTraceAdapter implements SocketIOMBean {
     /////
 
 
-    public void addListener(Listener listener) {
+    public void addListener(SocketIOListener listener) {
         listeners.add(listener);
     }
 
-    public static interface Listener {
+    public static interface SocketIOListener {
         public void socketIOHasCompleted(Event event);
     }
 
     private void notifyListeners(Event operation) {
-        for(Listener listener : listeners) {
+        for(SocketIOListener listener : listeners) {
             try {
                 listener.socketIOHasCompleted(operation);
             } catch(Exception ignore) {

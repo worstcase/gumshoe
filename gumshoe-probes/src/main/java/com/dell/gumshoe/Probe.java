@@ -1,17 +1,17 @@
 package com.dell.gumshoe;
 
-import com.dell.gumshoe.socket.SocketCloseMonitor;
-import com.dell.gumshoe.socket.SocketCloseMonitorMBean;
-import com.dell.gumshoe.socket.SocketIOAccumulator;
-import com.dell.gumshoe.socket.SocketIOMonitor;
-import com.dell.gumshoe.socket.SocketIOStackReporter;
-import com.dell.gumshoe.socket.SocketIOStackReporter.StreamReporter;
 import com.dell.gumshoe.socket.SocketMatcher;
 import com.dell.gumshoe.socket.SocketMatcherSeries;
 import com.dell.gumshoe.socket.SubnetAddress;
+import com.dell.gumshoe.socket.io.IODetailAccumulator;
+import com.dell.gumshoe.socket.io.SocketIOAccumulator;
+import com.dell.gumshoe.socket.io.SocketIOMonitor;
+import com.dell.gumshoe.socket.unclosed.SocketCloseMonitor;
+import com.dell.gumshoe.socket.unclosed.UnclosedStats;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stats.ValueReporter;
 
 import javax.management.ObjectName;
 import javax.management.StandardMBean;
@@ -34,7 +34,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /** util to enable/disable monitoring tools
@@ -47,6 +46,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *      Probe.initialize();
  */
 public class Probe {
+    public static final String SOCKET_IO_LABEL = "socket-io";
+    public static final String UNCLOSED_SOCKET_LABEL = "open-sockets";
+
     public static Probe MAIN_INSTANCE;
 
     public static void main(String... args) throws Throwable {
@@ -69,9 +71,11 @@ public class Probe {
 
     private Timer timer;
     private SocketCloseMonitor closeMonitor;
+    private ValueReporter<UnclosedStats> closeReporter;
+
     private SocketIOMonitor ioMonitor;
     private SocketIOAccumulator ioAccumulator;
-    private SocketIOStackReporter ioReporter;
+    private ValueReporter<IODetailAccumulator> ioReporter;
     private final List<Runnable> shutdownHooks = new CopyOnWriteArrayList<>();
     private Map<String,PrintStream> namedOutput = new HashMap<>();
 
@@ -242,35 +246,42 @@ public class Probe {
         final long minAge = getNumber(p, "gumshoe.socket-unclosed.age", 30000);
         final int clearCount = (int) getNumber(p, "gumshoe.socket-unclosed.check-interval", 100);
 
+        final StackFilter stackFilter = initializeStackFilter("gumshoe.socket-unclosed.filter.", p);
+
         final PrintStream out = getOutput(p, "gumshoe.socket-unclosed.output", System.out);
-        return initializeSocketCloseMonitor(shutdownReportEnabled, periodicFrequency, minAge, clearCount, mbeanName, out);
+        return initializeSocketCloseMonitor(shutdownReportEnabled, periodicFrequency, minAge, clearCount,
+                stackFilter, mbeanName, out);
     }
 
-    public SocketCloseMonitor initializeSocketCloseMonitor(boolean shutdownReportEnabled, Long reportPeriod, final long minAge, int clearCount, String mbeanName, final PrintStream out) throws Exception {
+    public SocketCloseMonitor initializeSocketCloseMonitor(boolean shutdownReportEnabled, Long reportPeriod, final long minAge, int clearCount,
+            StackFilter filter, String mbeanName, final PrintStream out) throws Exception {
         if(closeMonitor!=null) throw new IllegalStateException("monitor is already installed");
 
-        closeMonitor = new SocketCloseMonitor();
+        closeMonitor = new SocketCloseMonitor(minAge, filter);
         closeMonitor.setClearClosedSocketsInterval(clearCount);
 
         closeMonitor.initializeProbe();
 
-        if(mbeanName!=null) {
-            installMBean(mbeanName, closeMonitor, SocketCloseMonitorMBean.class);
+//        if(mbeanName!=null) {
+//            installMBean(mbeanName, closeMonitor, SocketCloseMonitorMBean.class);
+//        }
+
+        closeReporter = new ValueReporter(UNCLOSED_SOCKET_LABEL, closeMonitor);
+        if(shutdownReportEnabled) {
+            addShutdownHook(closeReporter);
+        }
+        if(out!=null) {
+            closeReporter.addStreamReporter(out);
         }
 
-        final TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                out.println(closeMonitor.getReport(minAge));
-            }
-        };
-        if(shutdownReportEnabled) {
-            addShutdownHook(task);
-        }
         if(reportPeriod!=null) {
-            getTimer().scheduleAtFixedRate(task, reportPeriod, reportPeriod);
+            getTimer().scheduleAtFixedRate(closeReporter, reportPeriod, reportPeriod);
         }
         return closeMonitor;
+    }
+
+    public ValueReporter<UnclosedStats> getUnclosedReporter() {
+        return closeReporter;
     }
 
     ///// socket io monitor
@@ -284,7 +295,7 @@ public class Probe {
             final boolean enabled = isTrue(p, "gumshoe.socket-io.enabled", reportEnabled || jmxEnabled);
             if( ! enabled) { return null; }
 
-            StackFilter stackFilter = initializeSocketFilter("gumshoe.socket-io.filter.", p);
+            StackFilter stackFilter = initializeStackFilter("gumshoe.socket-io.filter.", p);
 
             final SocketMatcher[] acceptList = parseSocketMatchers(p.getProperty("gumshoe.socket-io.include"));
             final SocketMatcher[] rejectList = parseSocketMatchers(p.getProperty("gumshoe.socket-io.exclude", "127.0.0.1/32:*"));
@@ -317,7 +328,7 @@ public class Probe {
      *                          if set to false, the raw stack is used if filters would have removed all frame
      *                          otherwise (the default) the empty stack becomes kind of a catch-all "other" category
      */
-    private StackFilter initializeSocketFilter(String prefix, Properties p) {
+    private StackFilter initializeStackFilter(String prefix, Properties p) {
         if(isTrue(p, prefix + "none", false)) { return Filter.NONE; }
 
         final Builder builder = Filter.builder();
@@ -340,12 +351,12 @@ public class Probe {
     public SocketIOMonitor initializeIOMonitor(boolean shutdownReportEnabled, Long periodicFrequency, SocketMatcher socketFilter, StackFilter stackFilter, final PrintStream out) throws Exception {
         if(ioMonitor!=null) throw new IllegalStateException("monitor is already installed");
 
-        ioAccumulator = new SocketIOAccumulator(stackFilter);
-
         ioMonitor = new SocketIOMonitor(socketFilter);
+
+        ioAccumulator = new SocketIOAccumulator(stackFilter);
         ioMonitor.addListener(ioAccumulator);
 
-        ioReporter = new SocketIOStackReporter(ioAccumulator);
+        ioReporter = new ValueReporter(SOCKET_IO_LABEL, ioAccumulator);
         if(shutdownReportEnabled) {
             addShutdownHook(ioReporter);
         }
@@ -353,8 +364,7 @@ public class Probe {
             getTimer().scheduleAtFixedRate(ioReporter, periodicFrequency, periodicFrequency);
         }
         if(out!=null) {
-            StreamReporter r = new StreamReporter(out);
-            ioReporter.addListener(r);
+            ioReporter.addStreamReporter(out);
         }
 
         ioMonitor.initializeProbe();
@@ -369,7 +379,7 @@ public class Probe {
         return ioAccumulator;
     }
 
-    public SocketIOStackReporter getIOReporter() {
+    public ValueReporter<IODetailAccumulator> getIOReporter() {
         return ioReporter;
     }
 

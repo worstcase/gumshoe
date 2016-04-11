@@ -1,10 +1,8 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.tools.StackGraphPanel.DisplayOptions;
-import com.dell.gumshoe.tools.StackGraphPanel.IOStat;
-import com.dell.gumshoe.tools.StackGraphPanel.IOUnit;
-import com.dell.gumshoe.tools.StackGraphPanel.Order;
-import com.dell.gumshoe.tools.StackGraphPanel.WidthScale;
+import com.dell.gumshoe.tools.graph.DisplayOptions;
+import com.dell.gumshoe.tools.graph.StackGraphPanel.IOStat;
+import com.dell.gumshoe.tools.graph.StackGraphPanel.IOUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -124,12 +122,12 @@ public class OptionEditor extends JPanel {
         else if(bytesUnit.isSelected()) unit = IOUnit.BYTES;
         else unit = IOUnit.TIME;
 
-        final Order order = byValue.isSelected() ? Order.BY_VALUE : Order.BY_NAME;
+        final DisplayOptions.Order order = byValue.isSelected() ? DisplayOptions.Order.BY_VALUE : DisplayOptions.Order.BY_NAME;
 
-        final WidthScale width;
-        if(valueWidth.isSelected()) width = WidthScale.VALUE;
-        else if(logWidth.isSelected()) width = WidthScale.LOG_VALUE;
-        else width = WidthScale.EQUAL;
+        final DisplayOptions.WidthScale width;
+        if(valueWidth.isSelected()) width = DisplayOptions.WidthScale.VALUE;
+        else if(logWidth.isSelected()) width = DisplayOptions.WidthScale.LOG_VALUE;
+        else width = DisplayOptions.WidthScale.EQUAL;
 
         final boolean isInverted = byCalled.isSelected();
         float minPct = 0f;

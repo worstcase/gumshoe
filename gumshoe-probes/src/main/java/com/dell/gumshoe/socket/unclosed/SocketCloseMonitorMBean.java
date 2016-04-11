@@ -1,4 +1,4 @@
-package com.dell.gumshoe.socket;
+package com.dell.gumshoe.socket.unclosed;
 
 
 public interface SocketCloseMonitorMBean {

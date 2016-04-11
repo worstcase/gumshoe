@@ -2,16 +2,16 @@ package com.dell.gumshoe;
 
 import static org.junit.Assert.assertEquals;
 
-import com.dell.gumshoe.socket.SocketIOAccumulator;
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
-import com.dell.gumshoe.socket.SocketIOMonitor;
-import com.dell.gumshoe.socket.SocketIOStackReporter;
 import com.dell.gumshoe.socket.SocketMatcher;
 import com.dell.gumshoe.socket.SocketMatcherSeries;
 import com.dell.gumshoe.socket.SubnetAddress;
+import com.dell.gumshoe.socket.io.IODetailAccumulator;
+import com.dell.gumshoe.socket.io.SocketIOAccumulator;
+import com.dell.gumshoe.socket.io.SocketIOMonitor;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stats.ValueReporter;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class TestIOAccumulator {
         StackFilter filter = Filter.builder().withEndsOnly(1, 0).build();
         SocketIOAccumulator ioAccumulator = new SocketIOAccumulator(filter);
 
-        SocketIOStackReporter reporter = new SocketIOStackReporter(ioAccumulator);
+        ValueReporter reporter = new ValueReporter("socket-io", ioAccumulator);
         ioMonitor.addListener(ioAccumulator);
         ioMonitor.initializeProbe();
 
@@ -61,7 +61,7 @@ public class TestIOAccumulator {
             }
             Thread.sleep(1000);
 
-            Map<Stack,DetailAccumulator> stats = ioAccumulator.getStats();
+            Map<Stack,IODetailAccumulator> stats = ioAccumulator.getStats();
             assertEquals(3, stats.size());
             ioAccumulator.reset();
         }
