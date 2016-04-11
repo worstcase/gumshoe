@@ -1,12 +1,12 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
-import com.dell.gumshoe.socket.SocketIOStackReporter;
 import com.dell.gumshoe.stack.Stack;
+import com.dell.gumshoe.stats.StatisticAdder;
+import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -36,7 +36,7 @@ public class FileDataParser {
     private final BidirectionalMap savedPositions = new BidirectionalMap();
     private final RandomAccessFile file;
     private Long lastPosition;
-
+    private final ValueReporter reporter = new ValueReporter("socket-io");
     public FileDataParser(RandomAccessFile file) { this.file = file; }
 
     public FileDataParser(String text) throws Exception {
@@ -62,7 +62,7 @@ public class FileDataParser {
     }
 
     /** return sample collected at given time (may not find if parseFile() has not been called) */
-    public Map<Stack, DetailAccumulator> getSample(Date date) throws Exception {
+    public Map<Stack, StatisticAdder> getSample(Date date) throws Exception {
         final Long position = savedPositions.getPosition(date);
         if(position==null) {
             lastPosition = null;
@@ -75,9 +75,9 @@ public class FileDataParser {
     /////
 
     /** return next sample found after current position in file */
-    public Map<Stack, DetailAccumulator> getNextSample() throws Exception {
+    public Map<Stack, StatisticAdder> getNextSample() throws Exception {
         long positionBefore = file.getFilePointer();
-        Map<Stack, DetailAccumulator> sample = read();
+        Map<Stack, StatisticAdder> sample = read();
         if(sample==null) {
             lastPosition = null;
             file.seek(0); // wrap around
@@ -88,7 +88,7 @@ public class FileDataParser {
     }
 
     /** return sample prior to current position in file */
-    public Map<Stack, DetailAccumulator> getPreviousSample() throws Exception {
+    public Map<Stack, StatisticAdder> getPreviousSample() throws Exception {
         lastPosition = savedPositions.getPositionBefore(lastPosition);
         if(lastPosition==null) { return null; }
         file.seek(lastPosition);
@@ -100,23 +100,27 @@ public class FileDataParser {
         return savedPositions.getTime(lastPosition);
     }
 
-    private Map<Stack,DetailAccumulator> read() throws IOException, ParseException {
+    private Map<Stack,StatisticAdder> read() throws Exception {
         String line = null;
 
         // read until find a start tag
         long startPosition = file.getFilePointer();
         Date startTime = null;
+        String type = null;
+        DataTypeHelper helper = null;
         while((line=file.readLine())!=null) {
-            startTime = SocketIOStackReporter.parseStartTag(line);
+            startTime = ValueReporter.parseStartTagTime(line);
             if(startTime!=null) {
+                type = ValueReporter.parseStartTagType(line);
+                helper = DataTypeHelper.forType(type);
                 break;
             }
             startPosition = file.getFilePointer();
         }
         if(startTime==null) { return null; }
 
-        final Map<Stack,DetailAccumulator> out = new HashMap<>();
-        DetailAccumulator stats = null;
+        final Map<Stack,StatisticAdder> out = new HashMap<>();
+        StatisticAdder stats = null;
         final List<StackTraceElement> stackFrames = new ArrayList<>();
         while((line=file.readLine())!=null) {
             if(line.startsWith(Stack.FRAME_PREFIX)) {
@@ -124,7 +128,7 @@ public class FileDataParser {
                     throw new IllegalStateException("stack line read but no stats");
                 }
                 stackFrames.add(Stack.parseFrame(line));
-            } else if(SocketIOStackReporter.END_TAG.equals(line)) {
+            } else if(ValueReporter.END_TAG.equals(line)) {
                 if(stats!=null) {
                     final Stack stack = new Stack(stackFrames.toArray(new StackTraceElement[0]));
                     out.put(stack, stats);
@@ -133,7 +137,7 @@ public class FileDataParser {
                 return out;
             } else {
                 // parse first, make sure is expected format
-                final DetailAccumulator nextStats = DetailAccumulator.fromString(line);
+                final StatisticAdder nextStats = helper.parse(line);
                 if(stats!=null) {
                     final Stack stack = new Stack(stackFrames.toArray(new StackTraceElement[0]));
                     out.put(stack, stats);

@@ -15,7 +15,7 @@ some other irrelevant stuff
     at javachat.ui.ChatWindow.jToggleButtonOnlineActionPerformed(ChatWindow.java:203)
     at javachat.ui.ChatWindow.access$200(ChatWindow.java:15)
     at javachat.ui.ChatWindow$3.actionPerformed(ChatWindow.java:81)
-291 read ops 1,302 bytes in 19,169 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
+291 read ops 1302 bytes in 19169 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.run(SocketController.java:76)
 0 read ops 0 bytes in 0 ms, 1 write ops 4 bytes in 1 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.<init>(SocketController.java:32)
@@ -49,7 +49,7 @@ some other irrelevant stuff
 </gumshoe-report>
 some other irrelevant stuff
 <gumshoe-report type='socket-io' time='2016-04-04 13:41:50'>
-294 read ops 1,284 bytes in 59,511 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
+294 read ops 1284 bytes in 59511 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.run(SocketController.java:76)
 0 read ops 0 bytes in 0 ms, 2 write ops 12 bytes in 1 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.sendData(SocketController.java:111)
@@ -59,7 +59,7 @@ some other irrelevant stuff
 </gumshoe-report>
 some other irrelevant stuff
 <gumshoe-report type='socket-io' time='2016-04-04 13:42:50'>
-6 read ops 12 bytes in 61,045 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
+6 read ops 12 bytes in 61045 ms, 0 write ops 0 bytes in 0 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.run(SocketController.java:76)
 0 read ops 0 bytes in 0 ms, 2 write ops 12 bytes in 0 ms: [127.0.0.1:12345]
     at javachat.network.socket.SocketController.sendData(SocketController.java:111)

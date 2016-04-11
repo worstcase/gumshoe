@@ -1,6 +1,5 @@
-package com.dell.gumshoe.socket;
+package com.dell.gumshoe.stats;
 
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
 import com.dell.gumshoe.stack.Stack;
 
 import java.io.PrintStream;
@@ -18,23 +17,29 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *  with total IO at each frame and
  *  link from frame to multiple next frames below
  */
-public class SocketIOStackReporter extends TimerTask {
+public class ValueReporter<A extends StatisticAdder> extends TimerTask {
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final MessageFormat START_TAG_PATTERN = new MessageFormat("<gumshoe-report type=''socket-io'' time=''{0}''>");
+    private static final MessageFormat START_TAG_PATTERN = new MessageFormat("<gumshoe-report type=''{0}'' time=''{1}''>");
     public static final String END_TAG = "</gumshoe-report>";
-    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-    private final SocketIOAccumulator source;
+    private final List<Listener<A>> listeners = new CopyOnWriteArrayList<>();
+    private final StackStatisticSource<A> source;
+    private final String type;
 
-    public SocketIOStackReporter(SocketIOAccumulator source) {
+    public ValueReporter(String type) {
+        this(type, null);
+    }
+
+    public ValueReporter(String type, StackStatisticSource<A> source) {
+        this.type = type;
         this.source = source;
     }
 
     @Override
     public void run() {
-        final Map<Stack, DetailAccumulator> stats = new HashMap<>(source.getStats());
+        final Map<Stack, A> stats = new HashMap<>(source.getStats());
         for(Listener listener : listeners) {
             try {
-                listener.socketIOStatsReported(stats);
+                listener.statsReported(type, stats);
             } catch(RuntimeException e) {
                 e.printStackTrace();
             }
@@ -43,15 +48,19 @@ public class SocketIOStackReporter extends TimerTask {
         source.reset();
     }
 
+    public static interface Listener<A extends StatisticAdder> {
+        public void statsReported(String type, Map<Stack,A> stats);
+    }
+
     public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
-    public static interface Listener {
-        public void socketIOStatsReported(Map<Stack, DetailAccumulator> stats);
+    public void addStreamReporter(PrintStream out) {
+        addListener(new StreamReporter(out));
     }
 
-    public static class StreamReporter implements Listener {
+    public class StreamReporter implements Listener<A> {
         private final PrintStream target;
 
         public StreamReporter(PrintStream target) {
@@ -59,9 +68,9 @@ public class SocketIOStackReporter extends TimerTask {
         }
 
         @Override
-        public void socketIOStatsReported(Map<Stack, DetailAccumulator> stats) {
+        public void statsReported(String type, Map<Stack,A> stats) {
             final StringBuilder out = new StringBuilder();
-            addStartTag(out);
+            addStartTag(out, type);
             addReport(out, stats);
             addEndTag(out);
 
@@ -69,23 +78,23 @@ public class SocketIOStackReporter extends TimerTask {
             target.flush();
         }
 
-        protected void addStartTag(StringBuilder out) {
+        private void addStartTag(StringBuilder out, String type) {
             final String now = formatDate(new Date());
-            out.append(formatStartTag(now)).append("\n");
+            out.append(formatStartTag(type, now)).append("\n");
         }
 
-        private void addReport(StringBuilder out, Map<Stack, DetailAccumulator> stats) {
-            for(Map.Entry<Stack, DetailAccumulator> entry : stats.entrySet()) {
+        private void addReport(StringBuilder out, Map<Stack,A> stats) {
+            for(Map.Entry<Stack,A> entry : stats.entrySet()) {
                 out.append(entry.getValue().get().toString()).append("\n").append(entry.getKey());
             }
         }
 
-        protected void addEndTag(StringBuilder out) {
+        private void addEndTag(StringBuilder out) {
             out.append(END_TAG).append("\n");
         }
     }
 
-    private static String formatDate(Date d) {
+    private String formatDate(Date d) {
         synchronized(DATE_TIME_FORMAT) {
             return DATE_TIME_FORMAT.format(d);
         }
@@ -97,18 +106,29 @@ public class SocketIOStackReporter extends TimerTask {
         }
     }
 
-    private static String formatStartTag(String date) {
+    private String formatStartTag(String type, String date) {
         synchronized(START_TAG_PATTERN) {
-            return START_TAG_PATTERN.format(new Object[] { date });
+            return START_TAG_PATTERN.format(new Object[] { type, date });
         }
     }
 
-    public static Date parseStartTag(String line) {
+    public static String parseStartTagType(String line) {
+        try {
+            synchronized(START_TAG_PATTERN) {
+                final Object[] fields = START_TAG_PATTERN.parse(line);
+                return (String)fields[0];
+            }
+        } catch(Exception e) {
+            return null;
+        }
+    }
+
+    public static Date parseStartTagTime(String line) {
         try {
             final String dateField;
             synchronized(START_TAG_PATTERN) {
                 final Object[] fields = START_TAG_PATTERN.parse(line);
-                dateField = (String) fields[0];
+                dateField = (String) fields[1];
             }
             return parseDate(dateField);
         } catch(Exception e) {

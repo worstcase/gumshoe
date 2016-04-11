@@ -1,7 +1,7 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
 import com.dell.gumshoe.stack.Stack;
+import com.dell.gumshoe.stats.StatisticAdder;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -97,19 +97,19 @@ public class FileSourcePanel extends JPanel {
         add(actionPanel, BorderLayout.CENTER);
     }
 
-    private class FileOpener extends SwingWorker<Map<Stack,DetailAccumulator>,Object> {
+    private class FileOpener extends SwingWorker<Map<Stack,StatisticAdder>,Object> {
         private final boolean forward;
         public FileOpener(boolean forward) {
             this.forward = forward;
         }
         @Override
-        public Map<Stack,DetailAccumulator> doInBackground() throws Exception {
+        public Map<Stack,StatisticAdder> doInBackground() throws Exception {
             return forward ? file.getNextSample() : file.getPreviousSample();
         }
         @Override
         public void done() {
             try {
-                final Map<Stack,DetailAccumulator> sample = get();
+                final Map<Stack,StatisticAdder> sample = get();
                 if(sample==null) {
                     parent.setStatus("No more samples found in file");
                     parent.setSample(null);

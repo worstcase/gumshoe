@@ -1,7 +1,7 @@
 package com.dell.gumshoe.socket;
 
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
-import com.dell.gumshoe.socket.SocketIOListener.IODetail;
+import com.dell.gumshoe.socket.io.IODetail;
+import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 
 import java.text.MessageFormat;
@@ -11,12 +11,12 @@ import junit.framework.TestCase;
 
 public class TestParsing extends TestCase {
     public void testDetailParse() throws ParseException {
-        DetailAccumulator orig = new DetailAccumulator();
+        SocketIODetailAdder orig = new SocketIODetailAdder();
         orig.add(new IODetail("1.2.3.4/5678", 123123, 123, 321321, 321));
 
         String stringValue = orig.get().toString();
 
-        DetailAccumulator copy = DetailAccumulator.fromString(stringValue);
+        SocketIODetailAdder copy = SocketIODetailAdder.fromString(stringValue);
         assertEquals(copy.addresses, orig.addresses);
         assertEquals(copy.readBytes.get(), orig.readBytes.get());
         assertEquals(copy.readCount.get(), orig.readCount.get());

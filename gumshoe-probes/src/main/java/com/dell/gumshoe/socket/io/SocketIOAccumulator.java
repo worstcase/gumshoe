@@ -1,8 +1,10 @@
-package com.dell.gumshoe.socket;
+package com.dell.gumshoe.socket.io;
 
-import com.dell.gumshoe.socket.SocketIOMonitor.Event;
+import com.dell.gumshoe.socket.io.SocketIOMonitor.Event;
+import com.dell.gumshoe.socket.io.SocketIOMonitor.SocketIOListener;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stats.StackStatisticSource;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +14,8 @@ import java.util.concurrent.ConcurrentMap;
  *  with total IO at each frame and
  *  link from frame to multiple next frames below
  */
-public class SocketIOAccumulator implements SocketIOListener {
-    private final ConcurrentMap<Stack,DetailAccumulator> totals = new ConcurrentHashMap<>();
+public class SocketIOAccumulator implements SocketIOListener, StackStatisticSource {
+    private final ConcurrentMap<Stack,SocketIODetailAdder> totals = new ConcurrentHashMap<>();
     private StackFilter filter;
 
     public SocketIOAccumulator(StackFilter filter) {
@@ -29,23 +31,25 @@ public class SocketIOAccumulator implements SocketIOListener {
     public void socketIOHasCompleted(Event event) {
         final IODetail value = new IODetail(event);
         Stack stack = event.getStack().applyFilter(filter);
-        final DetailAccumulator total = getAccumulator(stack);
+        final SocketIODetailAdder total = getAccumulator(stack);
         total.add(value);
     }
 
-    private DetailAccumulator getAccumulator(Stack key) {
-        final DetailAccumulator entry = totals.get(key);
+    private SocketIODetailAdder getAccumulator(Stack key) {
+        final SocketIODetailAdder entry = totals.get(key);
         if(entry!=null) {
             return entry;
         }
-        totals.putIfAbsent(key, new DetailAccumulator());
+        totals.putIfAbsent(key, new SocketIODetailAdder());
         return totals.get(key);
     }
 
-    public Map<Stack,DetailAccumulator> getStats() {
+    @Override
+    public Map<Stack,SocketIODetailAdder> getStats() {
         return totals;
     }
 
+    @Override
     public void reset() {
         totals.clear();
     }

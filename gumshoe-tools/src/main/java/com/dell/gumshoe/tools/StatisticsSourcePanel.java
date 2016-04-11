@@ -1,8 +1,9 @@
 package com.dell.gumshoe.tools;
 
 import com.dell.gumshoe.Probe;
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
 import com.dell.gumshoe.stack.Stack;
+import com.dell.gumshoe.stats.StatisticAdder;
+import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
@@ -78,7 +79,7 @@ public class StatisticsSourcePanel extends JPanel {
         status.setText(message);
     }
 
-    public void setSample(Map<Stack, DetailAccumulator> stats) {
+    public void setSample(Map<Stack,StatisticAdder> stats) {
         target.updateModel(stats);
     }
 }

@@ -1,15 +1,19 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.tools.StackGraphPanel.DisplayOptions;
-import com.dell.gumshoe.tools.StackGraphPanel.IOStat;
-import com.dell.gumshoe.tools.StackGraphPanel.IOUnit;
-import com.dell.gumshoe.tools.StackGraphPanel.Order;
-import com.dell.gumshoe.tools.StackGraphPanel.WidthScale;
+import static com.dell.gumshoe.tools.Swing.columns;
+import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.stackNorth;
+import static com.dell.gumshoe.tools.Swing.stackWest;
+
+import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.tools.graph.DisplayOptions;
+import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -17,95 +21,69 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class OptionEditor extends JPanel {
-    final JRadioButton readStat = new JRadioButton("read", true);
-    final JRadioButton writeStat = new JRadioButton("write");
-    final JRadioButton bothStat = new JRadioButton("read+write");
-    final JRadioButton opsUnit = new JRadioButton("ops", true);
-    final JRadioButton bytesUnit = new JRadioButton("bytes");
-    final JRadioButton timeUnit = new JRadioButton("time(ms)");
-    final JRadioButton byCaller = new JRadioButton("show callers (root graph)", true);
-    final JRadioButton byCalled = new JRadioButton("show called methods (flame graph)");
-    final JRadioButton valueWidth = new JRadioButton("statistic value", true);
-    final JRadioButton logWidth = new JRadioButton("log(value)");
-    final JRadioButton equalWidth = new JRadioButton("equal width");
-    final JCheckBox byValue = new JCheckBox("arrange by value");
+    private static final String[] STATISTIC_TYPES = {
+        Probe.SOCKET_IO_LABEL, Probe.UNCLOSED_SOCKET_LABEL
+    };
+    private final JRadioButton byCaller = new JRadioButton("show callers (root graph)", true);
+    private final JRadioButton byCalled = new JRadioButton("show called methods (flame graph)");
+    private final JRadioButton valueWidth = new JRadioButton("statistic value", true);
+    private final JRadioButton logWidth = new JRadioButton("log(value)");
+    private final JRadioButton equalWidth = new JRadioButton("equal width");
+    private final JCheckBox byValue = new JCheckBox("arrange by statistic value (left to right)");
     private final JTextField statLimit = new JTextField();
-    final JButton apply = new JButton("Apply");
+    private final JButton apply = new JButton("Apply");
+    private final JComboBox statSelector = new JComboBox(STATISTIC_TYPES);
+    private final CardLayout statCard = new CardLayout();
+    private final JPanel statOptions = new JPanel();
 
     public OptionEditor() {
-        final ButtonGroup statGroup = new ButtonGroup();
-        statGroup.add(readStat);
-        statGroup.add(writeStat);
-        statGroup.add(bothStat);
+        groupButtons(byCalled, byCaller);
+        final JPanel directionPanel = columns(new JLabel("Direction: "), byCaller, byCalled, new JLabel(""));
+//        directionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Direction", TitledBorder.LEFT, TitledBorder.TOP));
 
-        final JPanel statPanel = new JPanel();
-        statPanel.setLayout(new GridLayout(1,3));
-        statPanel.add(readStat);
-        statPanel.add(writeStat);
-        statPanel.add(bothStat);
-        statPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Operation", TitledBorder.LEFT, TitledBorder.TOP));
+        groupButtons(valueWidth, logWidth, equalWidth);
+        final JPanel widthPanel = columns(new JLabel("Cell width: "), valueWidth, logWidth, equalWidth);
+//        widthPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Cell width", TitledBorder.LEFT, TitledBorder.TOP));
 
-
-        final ButtonGroup unitGroup = new ButtonGroup();
-        unitGroup.add(opsUnit);
-        unitGroup.add(bytesUnit);
-        unitGroup.add(timeUnit);
-
-        final JPanel unitPanel = new JPanel();
-        unitPanel.setLayout(new GridLayout(1,3));
-        unitPanel.add(opsUnit);
-        unitPanel.add(bytesUnit);
-        unitPanel.add(timeUnit);
-        unitPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Measurement", TitledBorder.LEFT, TitledBorder.TOP));
 
         statLimit.setColumns(3);
-        final JPanel minPanel = new JPanel();
-        minPanel.setLayout(new BorderLayout());
-        minPanel.add(new JLabel("Drop frames less than"), BorderLayout.WEST);
-        minPanel.add(statLimit, BorderLayout.CENTER);
-        minPanel.add(new JLabel("%"), BorderLayout.EAST);
+        final JPanel bottomPanel = columns(
+                stackWest(new JLabel("Drop frames less than"), statLimit, new JLabel("%")),
+                byValue);
 
-        final ButtonGroup widthGroup = new ButtonGroup();
-        widthGroup.add(valueWidth);
-        widthGroup.add(logWidth);
-        widthGroup.add(equalWidth);
+        final JPanel graphPanel = stackNorth(directionPanel, widthPanel, bottomPanel);
+        graphPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Graph generation options", TitledBorder.LEFT, TitledBorder.TOP));
 
-        final JPanel widthPanel = new JPanel();
-        widthPanel.setLayout(new GridLayout(1,3));
-        widthPanel.add(valueWidth);
-        widthPanel.add(logWidth);
-        widthPanel.add(equalWidth);
-        widthPanel.add(minPanel);
-        widthPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Cell width", TitledBorder.LEFT, TitledBorder.TOP));
+        /////
 
-        final ButtonGroup directionGroup = new ButtonGroup();
-        directionGroup.add(byCalled);
-        directionGroup.add(byCaller);
+        statSelector.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final String label = (String)statSelector.getSelectedItem();
+                statCard.show(statOptions, label);
+            }
+        });
+        final JPanel statPanel = stackWest(new JLabel("For sample type "), statSelector, new JLabel(":"));
+        statOptions.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
 
-        final JPanel directionPanel = new JPanel();
-        directionPanel.setLayout(new GridLayout(1,2));
-        directionPanel.add(byCalled);
-        directionPanel.add(byCaller);
-        directionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Direction", TitledBorder.LEFT, TitledBorder.TOP));
+        statOptions.setLayout(statCard);
+        for(String typeName : STATISTIC_TYPES) {
+            statOptions.add(DataTypeHelper.forType(typeName).getOptionEditor(), typeName);
+        }
 
-        final JPanel otherPanel = new JPanel();
-        otherPanel.setLayout(new FlowLayout());
-        otherPanel.add(byValue);
-        otherPanel.add(apply);
+        final JPanel typePanel = stackNorth(statPanel, statOptions);
+        typePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
 
-        setLayout(new GridLayout(5,1));
-        add(statPanel);
-        add(unitPanel);
-        add(directionPanel);
-        add(widthPanel);
-        add(otherPanel);
+        /////
+
+        setLayout(new BorderLayout());
+        add(stackNorth(typePanel, graphPanel, flow(apply)), BorderLayout.NORTH);
     }
 
     public void addActionListener(ActionListener listener) {
@@ -114,22 +92,12 @@ public class OptionEditor extends JPanel {
     }
 
     public DisplayOptions getOptions() {
-        final IOStat stat;
-        if(readStat.isSelected()) stat = IOStat.READ;
-        else if(writeStat.isSelected()) stat = IOStat.WRITE;
-        else stat = IOStat.READ_PLUS_WRITE;
+        final DisplayOptions.Order order = byValue.isSelected() ? DisplayOptions.Order.BY_VALUE : DisplayOptions.Order.BY_NAME;
 
-        final IOUnit unit;
-        if(opsUnit.isSelected()) unit = IOUnit.OPS;
-        else if(bytesUnit.isSelected()) unit = IOUnit.BYTES;
-        else unit = IOUnit.TIME;
-
-        final Order order = byValue.isSelected() ? Order.BY_VALUE : Order.BY_NAME;
-
-        final WidthScale width;
-        if(valueWidth.isSelected()) width = WidthScale.VALUE;
-        else if(logWidth.isSelected()) width = WidthScale.LOG_VALUE;
-        else width = WidthScale.EQUAL;
+        final DisplayOptions.WidthScale width;
+        if(valueWidth.isSelected()) width = DisplayOptions.WidthScale.VALUE;
+        else if(logWidth.isSelected()) width = DisplayOptions.WidthScale.LOG_VALUE;
+        else width = DisplayOptions.WidthScale.EQUAL;
 
         final boolean isInverted = byCalled.isSelected();
         float minPct = 0f;
@@ -138,6 +106,6 @@ public class OptionEditor extends JPanel {
         } catch(Exception ignore) {
 
         }
-        return new DisplayOptions(isInverted, stat, unit, order, width, minPct);
+        return new DisplayOptions(isInverted, order, width, minPct);
     }
 }

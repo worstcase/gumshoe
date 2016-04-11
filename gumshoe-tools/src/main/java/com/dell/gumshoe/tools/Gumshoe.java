@@ -1,6 +1,7 @@
 package com.dell.gumshoe.tools;
 
 import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -87,8 +88,7 @@ public class Gumshoe extends JPanel {
         final JPanel detailPanel = new JPanel();
         detailPanel.setLayout(new BorderLayout());
         final JComponent detailField = graph.getDetailField();
-        final JScrollPane scroll = new JScrollPane();
-        scroll.setViewportView(detailField);
+        final JScrollPane scroll = new JScrollPane(detailField);
         detailPanel.add(scroll, BorderLayout.CENTER);
 
         final JPanel statsPanel = new JPanel();

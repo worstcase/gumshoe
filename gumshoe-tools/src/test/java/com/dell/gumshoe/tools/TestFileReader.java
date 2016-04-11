@@ -1,7 +1,7 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.socket.SocketIOListener.DetailAccumulator;
 import com.dell.gumshoe.stack.Stack;
+import com.dell.gumshoe.stats.StatisticAdder;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class TestFileReader extends TestCase {
     }
 
     public void testNavigating() throws Exception {
-        Map<Stack, DetailAccumulator> entry = target.getNextSample();
+        Map<Stack, StatisticAdder> entry = target.getNextSample();
         assertEquals(7, entry.size());
         Date time1 = target.getSampleTime();
 
@@ -61,7 +61,7 @@ public class TestFileReader extends TestCase {
         assertEquals(3, times.size());
 
         Date middle = times.get(1);
-        Map<Stack, DetailAccumulator> entry = target.getSample(middle);
+        Map<Stack, StatisticAdder> entry = target.getSample(middle);
         Date time = target.getSampleTime();
         assertEquals(2, entry.size());
         assertEquals(time, middle);

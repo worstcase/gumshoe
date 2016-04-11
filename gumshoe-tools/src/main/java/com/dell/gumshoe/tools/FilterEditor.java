@@ -4,6 +4,7 @@ import com.dell.gumshoe.Probe;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;

@@ -1,7 +1,8 @@
-package com.dell.gumshoe.socket;
+package com.dell.gumshoe.socket.unclosed;
 
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stats.StackStatisticSource;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -20,9 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** monitor and report on sockets left open
  */
-public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitorMBean {
+public class SocketCloseMonitor implements SocketImplFactory, StackStatisticSource<UnclosedStats> {
     private static AtomicInteger SOCKET_IDS = new AtomicInteger();
-    
+
     private final AtomicInteger socketCount = new AtomicInteger();
     private final ConcurrentMap<Integer,SocketImplDecorator> openSockets = new ConcurrentHashMap<Integer,SocketImplDecorator>();
     private final ConcurrentMap<Stack,AtomicInteger> countByStack = new ConcurrentHashMap<>();
@@ -31,46 +32,54 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
     private int clearClosedPerCount = 100;
     private StackFilter filter;
     private boolean enabled = true;
-    
+    private long minReportingAge;
+
     private Constructor socketConstructor;
     private Method getSocketMethod;
 
-    public SocketCloseMonitor() throws Exception { 
+    public SocketCloseMonitor(long minAge, StackFilter filter) throws Exception {
         Class<?> defaultSocketImpl = Class.forName("java.net.SocksSocketImpl");
         socketConstructor = defaultSocketImpl.getDeclaredConstructor();
         socketConstructor.setAccessible(true);
-        
+
         getSocketMethod = SocketImpl.class.getDeclaredMethod("getSocket");
         getSocketMethod.setAccessible(true);
-    }
-    
-    @Override
-    public boolean isEnabled() { return enabled; }
-    
-    @Override
-    public void setEnabled(boolean enabled) { 
-        this.enabled = enabled;
-        if( ! enabled) {
-            synchronized(clearClosedLock) {
-                clearClosedSockets();
-                openSockets.clear();
-                countByStack.clear();
-            }
-        }
+
+        this.minReportingAge = minAge;
+        this.filter = filter;
     }
 
+    public void setFilter(StackFilter filter) {
+        this.filter = filter;
+    }
+
+//    @Override
+//    public boolean isEnabled() { return enabled; }
+//
+//    @Override
+//    public void setEnabled(boolean enabled) {
+//        this.enabled = enabled;
+//        if( ! enabled) {
+//            synchronized(clearClosedLock) {
+//                clearClosedSockets();
+//                openSockets.clear();
+//                countByStack.clear();
+//            }
+//        }
+//    }
+
     /////
-    
+
     public void initializeProbe() throws IOException {
         Socket.setSocketImplFactory(this);
     }
-    
+
     public void destroyProbe() {
         // Socket.setSocketImplFactory() can be called only once
         throw new UnsupportedOperationException("socket close monitor cannot be removed");
     }
-    
-    /** request the system clear closed sockets every Nth time a new socket is created */ 
+
+    /** request the system clear closed sockets every Nth time a new socket is created */
     public void setClearClosedSocketsInterval(int numberOfSockets) {
         clearClosedPerCount = numberOfSockets;
         if(clearClosedThread==null) {
@@ -80,22 +89,22 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
             clearClosedThread.start();
         }
     }
-    
-    public List<SocketImplDecorator> findOpenedBefore(Date cutoff) {
+
+    public List<SocketImplDecorator> findOpenedBefore(long cutoff) {
         final List<SocketImplDecorator> out = new ArrayList<SocketImplDecorator>();
         for(SocketImplDecorator value : openSockets.values()) {
-            if(value.openTime.before(cutoff) && ! value.isClosed()) {
+            if(value.openTime<cutoff && ! value.isClosed()) {
                 out.add(value);
             }
         }
         return out;
     }
-    
+
     public int getSocketCount() {
         clearClosedSockets();
         return socketCount.get();
     }
-    
+
     public Map<Stack, Integer> getCountsByStack() {
         final Map<Stack, Integer> out = new HashMap<>(countByStack.size());
         for(Map.Entry<Stack,AtomicInteger> entry : countByStack.entrySet()) {
@@ -103,9 +112,9 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
         }
         return out;
     }
-    
+
     /////
-    
+
     /** JVM hook: capture info about socket as it is created */
     @Override
     public SocketImpl createSocketImpl() {
@@ -131,7 +140,7 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
             return newSocketImpl();
         }
     }
-    
+
     private SocketImpl newSocketImpl() {
         try {
             return (SocketImpl) socketConstructor.newInstance();
@@ -139,21 +148,21 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
             throw new RuntimeException(e);
         }
     }
-    
+
     /** information maintained about each open socket */
     public class SocketImplDecorator {
         public final int id;
         public final SocketImpl impl;
         public final Stack stack;
-        public final Date openTime;
-        
+        public final long openTime;
+
         private SocketImplDecorator(int id) {
             this.id = id;
             this.impl = newSocketImpl();
-            this.stack = new Stack();
-            this.openTime = new Date();
+            this.stack = new Stack().applyFilter(filter);
+            this.openTime = System.currentTimeMillis();
         }
-        
+
         private Socket getSocket() {
             try {
                 return (Socket) getSocketMethod.invoke(impl);
@@ -161,27 +170,27 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
                 throw new RuntimeException(e);
             }
         }
-        
+
         private boolean isClosed() {
-            return getSocket().isClosed(); 
+            return getSocket().isClosed();
         }
-        
+
 //        public SocketImplDecorator filterStack(StackFilter filter) {
 //            return new SocketImplDecorator(id, impl, stack.applyFilter(filter), openTime);
 //        }
-        
+
         @Override
         public String toString() {
             final Socket socket = getSocket();
-            
+
             return String.format("%s %s (%s)\n%s",
-                     socket.getRemoteSocketAddress().toString(), 
-                     openTime.toString(), 
-                     socket.isClosed() ? "closed" : "open", 
+                     socket.getRemoteSocketAddress().toString(),
+                     new Date(openTime).toString(),
+                     socket.isClosed() ? "closed" : "open",
                      stack.toString());
         }
     }
-    
+
     private void clearClosedSockets() {
         synchronized(clearClosedLock) {
             for(SocketImplDecorator value : openSockets.values()) {
@@ -192,15 +201,15 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
             }
         }
     }
-    
+
     /////
-    
+
     private void notifyClearClosed() {
         synchronized(clearClosedLock) {
             clearClosedLock.notifyAll();
         }
     }
-    
+
     private class ScanForClosed implements Runnable {
         @Override
         public void run() {
@@ -214,37 +223,30 @@ public class SocketCloseMonitor implements SocketImplFactory, SocketCloseMonitor
             }
         }
     }
-    
+
     /////
-    
+
     @Override
-    public String getReport(long minimumAge) {
-        final long cutoff = System.currentTimeMillis() - minimumAge;
-        final List<SocketImplDecorator> unclosed = findOpenedBefore(new Date(cutoff));
-        final StringBuilder report = new StringBuilder();
-        report.append("total ").append(unclosed.size()).append(" unclosed sockets:\n");
-        
-        final Map<Stack,Map<String,Integer>> summaryByStack = new HashMap<>();
-        for(SocketImplDecorator wrapper : unclosed) {
-            final Stack filteredStack = filter==null ? wrapper.stack : wrapper.stack.applyFilter(filter);
-            Map<String,Integer> countByDesc = summaryByStack.get(filteredStack);
-            if(countByDesc==null) {
-                countByDesc = new HashMap<String,Integer>();
-                summaryByStack.put(wrapper.stack, countByDesc);
+    public void reset() { /*no-op*/ }
+
+    @Override
+    public Map<Stack,UnclosedStats> getStats() {
+        return getStats(minReportingAge);
+    }
+
+    private Map<Stack,UnclosedStats> getStats(long minAge) {
+        final long now = System.currentTimeMillis();
+        final long cutoff = now - minAge;
+        final List<SocketImplDecorator> unclosed = findOpenedBefore(cutoff);
+        final Map<Stack,UnclosedStats> summaryByStack = new HashMap<>();
+        for(SocketImplDecorator socket : unclosed) {
+            UnclosedStats stats = summaryByStack.get(socket.stack);
+            if(stats==null) {
+                stats = new UnclosedStats();
+                summaryByStack.put(socket.stack, stats);
             }
-            final String address = wrapper.getSocket().getRemoteSocketAddress().toString();
-            Integer count = countByDesc.get(address);
-            countByDesc.put(address, (count==null) ? 1 : (count+1));
+            stats.add(now, socket);
         }
-        
-        for(Map.Entry<Stack,Map<String,Integer>> stackEntry : summaryByStack.entrySet()) {
-            final Stack stack = stackEntry.getKey();
-            final Map<String,Integer> countByDescription = stackEntry.getValue();
-            for(Map.Entry<String,Integer> countEntry : countByDescription.entrySet()) {
-                report.append(countEntry.getValue()).append(" connections to ").append(countEntry.getKey()).append("\n");
-            }
-            report.append(stack).append("\n");
-        }
-        return report.toString();
+        return summaryByStack;
     }
 }
