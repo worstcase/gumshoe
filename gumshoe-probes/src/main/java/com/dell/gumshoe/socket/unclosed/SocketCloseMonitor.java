@@ -53,20 +53,20 @@ public class SocketCloseMonitor implements SocketImplFactory, StackStatisticSour
         this.filter = filter;
     }
 
-//    @Override
-//    public boolean isEnabled() { return enabled; }
-//
-//    @Override
-//    public void setEnabled(boolean enabled) {
-//        this.enabled = enabled;
-//        if( ! enabled) {
-//            synchronized(clearClosedLock) {
-//                clearClosedSockets();
-//                openSockets.clear();
-//                countByStack.clear();
-//            }
-//        }
-//    }
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if( ! enabled) {
+            synchronized(clearClosedLock) {
+                clearClosedSockets();
+                openSockets.clear();
+                countByStack.clear();
+            }
+        }
+    }
 
     /////
 
@@ -88,6 +88,10 @@ public class SocketCloseMonitor implements SocketImplFactory, StackStatisticSour
             clearClosedThread.setName("clear-closed-sockets");
             clearClosedThread.start();
         }
+    }
+
+    public int getClearClosedSocketsInterval() {
+        return clearClosedPerCount;
     }
 
     public List<SocketImplDecorator> findOpenedBefore(long cutoff) {
@@ -234,7 +238,7 @@ public class SocketCloseMonitor implements SocketImplFactory, StackStatisticSour
         return getStats(minReportingAge);
     }
 
-    private Map<Stack,UnclosedStats> getStats(long minAge) {
+    Map<Stack,UnclosedStats> getStats(long minAge) {
         final long now = System.currentTimeMillis();
         final long cutoff = now - minAge;
         final List<SocketImplDecorator> unclosed = findOpenedBefore(cutoff);

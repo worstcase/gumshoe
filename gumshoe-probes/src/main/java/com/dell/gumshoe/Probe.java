@@ -3,10 +3,14 @@ package com.dell.gumshoe;
 import com.dell.gumshoe.socket.SocketMatcher;
 import com.dell.gumshoe.socket.SocketMatcherSeries;
 import com.dell.gumshoe.socket.SubnetAddress;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.socket.io.SocketIOAccumulator;
+import com.dell.gumshoe.socket.io.SocketIODetailAdder;
+import com.dell.gumshoe.socket.io.SocketIOMBean;
+import com.dell.gumshoe.socket.io.SocketIOMBeanImpl;
 import com.dell.gumshoe.socket.io.SocketIOMonitor;
+import com.dell.gumshoe.socket.unclosed.SocketCloseMBeanImpl;
 import com.dell.gumshoe.socket.unclosed.SocketCloseMonitor;
+import com.dell.gumshoe.socket.unclosed.SocketCloseMonitorMBean;
 import com.dell.gumshoe.socket.unclosed.UnclosedStats;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
@@ -100,7 +104,7 @@ public class Probe {
         namedOutput.put(key, value);
     }
 
-    private synchronized Timer getTimer() {
+    public synchronized Timer getTimer() {
         if(timer==null) {
             timer = new Timer(true);
         }
@@ -234,10 +238,10 @@ public class Probe {
         final boolean periodicReportEnabled = periodicFrequency!=null;
         final boolean reportingEnabled = periodicReportEnabled || shutdownReportEnabled;
 
-        // by default, jmx enabled if reporting it (but can override w/property)
-        final boolean jmxEnabled = isTrue(p, "gumshoe.socket-unclosed.mbean", reportingEnabled);
-        final String mbeanName = jmxEnabled ?
-                getMBeanName(p, "gumshoe.socket-unclosed.mbean.name", SocketCloseMonitor.class) : null;
+        // jmx enabled if explicit name, explicit property, or some reporting enabled
+        final String mbeanName = getMBeanName(p, "gumshoe.socket-unclosed.mbean.name", SocketCloseMonitor.class);
+        final boolean jmxEnabled = p.containsKey("gumshoe.socket-unclosed.mbean.name")
+                || isTrue(p, "gumshoe.socket-unclosed.mbean", reportingEnabled);
 
         // by default, enabled monitor only if reporting it or enabled mbean (but can override w/property)
         final boolean enabled = isTrue(p, "gumshoe.socket-unclosed.enabled", reportingEnabled || jmxEnabled);
@@ -250,7 +254,7 @@ public class Probe {
 
         final PrintStream out = getOutput(p, "gumshoe.socket-unclosed.output", System.out);
         return initializeSocketCloseMonitor(shutdownReportEnabled, periodicFrequency, minAge, clearCount,
-                stackFilter, mbeanName, out);
+                stackFilter, jmxEnabled ? mbeanName : null, out);
     }
 
     public SocketCloseMonitor initializeSocketCloseMonitor(boolean shutdownReportEnabled, Long reportPeriod, final long minAge, int clearCount,
@@ -260,26 +264,31 @@ public class Probe {
         closeMonitor = new SocketCloseMonitor(minAge, filter);
         closeMonitor.setClearClosedSocketsInterval(clearCount);
 
-        closeMonitor.initializeProbe();
-
-//        if(mbeanName!=null) {
-//            installMBean(mbeanName, closeMonitor, SocketCloseMonitorMBean.class);
-//        }
-
         closeReporter = new ValueReporter(UNCLOSED_SOCKET_LABEL, closeMonitor);
-        if(shutdownReportEnabled) {
-            addShutdownHook(closeReporter);
-        }
         if(out!=null) {
             closeReporter.addStreamReporter(out);
         }
 
-        if(reportPeriod!=null) {
-            getTimer().scheduleAtFixedRate(closeReporter, reportPeriod, reportPeriod);
+        if(shutdownReportEnabled) {
+            addShutdownHook(closeReporter.getShutdownHook());
         }
+
+        if(reportPeriod!=null) {
+            closeReporter.scheduleReportTimer(getTimer(), reportPeriod);
+        }
+
+        if(mbeanName!=null) {
+            final SocketCloseMonitorMBean mbean = new SocketCloseMBeanImpl(this);
+            installMBean(mbeanName, mbean, SocketCloseMonitorMBean.class);
+        }
+
+        closeMonitor.initializeProbe();
         return closeMonitor;
     }
 
+    public SocketCloseMonitor getUnclosedMonitor() {
+        return closeMonitor;
+    }
     public ValueReporter<UnclosedStats> getUnclosedReporter() {
         return closeReporter;
     }
@@ -291,7 +300,12 @@ public class Probe {
             final Long periodicFrequency = getNumber(p, "gumshoe.socket-io.period");
             final boolean periodicReportEnabled = periodicFrequency!=null;
             final boolean reportEnabled = shutdownReportEnabled || periodicReportEnabled;
-            final boolean jmxEnabled = isTrue(p, "gumshoe.socket-io.mbean", reportEnabled);
+
+            // jmx enabled if explicit name, explicit property, or some reporting enabled
+            final String mbeanName = getMBeanName(p, "gumshoe.socket-io.mbean.name", SocketIOMonitor.class);
+            final boolean jmxEnabled = p.containsKey("gumshoe.socket-io.mbean.name")
+                    || isTrue(p, "gumshoe.socket-io.mbean", reportEnabled);
+
             final boolean enabled = isTrue(p, "gumshoe.socket-io.enabled", reportEnabled || jmxEnabled);
             if( ! enabled) { return null; }
 
@@ -303,7 +317,7 @@ public class Probe {
 
             final PrintStream out = getOutput(p, "gumshoe.socket-io.output", System.out);
 
-            return initializeIOMonitor(shutdownReportEnabled, periodicFrequency, socketFilter, stackFilter, out);
+            return initializeIOMonitor(shutdownReportEnabled, periodicFrequency, jmxEnabled?mbeanName:null, socketFilter, stackFilter, out);
     }
 
     /** create stack filter for socket I/O
@@ -348,7 +362,7 @@ public class Probe {
         return builder.build();
     }
 
-    public SocketIOMonitor initializeIOMonitor(boolean shutdownReportEnabled, Long periodicFrequency, SocketMatcher socketFilter, StackFilter stackFilter, final PrintStream out) throws Exception {
+    public SocketIOMonitor initializeIOMonitor(boolean shutdownReportEnabled, Long periodicFrequency, String mbeanName, SocketMatcher socketFilter, StackFilter stackFilter, final PrintStream out) throws Exception {
         if(ioMonitor!=null) throw new IllegalStateException("monitor is already installed");
 
         ioMonitor = new SocketIOMonitor(socketFilter);
@@ -358,13 +372,18 @@ public class Probe {
 
         ioReporter = new ValueReporter(SOCKET_IO_LABEL, ioAccumulator);
         if(shutdownReportEnabled) {
-            addShutdownHook(ioReporter);
+            addShutdownHook(ioReporter.getShutdownHook());
         }
         if(periodicFrequency!=null) {
-            getTimer().scheduleAtFixedRate(ioReporter, periodicFrequency, periodicFrequency);
+            ioReporter.scheduleReportTimer(getTimer(), periodicFrequency);
         }
         if(out!=null) {
             ioReporter.addStreamReporter(out);
+        }
+
+        if(mbeanName!=null) {
+            final SocketIOMBean mbean = new SocketIOMBeanImpl(this);
+            installMBean(mbeanName, mbean, SocketIOMBean.class);
         }
 
         ioMonitor.initializeProbe();
@@ -385,8 +404,18 @@ public class Probe {
 
     /////
 
-    private void addShutdownHook(Runnable task) {
+    public void addShutdownHook(Runnable task) {
+        if(shutdownHooks.contains(task)) { throw new IllegalStateException("shutdown hook already enabled: " + task); }
         shutdownHooks.add(task);
+    }
+
+    public boolean removeShutdownHook(Runnable task) {
+        if( ! shutdownHooks.contains(task)) { throw new IllegalStateException("shutdown hook was not enabled: " + task); }
+        return shutdownHooks.remove(task);
+    }
+
+    public boolean isShutdownHookEnabled(Runnable task) {
+        return shutdownHooks.contains(task);
     }
 
     /////
