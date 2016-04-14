@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -17,13 +18,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *  with total IO at each frame and
  *  link from frame to multiple next frames below
  */
-public class ValueReporter<A extends StatisticAdder> extends TimerTask {
+public class ValueReporter<A extends StatisticAdder> {
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final MessageFormat START_TAG_PATTERN = new MessageFormat("<gumshoe-report type=''{0}'' time=''{1}''>");
     public static final String END_TAG = "</gumshoe-report>";
     private final List<Listener<A>> listeners = new CopyOnWriteArrayList<>();
     private final StackStatisticSource<A> source;
     private final String type;
+    private final Task shutdownHook;
+    private Task timerTask;
+    private long timerFrequency;
 
     public ValueReporter(String type) {
         this(type, null);
@@ -32,20 +36,7 @@ public class ValueReporter<A extends StatisticAdder> extends TimerTask {
     public ValueReporter(String type, StackStatisticSource<A> source) {
         this.type = type;
         this.source = source;
-    }
-
-    @Override
-    public void run() {
-        final Map<Stack, A> stats = new HashMap<>(source.getStats());
-        for(Listener listener : listeners) {
-            try {
-                listener.statsReported(type, stats);
-            } catch(RuntimeException e) {
-                e.printStackTrace();
-            }
-
-        }
-        source.reset();
+        this.shutdownHook = new Task();
     }
 
     public static interface Listener<A extends StatisticAdder> {
@@ -60,6 +51,47 @@ public class ValueReporter<A extends StatisticAdder> extends TimerTask {
         addListener(new StreamReporter(out));
     }
 
+    public Runnable getShutdownHook() {
+        return shutdownHook;
+    }
+
+    public void scheduleReportTimer(Timer timer, long frequency) {
+        if(timerTask!=null) {
+            throw new IllegalStateException("there is already a task running");
+        }
+        timerTask = new Task();
+        timer.scheduleAtFixedRate(timerTask, frequency, frequency);
+        this.timerFrequency = frequency;
+    }
+
+    public void cancelReportTimer() {
+        if(timerTask==null) {
+            throw new IllegalStateException("no task is running");
+        }
+        timerTask.cancel();
+        timerTask = null;
+    }
+
+    public long getReportTimerFrequency() {
+        return timerFrequency;
+    }
+
+    private class Task extends TimerTask {
+        @Override
+        public void run() {
+            final Map<Stack, A> stats = new HashMap<>(source.getStats());
+            for(Listener listener : listeners) {
+                try {
+                    listener.statsReported(type, stats);
+                } catch(RuntimeException e) {
+                    e.printStackTrace();
+                }
+
+            }
+            source.reset();
+        }
+    }
+
     public class StreamReporter implements Listener<A> {
         private final PrintStream target;
 
@@ -69,8 +101,13 @@ public class ValueReporter<A extends StatisticAdder> extends TimerTask {
 
         @Override
         public void statsReported(String type, Map<Stack,A> stats) {
+            if( ! type.equals(ValueReporter.this.type)) { throw new IllegalArgumentException(); }
+            statsReported(stats);
+        }
+
+        public void statsReported(Map<Stack,A> stats) {
             final StringBuilder out = new StringBuilder();
-            addStartTag(out, type);
+            addStartTag(out, ValueReporter.this.type);
             addReport(out, stats);
             addEndTag(out);
 

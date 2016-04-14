@@ -10,10 +10,10 @@ Data can be logged to a file or viewed live
 [Features](features.md)
 -----------------------
 
-- *now:* socket usage analysis
-- _soon:_ unclosed socket detection  
+- *now:* socket I/O analysis
+- *now:* unclosed socket detection  
 - _soon:_ file usage analysis
-- _next:_ CPU utilization analysis
+- _soon:_ CPU utilization analysis
 
 Collecting samples
 ------------------

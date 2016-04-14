@@ -17,57 +17,46 @@ The Probe is used to initialize and begin monitoring:
 
 It can stop monitoring or update configuration:
 - Explicitly invoke Probe methods from your application
-- _soon_ Invoke JMX operations
+- [Invoke JMX operations](jmx.md)
 
 Handling Data
 -------------
 
-Collected data is forwarded to a  
-[Listener](https://github.com/dcm-oss/gumshoe/blob/master/gumshoe-probes/src/main/java/com/dell/gumshoe/socket/SocketIOStackReporter.java#L50) 
-at configured intervals.  The probe package includes listeners to write data to standard out or a text file.
+Collected data is forwarded to a Listener at configured intervals.  
+The probe package includes listeners to write data to standard out or a text file.
 
 Configuration Properties
 ------------------------
 
-Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
+System.properties can be used with Probe.initialize() or Probe.main(), 
+or any Properties object can be used with Probe.initialize(Properties).
+The values will install JVM hooks, manage filters and data collection,
+and determine when and where results are reported.
 
-    gumshoe.socket-io.period    Data samples will be reported at regular intervals (in milliseconds)
-    gumshoe.socket-io.onshutdown    If true, data samples will be reported when the JVM exits
-    gumshoe.socket-io.mbean     If true, enable JMX control of socket usage probe (not implemented)
-    gumshoe.socket-io.enabled   By default, the usage probe is initialized if periodic or shutdown
-                                reporting is enabled.  Override this behavior to install the probe
-                                now but enable/disable the reporting at another time.
+For details:
+- [Properties for socket I/O reporting](properties-socket-io.md)
+- [Properties for unclosed socket reporting](properties-unclosed-socket.md)
 
-Collection may be limited to certain networks, systems or ports: 
-                              
-    gumshoe.socket-io.include   Socket endpoints to monitor 
-    gumshoe.socket-io.exclude   Socket endpoints not to monitor
-    
-                                Both of these properties support comma-separated list of: 
-                                    <ip-address> : <mask-len> / <port-or-star>  
-                                for example:
-                                    192.168.3.0/24:80,127.0.0.1/32:*
-                                    
-                                Statistics for a socket are collected if the socket endpoint:
-                                - matches "include" or "include" is blank
-                                - does not match "exclude" or "exclude" is blank
-         
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
-                                
-    gumshoe.socket-io.filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
-    gumshoe.socket-io.filter.include        Include only these packages or classes (comma-separated)
-    gumshoe.socket-io.filter.exclude        Exclude these packages or classes 
-    gumshoe.socket-io.filter.top            Number of frames at top of stack to retain
-    gumshoe.socket-io.filter.bottom         Number of frames at bottom of stack to retain
-    gumshoe.socket-io.filter.allow-empty-stack    If filters excluded all frames from a stack,
-                                                  the full unfiltered stack can be restored (if false),
-                                                  or the empty stack will be used and collect stats
-                                                  as an "other" category.
-    gumshoe.socket-io.filter.none           If true, override other filter settings: no filtering is done. 
+Managing Configuration with JMX
+-------------------------------
 
-Collected data samples are written to:
+Many of the settings can also to be managed at runtime using MBeans.
+MBeans will be installed as part of Probe.initialize()
+for any monitors enabled; or Properties can override this behavior
+and install an MBean even if the monitor is not enabled during startup.
+(This would allow you to later connect, enable the monitor,
+and collect data only during a specific period of time.)
 
-    gumshoe.socket-io.output=none   Do not write samples (ie, when your program is
-                                    adding its own explicit Listener to receive samples)
-    gumshoe.socket-io.output=stdout Write to System.out (the default)
-    gumshoe.socket-io.output=file:/some/path    Write to a text file.
+To work with MBeans, a JMX service must be enabled in the JVM.
+Use system properties such as these:
+  -Dcom.sun.management.jmxremote.port=1234
+  -Dcom.sun.management.jmxremote.local.only=false
+  -Dcom.sun.management.jmxremote.authenticate=false
+  -Dcom.sun.management.jmxremote.ssl=false
+and connect to your JVM using a JMX client such as jconsole.
+
+By default, the MBeans installed will have names beginning with "com.dell.gumshoe".  
+  
+For details:
+- [Socket I/O MBean](jmx-socket-io.md)
+- [Unclosed Socket MBean](jmx-unclosed-socket.md) 
