@@ -1,14 +1,25 @@
 package com.dell.gumshoe.thread;
 
-import com.dell.gumshoe.stack.StackFilter;
 
 public interface CpuUsageMBean {
     public long getDumpInterval();
     public void setDumpInterval(long dumpInterval);
+    public long getEffectiveInterval();
+    public long getAverageDumpTime();
+
     public int getThreadPriority();
     public void setThreadPriority(int threadPriority);
-    public long getEffectiveInterval();
+
+
     public void setEnabled(boolean enabled);
     public boolean isEnabled();
+
+    public void setReportingFrequency(long millis);
+    public long getReportingFrequency();
+
+    public void setShutdownReportEnabled(boolean enabled);
+    public boolean isShutdownReportEnabled();
+
+    public String getReport();
     public void reset();
 }

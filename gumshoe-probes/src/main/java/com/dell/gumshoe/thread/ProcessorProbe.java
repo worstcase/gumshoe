@@ -1,16 +1,17 @@
 package com.dell.gumshoe.thread;
 
 import com.dell.gumshoe.Probe;
-import com.dell.gumshoe.socket.SocketMatcher;
-import com.dell.gumshoe.socket.SocketMatcherSeries;
-import com.dell.gumshoe.socket.io.SocketIOMBean;
-import com.dell.gumshoe.socket.io.SocketIOMonitor;
+import com.dell.gumshoe.socket.io.SocketIODetailAdder;
+import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.stats.ValueReporter.StreamReporter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.Map;
 import java.util.Properties;
 
 public class ProcessorProbe extends Probe implements CpuUsageMBean {
@@ -123,8 +124,47 @@ public class ProcessorProbe extends Probe implements CpuUsageMBean {
     }
 
     @Override
+    public String getReport() {
+        final ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+        final PrintStream out = new PrintStream(rawOut);
+        final ValueReporter<CPUStats>.StreamReporter streamer = getReporter().new StreamReporter(out);
+        final Map<Stack,CPUStats> values = monitor.getStats();
+        streamer.statsReported(values);
+        return rawOut.toString();
+    }
+
+
+    @Override
     public void reset() {
         monitor.reset();
     }
 
+    @Override
+    public long getAverageDumpTime() {
+        return monitor.getAverageDumpTime();
+    }
+
+    @Override
+    public void setReportingFrequency(long millis) {
+        getReporter().scheduleReportTimer(getTimer(), millis);
+    }
+
+    @Override
+    public long getReportingFrequency() {
+        return getReporter().getReportTimerFrequency();
+    }
+
+    @Override
+    public void setShutdownReportEnabled(boolean enabled) {
+        if(enabled) {
+            addShutdownHook(getReporter().getShutdownHook());
+        } else {
+            removeShutdownHook(getReporter().getShutdownHook());
+        }
+    }
+
+    @Override
+    public boolean isShutdownReportEnabled() {
+        return isShutdownHookEnabled(getReporter().getShutdownHook());
+    }
 }

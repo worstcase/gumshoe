@@ -1,8 +1,8 @@
 Gumshoe Probe
 =============
 
-The gumshoe probe is the set of classes that receive, filter and forward information from the gumshoe hooks.
-Unlike the hooks, the probe needs only to be in the classpath (not the bootclasspath).  
+The gumshoe probe is the set of classes that receive, filter and forward information from the gumshoe hooks
+or the JDK itself.  Unlike the hooks, the probe needs only to be in the classpath (not the bootclasspath).  
 
 Managing Data Collection
 ------------------------
@@ -35,6 +35,7 @@ and determine when and where results are reported.
 
 For details:
 - [Properties for socket I/O reporting](properties-socket-io.md)
+- [Properties for CPU usage reporting](properties-cpu-stats.md)
 - [Properties for unclosed socket reporting](properties-unclosed-socket.md)
 
 Managing Configuration with JMX
@@ -59,4 +60,5 @@ By default, the MBeans installed will have names beginning with "com.dell.gumsho
   
 For details:
 - [Socket I/O MBean](jmx-socket-io.md)
+- [CPU Stats MBean](jmx-cpu-stats.md)
 - [Unclosed Socket MBean](jmx-unclosed-socket.md) 

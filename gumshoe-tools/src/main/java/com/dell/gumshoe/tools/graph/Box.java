@@ -11,6 +11,7 @@ class Box {
     private final long position;
     final StackFrameNode boxNode;
     private final StackFrameNode parentNode;
+    private String label;
 
     public Box(int row, long position, StackFrameNode boxNode, StackFrameNode parentNode) {
         this.row = row;
@@ -41,15 +42,20 @@ class Box {
         g.setClip(null);
     }
 
-    public boolean contains(int displayHeight, int dispalyWidth, int rows, long total, DisplayOptions o, int x, int y) {
+    public boolean contains(int displayHeight, int displayWidth, int rows, long total, DisplayOptions o, int x, int y) {
         final float rowHeight = displayHeight / (float)rows;
-        final float unitWidth = dispalyWidth / (float)total;
-        final int boxX = (int) (position * unitWidth);
-        final int boxWidth = (int) (boxNode.getValue() * unitWidth);
         final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
-        final int boxHeight = (int)rowHeight;
+        if(y<boxY) { return false; } // can avoid remaining calculations
 
-        return x>=boxX && x<boxX+boxWidth && y>=boxY && y<boxY+boxHeight;
+        final int boxHeight = (int)rowHeight;
+        if(y>=boxY+boxHeight) { return false; }
+
+        final float unitWidth = displayWidth / (float)total;
+        final int boxX = (int) (position * unitWidth);
+        if(x<boxX) { return false; }
+
+        final int boxWidth = (int) (boxNode.getValue() * unitWidth);
+        return x<boxX+boxWidth;
     }
 
     private Color getColor(long total, DisplayOptions o) {
@@ -60,14 +66,17 @@ class Box {
     }
 
     public String getLabelText() {
-        final String[] parts = boxNode.getFrame().getClassName().split("\\.");
-        final String className = parts[parts.length-1].replaceAll("\\$", ".");
-        final int lineNumber = boxNode.getFrame().getLineNumber();
-        if(lineNumber>0) {
-            return String.format("%s.%s:%d", className, boxNode.getFrame().getMethodName(), lineNumber);
-        } else {
-            return String.format("%s.%s", className, boxNode.getFrame().getMethodName());
+        if(label==null) {
+            final String[] parts = boxNode.getFrame().getClassName().split("\\.");
+            final String className = parts[parts.length-1];
+            final int lineNumber = boxNode.getFrame().getLineNumber();
+            if(lineNumber>0) {
+                label = String.format("%s.%s:%d", className, boxNode.getFrame().getMethodName(), lineNumber);
+            } else {
+                label = String.format("%s.%s", className, boxNode.getFrame().getMethodName());
+            }
         }
+        return label;
     }
 
     public String getToolTipText() {

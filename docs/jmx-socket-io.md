@@ -1,5 +1,5 @@
-Gumshoe MBean Management of Socket I/O Reporting
-================================================
+MBean Management of Socket I/O Reporting
+========================================
 
 By default if socket I/O reporting is enabled, an MBean will be also be installed.
 Properties used to initialize gumshoe can change this behavior and either force or disable

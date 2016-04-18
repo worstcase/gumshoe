@@ -4,7 +4,6 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.StackStatisticSource;
 
-import java.lang.Thread.State;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -37,8 +36,11 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
     private ThreadFilter threadFilter = ThreadFilter.NONE;
     private long dumpInterval = 5000;
     private int threadPriority = Thread.MIN_PRIORITY;
+    private int dumpCount;
+    private long dumpTimeSum;
 
     public long getDumpInterval() { return dumpInterval; }
+
     public void setDumpInterval(long dumpInterval) {
         if(dumper==null) {
             this.dumpInterval = dumpInterval;
@@ -59,6 +61,7 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
             thread.setPriority(threadPriority);
         }
     }
+
     public long getEffectiveInterval() { return effectiveInterval; }
     public void setStackFilter(StackFilter stackFilter) { this.stackFilter = stackFilter; }
     public void setThreadFilter(ThreadFilter threadFilter) { this.threadFilter = threadFilter; }
@@ -101,6 +104,9 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
         return enabled;
     }
 
+    public long getAverageDumpTime() {
+        return dumpTimeSum / dumpCount;
+    }
     /////
 
     @Override
@@ -118,6 +124,7 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
 
     /** add thread dump to the running tallies */
     private void recordThreadInfo() throws InterruptedException {
+        final long startTime = System.currentTimeMillis();
         final ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         final ThreadInfo[] items = mbean.dumpAllThreads(false, false);
         for(ThreadInfo item : items) {
@@ -141,6 +148,9 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
                 recordThreadInfo(filteredStack, stat);
             }
         }
+        final long elapsed = System.currentTimeMillis() - startTime;
+        dumpTimeSum += elapsed;
+        dumpCount++;
     }
 
     /** add info on one thread to the running tally */

@@ -5,20 +5,32 @@ Overview
 --------
 
 Gumshoe intercepts java calls to sockets and captures network statistics.
-Data can be logged to a file or viewed live
+Data can be logged to a file or viewed live.
 
 [Features](features.md)
 -----------------------
 
-- *now:* socket I/O analysis
-- *now:* unclosed socket detection  
-- _soon:_ file usage analysis
-- _soon:_ CPU utilization analysis
+- socket I/O analysis
+- CPU utilization analysis
+- unclosed socket detection  
+- file I/O analysis
 
-Collecting samples
+Getting Started
+---------------
+
+- Examples
+- ELI5: Performance tuning
+- Components of gumshoe
+- Step by step
+
+
+Collecting Samples
 ------------------
 
 - [About the hook](hook.md)
 - [Configuring the probe](probe.md)
 - [Using filters](filters.md)
 - [Running your program](run.md)
+
+Viewing Samples
+---------------

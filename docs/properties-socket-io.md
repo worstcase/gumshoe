@@ -1,5 +1,5 @@
-Gumshoe Properties for Socket I/O Monitoring
-============================================
+Properties for Socket I/O Monitoring
+====================================
 
 These properties are used by the Probe to install the hook, filter and forward socket I/O information generated.
 

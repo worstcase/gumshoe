@@ -1,9 +1,10 @@
 package com.dell.gumshoe.tools.stats;
 
-import static com.dell.gumshoe.tools.Swing.*;
+import static com.dell.gumshoe.tools.Swing.grid;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter;
