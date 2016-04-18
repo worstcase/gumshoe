@@ -14,7 +14,7 @@ public class TestParsing extends TestCase {
         SocketIODetailAdder orig = new SocketIODetailAdder();
         orig.add(new IODetail("1.2.3.4/5678", 123123, 123, 321321, 321));
 
-        String stringValue = orig.get().toString();
+        String stringValue = orig.toString();
 
         SocketIODetailAdder copy = SocketIODetailAdder.fromString(stringValue);
         assertEquals(copy.addresses, orig.addresses);

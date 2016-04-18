@@ -1,24 +1,25 @@
 package com.dell.gumshoe.tools.stats;
 
+import static com.dell.gumshoe.tools.Swing.columns;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.stackNorth;
+
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
+import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.stats.ValueReporter.Listener;
 import com.dell.gumshoe.tools.graph.IODirection;
 import com.dell.gumshoe.tools.graph.IOUnit;
 import com.dell.gumshoe.tools.graph.StackFrameNode;
 
-import static com.dell.gumshoe.tools.Swing.*;
-
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.border.TitledBorder;
 
-import java.awt.Color;
-import java.awt.GridLayout;
 import java.text.ParseException;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,14 @@ public class SocketIOHelper extends DataTypeHelper {
     private final JRadioButton opsUnit = new JRadioButton("ops/count", true);
     private final JRadioButton bytesUnit = new JRadioButton("bytes");
     private final JRadioButton timeUnit = new JRadioButton("time(ms)");
+
+    private final JCheckBox acceptSocketIO = new JCheckBox("socket IO", true);
+
+    @Override
+    public JComponent getSelectionComponent() { return acceptSocketIO; }
+
+    @Override
+    public boolean isSelected() { return acceptSocketIO.isSelected(); }
 
     @Override
     public String getToolTipText(StackFrameNode boxNode, StackFrameNode parentNode) {
@@ -163,4 +172,11 @@ public class SocketIOHelper extends DataTypeHelper {
         }
     }
 
+    @Override
+    public void addListener(ProbeManager probe, Listener listener) {
+        final ValueReporter<SocketIODetailAdder> reporter = probe.getIOReporter();
+        if(reporter!=null) {
+            reporter.addListener(listener);
+        }
+    }
 }

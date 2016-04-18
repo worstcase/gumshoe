@@ -6,6 +6,7 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.StackStatisticSource;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -14,8 +15,8 @@ import java.util.concurrent.ConcurrentMap;
  *  with total IO at each frame and
  *  link from frame to multiple next frames below
  */
-public class SocketIOAccumulator implements SocketIOListener, StackStatisticSource {
-    private final ConcurrentMap<Stack,SocketIODetailAdder> totals = new ConcurrentHashMap<>();
+public class SocketIOAccumulator implements SocketIOListener, StackStatisticSource<SocketIODetailAdder> {
+    private ConcurrentMap<Stack,SocketIODetailAdder> totals = new ConcurrentHashMap<>();
     private StackFilter filter;
 
     public SocketIOAccumulator(StackFilter filter) {
@@ -24,7 +25,7 @@ public class SocketIOAccumulator implements SocketIOListener, StackStatisticSour
 
     public void setFilter(StackFilter filter) {
         this.filter = filter;
-        totals.clear();
+        totals = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -36,21 +37,26 @@ public class SocketIOAccumulator implements SocketIOListener, StackStatisticSour
     }
 
     private SocketIODetailAdder getAccumulator(Stack key) {
-        final SocketIODetailAdder entry = totals.get(key);
+        final ConcurrentMap<Stack,SocketIODetailAdder> totalLocalCopy = this.totals;
+        final SocketIODetailAdder entry = totalLocalCopy.get(key);
         if(entry!=null) {
             return entry;
         }
-        totals.putIfAbsent(key, new SocketIODetailAdder());
-        return totals.get(key);
+        totalLocalCopy.putIfAbsent(key, new SocketIODetailAdder());
+        return totalLocalCopy.get(key);
     }
 
+    /** THREAD SAFETY: the object returned may be modified while you are using it.
+     *  callers should not keep this reference long,
+     *  and an entry may continue to be modified after fetched.
+     */
     @Override
     public Map<Stack,SocketIODetailAdder> getStats() {
-        return totals;
+        return Collections.unmodifiableMap(totals);
     }
 
     @Override
     public void reset() {
-        totals.clear();
+        totals = new ConcurrentHashMap<>();
     }
 }

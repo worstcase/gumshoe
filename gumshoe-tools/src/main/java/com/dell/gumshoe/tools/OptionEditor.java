@@ -4,9 +4,10 @@ import static com.dell.gumshoe.tools.Swing.columns;
 import static com.dell.gumshoe.tools.Swing.flow;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.stackNorth;
+import static com.dell.gumshoe.tools.Swing.stackSouth;
 import static com.dell.gumshoe.tools.Swing.stackWest;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.tools.graph.DisplayOptions;
 import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
@@ -28,7 +29,7 @@ import java.awt.event.ActionListener;
 
 public class OptionEditor extends JPanel {
     private static final String[] STATISTIC_TYPES = {
-        Probe.SOCKET_IO_LABEL, Probe.UNCLOSED_SOCKET_LABEL
+        ProbeManager.SOCKET_IO_LABEL, ProbeManager.UNCLOSED_SOCKET_LABEL, ProbeManager.CPU_USAGE_LABEL
     };
     private final JRadioButton byCaller = new JRadioButton("show callers (root graph)", true);
     private final JRadioButton byCalled = new JRadioButton("show called methods (flame graph)");
@@ -53,11 +54,11 @@ public class OptionEditor extends JPanel {
 
 
         statLimit.setColumns(3);
-        final JPanel bottomPanel = columns(
+        final JPanel displaySettingsPanel = columns(
                 stackWest(new JLabel("Drop frames less than"), statLimit, new JLabel("%")),
                 byValue);
 
-        final JPanel graphPanel = stackNorth(directionPanel, widthPanel, bottomPanel);
+        final JPanel graphPanel = stackNorth(directionPanel, widthPanel, displaySettingsPanel);
         graphPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Graph generation options", TitledBorder.LEFT, TitledBorder.TOP));
 
         /////
@@ -69,7 +70,7 @@ public class OptionEditor extends JPanel {
                 statCard.show(statOptions, label);
             }
         });
-        final JPanel statPanel = stackWest(new JLabel("For sample type "), statSelector, new JLabel(":"));
+        final JPanel statChooserPanel = stackWest(new JLabel("For sample type "), statSelector, new JLabel(":"));
         statOptions.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
 
         statOptions.setLayout(statCard);
@@ -77,13 +78,20 @@ public class OptionEditor extends JPanel {
             statOptions.add(DataTypeHelper.forType(typeName).getOptionEditor(), typeName);
         }
 
-        final JPanel typePanel = stackNorth(statPanel, statOptions);
-        typePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
+//        final JPanel typePanel = stackSouth(statChooserPanel);
+//        typePanel.add(statOptions, BorderLayout.CENTER);
+//        typePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
 
-        /////
+        final JPanel bottomPanel = stackSouth(flow(apply), graphPanel);
+        final JPanel statPanel = new JPanel();
+        statPanel.setLayout(new BorderLayout());
+        statPanel.add(statChooserPanel, BorderLayout.NORTH);
+        statPanel.add(statOptions, BorderLayout.CENTER);
+        statPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
 
         setLayout(new BorderLayout());
-        add(stackNorth(typePanel, graphPanel, flow(apply)), BorderLayout.NORTH);
+        add(bottomPanel, BorderLayout.SOUTH);
+        add(statPanel, BorderLayout.CENTER);
     }
 
     public void addActionListener(ActionListener listener) {

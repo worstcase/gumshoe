@@ -19,9 +19,9 @@ class Box {
         this.parentNode = parentNode;
     }
 
-    public void draw(Graphics g, int displayHeight, int dispalyWidth, int rows, long total, DisplayOptions o, StackTraceElement selected) {
+    public void draw(Graphics g, int displayHeight, int displayWidth, int rows, long total, DisplayOptions o, StackTraceElement selected) {
         final float rowHeight = displayHeight / (float)rows;
-        final float unitWidth = dispalyWidth / (float)total;
+        final float unitWidth = displayWidth / (float)total;
         final int boxX = (int) (position * unitWidth);
         final int boxWidth = (int) (boxNode.getValue() * unitWidth);
         final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
@@ -62,7 +62,12 @@ class Box {
     public String getLabelText() {
         final String[] parts = boxNode.getFrame().getClassName().split("\\.");
         final String className = parts[parts.length-1].replaceAll("\\$", ".");
-        return String.format("%s.%s:%d", className, boxNode.getFrame().getMethodName(), boxNode.getFrame().getLineNumber());
+        final int lineNumber = boxNode.getFrame().getLineNumber();
+        if(lineNumber>0) {
+            return String.format("%s.%s:%d", className, boxNode.getFrame().getMethodName(), lineNumber);
+        } else {
+            return String.format("%s.%s", className, boxNode.getFrame().getMethodName());
+        }
     }
 
     public String getToolTipText() {

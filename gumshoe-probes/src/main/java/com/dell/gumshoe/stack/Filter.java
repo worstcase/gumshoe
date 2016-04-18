@@ -7,8 +7,6 @@ import java.util.List;
  *
  */
 public class Filter implements StackFilter {
-    public static StackFilter NONE = Filter.builder().build();
-
     public static Builder builder() { return new Builder(); }
 
     private final boolean withOriginal;

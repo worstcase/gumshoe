@@ -2,13 +2,18 @@ package com.dell.gumshoe.socket.io;
 
 import com.dell.gumshoe.stats.StatisticAdder;
 
+import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class IODetailAdder implements StatisticAdder<IODetail> {
+    public static final MessageFormat FORMAT =
+            new MessageFormat("{0,number,#} read ops {1,number,#} bytes in {2,number,#} ms, {3,number,#} write ops {4,number,#} bytes in {5,number,#} ms: [{6}]");
+
     public final Set<String> addresses = new ConcurrentSkipListSet<>();
     public final AtomicLong readBytes = new AtomicLong();
     public final AtomicLong readTime = new AtomicLong();
@@ -21,8 +26,6 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
     public void add(StatisticAdder<IODetail>  that) {
         if(that instanceof IODetailAdder) {
             add((IODetailAdder)that);
-        } else {
-            add(that.get());
         }
     }
 
@@ -48,14 +51,34 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
     }
 
     @Override
-    public IODetail get() {
-        return new IODetail(addresses.toString(), readBytes.get(), readTime.get(), readCount.get(), writeBytes.get(), writeTime.get(), writeCount.get());
+    public String toString() {
+        final Object[] arg = {
+                readCount.get(), readBytes.get(), readTime.get(),
+                writeCount.get(), writeBytes.get(), writeTime.get(),
+                addresses.toString().replaceAll("[\\[\\]]", "")
+        };
+
+        synchronized(FORMAT) {
+            return FORMAT.format(arg);
+        }
     }
 
-    @Override
-    public String toString() {
-        return String.format("%d r %d bytes in %d ms, %d w %d bytes in %d ms",
-                readCount.get(), readBytes.get(), readTime.get(),
-                writeCount.get(), writeBytes.get(), writeTime.get());
+    protected void setFromString(String line) throws ParseException {
+        final Object[] fields;
+        synchronized(FORMAT) {
+            fields = FORMAT.parse(line);
+        }
+
+        this.readCount.set(((Number)fields[0]).intValue());
+        this.readBytes.set(((Number)fields[1]).longValue());
+        this.readTime.set(((Number)fields[2]).longValue());
+        this.writeCount.set(((Number)fields[3]).intValue());
+        this.writeBytes.set(((Number)fields[4]).longValue());
+        this.writeTime.set(((Number)fields[5]).longValue());
+
+        final String addressCSV = (String)fields[6];
+        this.addresses.clear();
+        this.addresses.addAll(Arrays.asList(addressCSV.replaceAll(" ", "").split(",")));
     }
+
 }

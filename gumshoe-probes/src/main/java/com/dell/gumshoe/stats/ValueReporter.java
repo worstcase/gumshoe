@@ -122,7 +122,7 @@ public class ValueReporter<A extends StatisticAdder> {
 
         private void addReport(StringBuilder out, Map<Stack,A> stats) {
             for(Map.Entry<Stack,A> entry : stats.entrySet()) {
-                out.append(entry.getValue().get().toString()).append("\n").append(entry.getKey());
+                out.append(entry.getValue().toString()).append("\n").append(entry.getKey());
             }
         }
 

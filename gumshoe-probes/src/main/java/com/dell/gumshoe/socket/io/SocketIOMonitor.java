@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** monitor socket IO and report each as an event to registered listeners
  */
-public class SocketIOMonitor extends IoTraceAdapter implements SocketIOMBean {
+public class SocketIOMonitor extends IoTraceAdapter {
 
     private BlockingQueue<Event> queue;
     private final List<SocketIOListener> listeners = new CopyOnWriteArrayList<>();

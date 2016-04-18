@@ -4,8 +4,6 @@ import com.dell.gumshoe.socket.io.SocketIOMonitor.Event;
 import com.dell.gumshoe.socket.io.SocketIOMonitor.RW;
 
 import java.net.InetAddress;
-import java.text.MessageFormat;
-import java.text.ParseException;
 
 /** thread-safety: toString and fromString are synchronized on FORMAT,
  *      contention not likely in current usage so this is chosen
@@ -13,9 +11,6 @@ import java.text.ParseException;
  *      consider change if use-case is different.
  */
 public class IODetail {
-    public static final MessageFormat FORMAT =
-            new MessageFormat("{0,number,#} read ops {1,number,#} bytes in {2,number,#} ms, {3,number,#} write ops {4,number,#} bytes in {5,number,#} ms: {6}");
-
     private static String convertAddress(InetAddress addr, int port) {
         final byte[] ip = addr.getAddress();
         return String.format("%d.%d.%d.%d:%d", 255&ip[0], 255&ip[1], 255&ip[2], 255&ip[3], port);
@@ -49,19 +44,7 @@ public class IODetail {
 
     @Override
     public String toString() {
-        synchronized(FORMAT) {
-            return FORMAT.format(new Object[] { readCount, readBytes, readTime, writeCount, writeBytes, writeTime, address });
-        }
+        return String.format("%s: %d r %d bytes in %d ms, %d w %d bytes in %d ms",
+            address, readCount, readBytes, readTime, writeCount, writeBytes, writeTime );
     }
-
-    public static IODetail fromString(String line) throws ParseException {
-        final Object[] args;
-        synchronized(IODetail.FORMAT) {
-            args = IODetail.FORMAT.parse(line);
-        }
-        final String addressField = (String)args[6];
-        final String addresses = addressField.replaceAll("[\\[\\]]", "");
-        return new IODetail(addresses, (Long)args[1], (Long)args[2], ((Number)args[0]).intValue(),(Long) args[4], (Long)args[5], ((Number)args[3]).intValue());
-    }
-
 }

@@ -93,17 +93,16 @@ public class StackFrameNode {
     }
 
     private long getValue(StatisticAdder details, DisplayOptions options) {
-        if( ! (details instanceof SocketIODetailAdder)) { return 5; }
         final DisplayOptions.WidthScale width = options.scale;
         switch(width) {
             case EQUAL:     return 5;
-            case VALUE:     return getStatValue((SocketIODetailAdder) details, options);
-            case LOG_VALUE:
-            default:        return (long)(100. * Math.log1p(getStatValue((SocketIODetailAdder) details, options)));
+            case VALUE:     return getStatValue(details, options);
+            case LOG_VALUE: return (long)(100. * Math.log1p(getStatValue(details, options)));
         }
+        throw new IllegalArgumentException("unknown width scale: " + width);
     }
 
-    private long getStatValue(SocketIODetailAdder details, DisplayOptions options) {
+    private long getStatValue(StatisticAdder details, DisplayOptions options) {
         return DataTypeHelper.getValue(details);
     }
 
