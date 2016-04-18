@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.BorderFactory;
@@ -48,7 +48,7 @@ public class Gumshoe extends JPanel {
 
         final boolean forceProbe = Boolean.getBoolean("gumshoe.probe.enabled");
         final boolean useProbe = forceProbe || hasMain;
-        final Probe probe = useProbe ? new Probe() : null;
+        final ProbeManager probe = useProbe ? new ProbeManager() : null;
         if(useProbe) { probe.initialize(); }
 
         final JFrame frame = new JFrame();
@@ -58,7 +58,7 @@ public class Gumshoe extends JPanel {
         }
 
         frame.getContentPane().add(new Gumshoe(probe));
-        frame.setSize(800,600);
+        frame.pack();
         frame.setVisible(true);
     }
 
@@ -81,7 +81,7 @@ public class Gumshoe extends JPanel {
         }
     }
 
-    private Gumshoe(Probe probe) {
+    private Gumshoe(ProbeManager probe) {
         final StackGraphPanel graph = new StackGraphPanel();
         final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(graph, probe);
 
@@ -96,7 +96,7 @@ public class Gumshoe extends JPanel {
 
         final FilterEditor filterEditor = new FilterEditor();
         filterEditor.setGraph(graph);
-        filterEditor.setProbe(probe);
+        filterEditor.setProbeManager(probe);
 
         final JTabbedPane settings = new JTabbedPane();
         settings.setBorder(BorderFactory.createEmptyBorder(10,5,5,5));

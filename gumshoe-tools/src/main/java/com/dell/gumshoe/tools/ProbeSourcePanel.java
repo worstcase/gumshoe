@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
@@ -34,9 +34,6 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     private String receiveTime;
     private final StatisticsSourcePanel parent;
 
-    private final JCheckBox acceptSocketIO = new JCheckBox("socket IO", true);
-    private final JCheckBox acceptSocketUnclosed = new JCheckBox("unclosed sockets");
-//    private final JCheckBox acceptFileIO = new JCheckBox("file IO");
     private final JRadioButton ignoreIncoming = new JRadioButton("ignore new samples");
     private final JRadioButton dropOldest = new JRadioButton("drop oldest sample", true);
     private final JCheckBox sendLive = new JCheckBox("Immediately show newest");
@@ -46,7 +43,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     private final DefaultListModel sampleModel = new DefaultListModel();
     private final JList sampleList = new JList(sampleModel);
 
-    public ProbeSourcePanel(StatisticsSourcePanel parent, Probe probe) {
+    public ProbeSourcePanel(StatisticsSourcePanel parent, ProbeManager probe) {
         this.parent = parent;
 
         sendNow.addActionListener(new ActionListener() {
@@ -74,9 +71,9 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
         final JPanel acceptPanel = new JPanel();
         acceptPanel.add(new JLabel("Accept:"));
-        acceptPanel.add(acceptSocketIO);
-        acceptPanel.add(acceptSocketUnclosed);
-//        acceptPanel.add(acceptFileIO);
+        for(String type : DataTypeHelper.getTypes()) {
+            acceptPanel.add(DataTypeHelper.forType(type).getSelectionComponent());
+        }
 
         final ButtonGroup fullGroup = new ButtonGroup();
         fullGroup.add(ignoreIncoming);
@@ -113,22 +110,27 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         add(sampleScroll, BorderLayout.CENTER);
 
         if(probe!=null) {
-            if(probe.getIOReporter()!=null) {
-                probe.getIOReporter().addListener(this);
-            }
-            if(probe.getUnclosedReporter()!=null) {
-                probe.getUnclosedReporter().addListener(this);
+            for(String helperType : DataTypeHelper.getTypes()) {
+                DataTypeHelper.forType(helperType).addListener(probe, this);
             }
         }
     }
 
-    private boolean canAccept(String type, Map<Stack,StatisticAdder> stats) {
+    private boolean canAccept(String sampleType, Map<Stack,StatisticAdder> stats) {
         if(stats.isEmpty()) { return false; }
 
-        if(Probe.SOCKET_IO_LABEL.equals(type) && ! acceptSocketIO.isSelected()) { return false; }
-        if(Probe.UNCLOSED_SOCKET_LABEL.equals(type) && ! acceptSocketUnclosed.isSelected()) { return false; }
+        // see if the box is checked to accept this sample type
+        for(String helperType : DataTypeHelper.getTypes()) {
+            if(helperType.equals(sampleType)) {
+                if(DataTypeHelper.forType(helperType).isSelected()) {
+                    break;
+                } else {
+                    return false;
+                }
+            }
+        }
 
-        // check if buffer full and if we can remove one
+        // see if buffer has room or we can remove one
         if(sampleModel.size()>=sampleCount) {
             if(ignoreIncoming.isSelected() && ! sendLive.isSelected()) { return false; }
             sampleModel.removeElementAt(0);

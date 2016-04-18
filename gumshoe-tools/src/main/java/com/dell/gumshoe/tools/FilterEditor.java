@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
@@ -50,7 +50,7 @@ public class FilterEditor extends JPanel {
     private final JButton probeButton = new JButton("Apply to probe");
     private final JButton generate = new JButton("Generate cmdline options");
 
-    private Probe probe;
+    private ProbeManager probe;
     private StackGraphPanel graph;
 
     public FilterEditor() {
@@ -134,7 +134,7 @@ public class FilterEditor extends JPanel {
         addNorth(this, zeroPanel, countPanel, acceptPanel, rejectPanel, jvmPanel, buttonPanel);
     }
 
-    public void setProbe(Probe probe) {
+    public void setProbeManager(ProbeManager probe) {
         this.probe = probe;
         if(probe!=null) {
             probeButton.setEnabled(true);

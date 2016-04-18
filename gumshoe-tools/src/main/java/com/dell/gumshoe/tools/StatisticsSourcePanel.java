@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
@@ -27,7 +27,7 @@ public class StatisticsSourcePanel extends JPanel {
     private final CardLayout sourceCardLayout = new CardLayout();
     private final JLabel status = new JLabel("No data currently displayed");
 
-    public StatisticsSourcePanel(StackGraphPanel target, Probe probe) {
+    public StatisticsSourcePanel(StackGraphPanel target, ProbeManager probe) {
         this.target = target;
         fileSource = new FileSourcePanel(this);
         probeSource = new ProbeSourcePanel(this, probe);

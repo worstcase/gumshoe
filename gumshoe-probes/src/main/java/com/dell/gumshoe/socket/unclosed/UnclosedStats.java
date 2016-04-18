@@ -1,11 +1,10 @@
 package com.dell.gumshoe.socket.unclosed;
 
-import com.dell.gumshoe.Probe;
+import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.socket.unclosed.SocketCloseMonitor.SocketImplDecorator;
 import com.dell.gumshoe.stats.StatisticAdder;
 
 import java.text.MessageFormat;
-import java.text.ParseException;
 
 /** thread-safety: toString and fromString are synchronized on FORMAT,
  *      contention not likely in current usage so this is chosen
@@ -30,7 +29,7 @@ public class UnclosedStats implements StatisticAdder<UnclosedStats> {
 
     @Override
     public void add(StatisticAdder<UnclosedStats> value) {
-        add(value.get());
+        add((UnclosedStats)value);
     }
 
     @Override
@@ -40,19 +39,15 @@ public class UnclosedStats implements StatisticAdder<UnclosedStats> {
     }
 
     @Override
-    public UnclosedStats get() {
-        return this;
-    }
-
-    @Override
     public StatisticAdder<UnclosedStats> newInstance() {
         return new UnclosedStats();
     }
 
     @Override
     public String toString() {
+        final Object[] arg = { count, maxAge };
         synchronized(FORMAT) {
-            return FORMAT.format(new Object[] { count, maxAge });
+            return FORMAT.format(arg);
         }
     }
 
@@ -73,6 +68,6 @@ public class UnclosedStats implements StatisticAdder<UnclosedStats> {
 
     @Override
     public String getType() {
-        return Probe.UNCLOSED_SOCKET_LABEL;
+        return ProbeManager.UNCLOSED_SOCKET_LABEL;
     }
 }

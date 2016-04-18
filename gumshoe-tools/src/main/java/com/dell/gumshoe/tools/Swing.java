@@ -28,6 +28,25 @@ public class Swing {
         return out;
     }
 
+    public static JPanel rows(JComponent... components) {
+        final JPanel out = new JPanel();
+        out.setLayout(new GridLayout(components.length, 1));
+        for(JComponent component : components) {
+            out.add(component);
+        }
+        return out;
+    }
+
+    /** add these components to a new panel, one in each column */
+    public static JPanel grid(int cols, JComponent... components) {
+        final JPanel out = new JPanel();
+        out.setLayout(new GridLayout(components.length/cols+1, cols));
+        for(JComponent component : components) {
+            out.add(component);
+        }
+        return out;
+    }
+
     /** add these components to a new panel, stacking along the left side */
     public static JPanel stackWest(JComponent... components) {
         return stack(BorderLayout.WEST, components);
@@ -36,6 +55,11 @@ public class Swing {
     /** add these components to a new panel, stacking along the top side */
     public static JPanel stackNorth(JComponent... components) {
         return stack(BorderLayout.NORTH, components);
+    }
+
+    /** add these components to a new panel, stacking along the top side */
+    public static JPanel stackSouth(JComponent... components) {
+        return stack(BorderLayout.SOUTH, components);
     }
 
     /** add these components to a new panel, stacking along the given side */

@@ -5,7 +5,6 @@ import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.tools.OptionEditor;
 import com.dell.gumshoe.tools.stats.DataTypeHelper;
-import com.dell.gumshoe.tools.stats.SocketIOHelper;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;

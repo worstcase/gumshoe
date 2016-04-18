@@ -3,7 +3,7 @@ package com.dell.gumshoe;
 import com.dell.gumshoe.socket.io.SocketIOMonitor;
 import com.dell.gumshoe.socket.unclosed.SocketCloseMonitor;
 import com.dell.gumshoe.socket.unclosed.SocketCloseMonitor.SocketImplDecorator;
-import com.dell.gumshoe.stack.Filter;
+import com.dell.gumshoe.stack.StackFilter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -25,7 +24,7 @@ public class TestSocketDiag extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        target = new SocketCloseMonitor(0, Filter.NONE);
+        target = new SocketCloseMonitor(0, StackFilter.NONE);
         Socket.setSocketImplFactory(target);
         final SocketIOMonitor ioMonitor = new SocketIOMonitor();
 //        ioMonitor.addListener(new SocketIOMonitor.PrintEvents());
