@@ -57,7 +57,7 @@ public class ValueReporter<A extends StatisticAdder> {
 
     public void scheduleReportTimer(Timer timer, long frequency) {
         if(timerTask!=null) {
-            throw new IllegalStateException("there is already a task running");
+            cancelReportTimer();
         }
         timerTask = new Task();
         timer.scheduleAtFixedRate(timerTask, frequency, frequency);
@@ -66,7 +66,7 @@ public class ValueReporter<A extends StatisticAdder> {
 
     public void cancelReportTimer() {
         if(timerTask==null) {
-            throw new IllegalStateException("no task is running");
+            return;
         }
         timerTask.cancel();
         timerTask = null;

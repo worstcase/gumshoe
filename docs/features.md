@@ -1,23 +1,25 @@
-Gumshoe Feature Roadmap
-=======================
+Gumshoe Features
+================
 
-Current version
----------------
+Measure CPU usage
+-----------------
 
-- Flame graph and root graph
-- Live capture and visualize or record to text file and view later 
-- Capture socket I/O information
-- Capture unclosed socket information
+Measure Socket I/O
+------------------
 
-Partial support
----------------
+Measure File I/O
+----------------
+ 
+Detect Unclosed Sockets
+-----------------------
 
-- The hook is also capable of capturing file usage,
-  but the probe and viewer do not make use of this.
+Flame Graph
+-----------
 
-Expected soon
--------------
+Root Graph
+----------
 
-- Capturing all threads at intervals instead of just those involved in socket I/O
-  would result in the familiar flame graphs or root graphs used for
-  processor utilization analysis.
+Live capture and view 
+---------------------
+
+

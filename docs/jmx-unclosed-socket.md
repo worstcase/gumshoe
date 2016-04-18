@@ -1,5 +1,5 @@
-Gumshoe MBean Management of Unclosed Socket Reporting
-=====================================================
+MBean Management of Unclosed Socket Reporting
+=============================================
 
 By default if unclosed socket reporting is enabled, an MBean will be also be installed.
 Properties used to initialize gumshoe can change this behavior and either force or disable

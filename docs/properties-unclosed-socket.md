@@ -1,5 +1,5 @@
-Gumshoe Properties for Unclosed Socket Reporting
-================================================
+Properties for Unclosed Socket Reporting
+========================================
 
 These properties are used by the Probe
 to install the hook, filter stacks, and forward information generated about unclosed sockets.
