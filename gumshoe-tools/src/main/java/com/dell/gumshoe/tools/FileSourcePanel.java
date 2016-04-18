@@ -29,7 +29,7 @@ public class FileSourcePanel extends JPanel {
 
     public FileSourcePanel(final StatisticsSourcePanel parent) {
         this.parent = parent;
-
+        fileChooser.setApproveButtonText("Parse");
         final JButton chooseButton = new JButton("File:");
         chooseButton.addActionListener(new ActionListener() {
             @Override
@@ -37,34 +37,14 @@ public class FileSourcePanel extends JPanel {
                 final int result = fileChooser.showOpenDialog(FileSourcePanel.this);
                 if(result==JFileChooser.APPROVE_OPTION) {
                     fileNameField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                    openFile();
                 }
             }
         });
         openButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(file!=null) {
-                    try { file.close(); }
-                    catch(Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    file = null;
-                }
-                try {
-                    final String fileName = fileNameField.getText();
-                    if("".equals(fileName.trim())) {
-                        parent.setStatus("No file selected");
-                    } else if( ! new File(fileName).canRead()) {
-                        parent.setStatus("Unable to read file");
-                    } else {
-                        file = new FileDataParser(fileName);
-                        openButton.setEnabled(false);
-                        parent.setStatus("Reading file: " + fileName);
-                        readSample(true);
-                    }
-                } catch(Exception ex) {
-                    ex.printStackTrace();
-                }
+                openFile();
             }
         });
         fileNameField.setColumns(30);
@@ -95,6 +75,31 @@ public class FileSourcePanel extends JPanel {
         setLayout(new BorderLayout());
         add(fileNamePanel, BorderLayout.NORTH);
         add(actionPanel, BorderLayout.CENTER);
+    }
+
+    private void openFile() {
+        if(file!=null) {
+            try { file.close(); }
+            catch(Exception ex) {
+                ex.printStackTrace();
+            }
+            file = null;
+        }
+        try {
+            final String fileName = fileNameField.getText();
+            if("".equals(fileName.trim())) {
+                parent.setStatus("No file selected");
+            } else if( ! new File(fileName).canRead()) {
+                parent.setStatus("Unable to read file");
+            } else {
+                file = new FileDataParser(fileName);
+                openButton.setEnabled(false);
+                parent.setStatus("Reading file: " + fileName);
+                readSample(true);
+            }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private class FileOpener extends SwingWorker<Map<Stack,StatisticAdder>,Object> {

@@ -1,5 +1,7 @@
 package com.dell.gumshoe.tools;
 
+import static com.dell.gumshoe.tools.Swing.flow;
+
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
@@ -15,6 +17,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -103,11 +106,12 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         optionPanel.add(acceptPanel);
         optionPanel.add(handleIncoming);
 
-        JScrollPane sampleScroll = new JScrollPane(sampleList);
+        JScrollPane sampleScroll = new JScrollPane(sampleList, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         setLayout(new BorderLayout());
         add(optionPanel, BorderLayout.NORTH);
         add(sampleScroll, BorderLayout.CENTER);
+        add(flow(sendNow), BorderLayout.SOUTH);
 
         if(probe!=null) {
             for(String helperType : DataTypeHelper.getTypes()) {

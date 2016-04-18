@@ -1,6 +1,5 @@
 package com.dell.gumshoe.tools.graph;
 
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.StatisticAdder;

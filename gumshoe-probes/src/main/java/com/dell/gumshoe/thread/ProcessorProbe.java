@@ -1,10 +1,6 @@
 package com.dell.gumshoe.thread;
 
 import com.dell.gumshoe.Probe;
-import com.dell.gumshoe.socket.SocketMatcher;
-import com.dell.gumshoe.socket.SocketMatcherSeries;
-import com.dell.gumshoe.socket.io.SocketIOMBean;
-import com.dell.gumshoe.socket.io.SocketIOMonitor;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.ValueReporter;
 
@@ -127,4 +123,8 @@ public class ProcessorProbe extends Probe implements CpuUsageMBean {
         monitor.reset();
     }
 
+    @Override
+    public long getAverageDumpTime() {
+        return monitor.getAverageDumpTime();
+    }
 }

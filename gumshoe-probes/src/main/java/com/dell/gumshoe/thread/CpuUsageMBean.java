@@ -1,6 +1,5 @@
 package com.dell.gumshoe.thread;
 
-import com.dell.gumshoe.stack.StackFilter;
 
 public interface CpuUsageMBean {
     public long getDumpInterval();
@@ -11,4 +10,5 @@ public interface CpuUsageMBean {
     public void setEnabled(boolean enabled);
     public boolean isEnabled();
     public void reset();
+    public long getAverageDumpTime();
 }

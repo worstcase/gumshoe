@@ -4,7 +4,6 @@ import static com.dell.gumshoe.tools.Swing.columns;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.socket.unclosed.UnclosedStats;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
