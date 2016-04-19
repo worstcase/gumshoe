@@ -1,23 +1,23 @@
-package com.dell.gumshoe.socket.io;
+package com.dell.gumshoe.file.io;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.io.IOEvent;
 import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.StatisticAdder;
 
-public class SocketIODetailAdder extends IODetailAdder {
+public class FileIODetailAdder extends IODetailAdder {
     @Override
     public String getType() {
-        return ProbeManager.SOCKET_IO_LABEL;
+        return ProbeManager.FILE_IO_LABEL;
     }
 
     @Override
     public StatisticAdder<IOEvent> newInstance() {
-        return new SocketIODetailAdder();
+        return new FileIODetailAdder();
     }
 
-    public static SocketIODetailAdder fromString(String line) {
-        final SocketIODetailAdder out = new SocketIODetailAdder();
+    public static FileIODetailAdder fromString(String line) {
+        final FileIODetailAdder out = new FileIODetailAdder();
         try {
             out.setFromString(line);
         } catch(Exception e) {
@@ -25,5 +25,4 @@ public class SocketIODetailAdder extends IODetailAdder {
         }
         return out;
     }
-
 }

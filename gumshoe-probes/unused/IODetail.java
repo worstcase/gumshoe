@@ -1,6 +1,7 @@
-package com.dell.gumshoe.socket.io;
+package com.dell.gumshoe.stats;
 
-import com.dell.gumshoe.socket.io.SocketIOMonitor.Event;
+import com.dell.gumshoe.io.IOEvent;
+import com.dell.gumshoe.socket.io.SocketIOMonitor;
 import com.dell.gumshoe.socket.io.SocketIOMonitor.RW;
 
 import java.net.InetAddress;
@@ -21,30 +22,22 @@ public class IODetail {
     final long readTime;
     final long writeBytes;
     final long writeTime;
-    final int readCount;
-    final int writeCount;
 
-    public IODetail(Event e) {
-        this(convertAddress(e.getAddress(), e.getPort()), e.getReadBytes(), e.getReadElapsed(), e.getRw()==RW.READ?1:0, e.getWriteBytes(), e.getWriteElapsed(), e.getRw()==RW.WRITE?1:0);
+    public IODetail(IOEvent e) {
+        this(convertAddress(e.getAddress(), e.getPort()), e.getReadBytes(), e.getReadElapsed(), e.getWriteBytes(), e.getWriteElapsed());
     }
 
     public IODetail(String address, long readBytes, long readTime, long writeBytes, long writeTime) {
-        this(address, readBytes, readTime, 1, writeBytes, writeTime, 1);
-    }
-
-    public IODetail(String address, long readBytes, long readTime, int readCount, long writeBytes, long writeTime, int writeCount) {
         this.address = address;
         this.readBytes = readBytes;
         this.readTime = readTime;
         this.writeBytes = writeBytes;
         this.writeTime = writeTime;
-        this.readCount = readCount;
-        this.writeCount = writeCount;
     }
 
     @Override
     public String toString() {
-        return String.format("%s: %d r %d bytes in %d ms, %d w %d bytes in %d ms",
-            address, readCount, readBytes, readTime, writeCount, writeBytes, writeTime );
+        return String.format("%s: r %d bytes in %d ms, w %d bytes in %d ms",
+            address, readBytes, readTime, writeBytes, writeTime );
     }
 }

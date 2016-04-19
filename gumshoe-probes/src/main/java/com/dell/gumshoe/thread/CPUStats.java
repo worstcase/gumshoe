@@ -55,10 +55,6 @@ public class CPUStats implements StatisticAdder<ThreadDetails> {
         waitedTime += value.waitedTime;
         userTime += value.userTime;
         cpuTime += value.cpuTime;
-
-        if(value.waitedCount>50) {
-            System.out.println();
-        }
     }
 
     @Override
@@ -70,9 +66,6 @@ public class CPUStats implements StatisticAdder<ThreadDetails> {
         waitedTime += Math.max(0L, value.getWaitedTime());
         userTime += value.getUserTime();
         cpuTime += Math.max(0L, value.getCpuTime());
-        if(value.getWaitedCount()>50) {
-            System.out.println();
-        }
     }
 
     @Override
@@ -134,18 +127,12 @@ public class CPUStats implements StatisticAdder<ThreadDetails> {
 
         public void increment(State key) {
             final int sum = get(key)+1;
-            if(sum>100) {
-                System.out.println();
-            }
             put(key, sum);
         }
 
         public void add(TallyMap that) {
             for(State key : State.values()) {
                 final int sum = get(key)+that.get(key);
-                if(sum>100) {
-                    System.out.println();
-                }
                 put(key, sum);
             }
         }

@@ -1,11 +1,9 @@
 package com.dell.gumshoe.thread;
 
 import com.dell.gumshoe.Probe;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.ValueReporter;
-import com.dell.gumshoe.stats.ValueReporter.StreamReporter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

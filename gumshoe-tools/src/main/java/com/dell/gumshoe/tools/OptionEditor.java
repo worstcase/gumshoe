@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.columns;
+import static com.dell.gumshoe.tools.Swing.*;
 import static com.dell.gumshoe.tools.Swing.flow;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.stackNorth;
@@ -28,9 +28,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class OptionEditor extends JPanel {
-    private static final String[] STATISTIC_TYPES = {
-        ProbeManager.SOCKET_IO_LABEL, ProbeManager.UNCLOSED_SOCKET_LABEL, ProbeManager.CPU_USAGE_LABEL
-    };
     private final JRadioButton byCaller = new JRadioButton("show callers (root graph)", true);
     private final JRadioButton byCalled = new JRadioButton("show called methods (flame graph)");
     private final JRadioButton valueWidth = new JRadioButton("statistic value", true);
@@ -39,18 +36,16 @@ public class OptionEditor extends JPanel {
     private final JCheckBox byValue = new JCheckBox("arrange by statistic value (left to right)");
     private final JTextField statLimit = new JTextField();
     private final JButton apply = new JButton("Apply");
-    private final JComboBox statSelector = new JComboBox(STATISTIC_TYPES);
+    private final JComboBox statSelector = new JComboBox(DataTypeHelper.getTypes().toArray());
     private final CardLayout statCard = new CardLayout();
     private final JPanel statOptions = new JPanel();
 
     public OptionEditor() {
         groupButtons(byCalled, byCaller);
         final JPanel directionPanel = columns(new JLabel("Direction: "), byCaller, byCalled, new JLabel(""));
-//        directionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Direction", TitledBorder.LEFT, TitledBorder.TOP));
 
         groupButtons(valueWidth, logWidth, equalWidth);
         final JPanel widthPanel = columns(new JLabel("Cell width: "), valueWidth, logWidth, equalWidth);
-//        widthPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Cell width", TitledBorder.LEFT, TitledBorder.TOP));
 
 
         statLimit.setColumns(3);
@@ -58,8 +53,8 @@ public class OptionEditor extends JPanel {
                 stackWest(new JLabel("Drop frames less than"), statLimit, new JLabel("%")),
                 byValue);
 
-        final JPanel graphPanel = stackNorth(directionPanel, widthPanel, displaySettingsPanel);
-        graphPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Graph generation options", TitledBorder.LEFT, TitledBorder.TOP));
+        final JPanel graphPanel = titled("Graph generation options",
+                stackNorth(directionPanel, widthPanel, displaySettingsPanel));
 
         /////
 
@@ -74,20 +69,16 @@ public class OptionEditor extends JPanel {
         statOptions.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
 
         statOptions.setLayout(statCard);
-        for(String typeName : STATISTIC_TYPES) {
+        for(String typeName : DataTypeHelper.getTypes()) {
             statOptions.add(DataTypeHelper.forType(typeName).getOptionEditor(), typeName);
         }
-
-//        final JPanel typePanel = stackSouth(statChooserPanel);
-//        typePanel.add(statOptions, BorderLayout.CENTER);
-//        typePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
 
         final JPanel bottomPanel = stackSouth(flow(apply), graphPanel);
         final JPanel statPanel = new JPanel();
         statPanel.setLayout(new BorderLayout());
         statPanel.add(statChooserPanel, BorderLayout.NORTH);
         statPanel.add(statOptions, BorderLayout.CENTER);
-        statPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Select statistic to display", TitledBorder.LEFT, TitledBorder.TOP));
+        titled("Select statistic to display", statPanel);
 
         setLayout(new BorderLayout());
         add(bottomPanel, BorderLayout.SOUTH);

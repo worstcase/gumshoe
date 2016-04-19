@@ -1,4 +1,4 @@
-package com.dell.gumshoe.socket.io;
+package com.dell.gumshoe.file.io;
 
 import com.dell.gumshoe.io.IOAccumulator;
 import com.dell.gumshoe.stack.StackFilter;
@@ -7,15 +7,15 @@ import com.dell.gumshoe.stack.StackFilter;
  *  with total IO at each frame and
  *  link from frame to multiple next frames below
  */
-public class SocketIOAccumulator extends IOAccumulator<SocketIODetailAdder> {
+public class FileIOAccumulator extends IOAccumulator<FileIODetailAdder> {
 
-    public SocketIOAccumulator(StackFilter filter) {
+    public FileIOAccumulator(StackFilter filter) {
         super(filter);
     }
 
     @Override
-    public SocketIODetailAdder newAdder() {
-        return new SocketIODetailAdder();
+    public FileIODetailAdder newAdder() {
+        return new FileIODetailAdder();
     }
 
 }

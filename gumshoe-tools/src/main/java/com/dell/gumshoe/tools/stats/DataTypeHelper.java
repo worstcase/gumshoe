@@ -48,9 +48,10 @@ public abstract class DataTypeHelper {
 
     private static Map<String,DataTypeHelper> getImpl() {
         if(impl.isEmpty()) {
-            impl.put(ProbeManager.SOCKET_IO_LABEL, new SocketIOHelper());
-            impl.put(ProbeManager.UNCLOSED_SOCKET_LABEL, new UnclosedSocketHelper());
             impl.put(ProbeManager.CPU_USAGE_LABEL, new CPUUsageHelper());
+            impl.put(ProbeManager.SOCKET_IO_LABEL, new SocketIOHelper());
+            impl.put(ProbeManager.FILE_IO_LABEL, new FileIOHelper());
+            impl.put(ProbeManager.UNCLOSED_SOCKET_LABEL, new UnclosedSocketHelper());
         }
         return impl;
     }

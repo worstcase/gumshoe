@@ -1,23 +1,33 @@
 package com.dell.gumshoe.socket;
 
-import com.dell.gumshoe.socket.io.IODetail;
+import com.dell.gumshoe.socket.io.SocketEvent;
 import com.dell.gumshoe.socket.io.SocketIODetailAdder;
+import com.dell.gumshoe.socket.io.SocketReadEvent;
+import com.dell.gumshoe.socket.io.SocketWriteEvent;
 import com.dell.gumshoe.stack.Stack;
 
+import java.net.InetAddress;
 import java.text.MessageFormat;
 import java.text.ParseException;
 
 import junit.framework.TestCase;
 
 public class TestParsing extends TestCase {
-    public void testDetailParse() throws ParseException {
+    public void testDetailParse() throws Exception {
+        SocketEvent event1 = SocketReadEvent.begin();
+        SocketEvent event2 = SocketWriteEvent.begin();
+        Thread.sleep(100);
+        event1.complete(InetAddress.getLocalHost(), 5678, 123123);
+        Thread.sleep(100);
+        event2.complete(InetAddress.getLocalHost(), 5678, 321321);
         SocketIODetailAdder orig = new SocketIODetailAdder();
-        orig.add(new IODetail("1.2.3.4/5678", 123123, 123, 321321, 321));
+        orig.add(event1);
+        orig.add(event2);
 
         String stringValue = orig.toString();
 
         SocketIODetailAdder copy = SocketIODetailAdder.fromString(stringValue);
-        assertEquals(copy.addresses, orig.addresses);
+        assertEquals(copy.targets, orig.targets);
         assertEquals(copy.readBytes.get(), orig.readBytes.get());
         assertEquals(copy.readCount.get(), orig.readCount.get());
         assertEquals(copy.readTime.get(), orig.readTime.get());

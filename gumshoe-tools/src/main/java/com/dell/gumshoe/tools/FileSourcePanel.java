@@ -16,6 +16,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import static com.dell.gumshoe.tools.Swing.*;
 
 public class FileSourcePanel extends JPanel {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
@@ -49,10 +50,7 @@ public class FileSourcePanel extends JPanel {
         });
         fileNameField.setColumns(30);
 
-        final JPanel fileNamePanel = new JPanel();
-        fileNamePanel.add(chooseButton);
-        fileNamePanel.add(fileNameField);
-        fileNamePanel.add(openButton);
+        final JPanel fileNamePanel = flow(chooseButton, fileNameField, openButton);
 
         final JButton back = new JButton("<< Previous");
         back.addActionListener(new ActionListener() {
@@ -69,9 +67,7 @@ public class FileSourcePanel extends JPanel {
             }
         });
 
-        final JPanel actionPanel = new JPanel();
-        actionPanel.add(back);
-        actionPanel.add(forward);
+        final JPanel actionPanel = flow(back, forward);
         setLayout(new BorderLayout());
         add(fileNamePanel, BorderLayout.NORTH);
         add(actionPanel, BorderLayout.CENTER);

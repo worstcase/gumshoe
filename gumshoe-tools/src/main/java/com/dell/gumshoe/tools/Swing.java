@@ -1,11 +1,15 @@
 package com.dell.gumshoe.tools;
 
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridLayout;
 
 /** utility methods to simplify layout and construction of swing GUI */
@@ -86,5 +90,20 @@ public class Swing {
             out.add(component);
         }
         return out;
+    }
+
+    public static JPanel titled(String title, JComponent content) {
+        final Border lineBorder = BorderFactory.createLineBorder(Color.black);
+        final TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, title, TitledBorder.LEFT, TitledBorder.TOP);
+        if(content instanceof JPanel) {
+            content.setBorder(titledBorder);
+            return (JPanel) content;
+        } else {
+            final JPanel out = new JPanel();
+            out.setBorder(titledBorder);
+            out.setLayout(new BorderLayout());
+            out.add(content, BorderLayout.CENTER);
+            return out;
+        }
     }
 }

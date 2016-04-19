@@ -131,24 +131,20 @@ public class StackGraphPanel extends JPanel {
 
     private void update() {
         if(model==null) {
-            System.out.println("updating model");
             model = new StackFrameNode(values, options, filter);
             modelRows = model.getDepth(options);
             modelValueTotal = model.getValue();
             boxes = null;
         }
         if(boxes==null) {
-            System.out.println("updating boxes");
             boxes = model.createBoxes(options);
             updateDetails();
         }
-        System.out.println("updating image");
         image = createImage();
     }
 
     @Override
     public void paintComponent(Graphics g) {
-        System.out.println("painting");
         final Dimension dim = getSize();
         if(options==null || values==null) {
             g.drawString("No data", 10, 10);
