@@ -1,4 +1,5 @@
 package com.dell.gumshoe.tools;
+import static com.dell.gumshoe.tools.Swing.*;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
@@ -47,13 +48,8 @@ public class StatisticsSourcePanel extends JPanel {
             }
         });
 
-        final ButtonGroup sourceGroup = new ButtonGroup();
-        sourceGroup.add(jvmButton);
-        sourceGroup.add(fileButton);
-        final JPanel sourcePanel = new JPanel();
-        sourcePanel.add(new JLabel("Source:"));
-        sourcePanel.add(jvmButton);
-        sourcePanel.add(fileButton);
+        groupButtons(jvmButton, fileButton);
+        final JPanel sourcePanel = flow(new JLabel("Source:"), jvmButton, fileButton);
 
         cardPanel.setLayout(sourceCardLayout);
         cardPanel.add(fileSource, "file");

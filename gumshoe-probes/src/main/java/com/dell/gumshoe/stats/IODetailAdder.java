@@ -1,6 +1,6 @@
-package com.dell.gumshoe.socket.io;
+package com.dell.gumshoe.stats;
 
-import com.dell.gumshoe.stats.StatisticAdder;
+import com.dell.gumshoe.io.IOEvent;
 
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -10,11 +10,11 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class IODetailAdder implements StatisticAdder<IODetail> {
+public abstract class IODetailAdder implements StatisticAdder<IOEvent> {
     public static final MessageFormat FORMAT =
             new MessageFormat("{0,number,#} read ops {1,number,#} bytes in {2,number,#} ms, {3,number,#} write ops {4,number,#} bytes in {5,number,#} ms: [{6}]");
 
-    public final Set<String> addresses = new ConcurrentSkipListSet<>();
+    public final Set<String> targets = new ConcurrentSkipListSet<>();
     public final AtomicLong readBytes = new AtomicLong();
     public final AtomicLong readTime = new AtomicLong();
     public final AtomicInteger readCount = new AtomicInteger();
@@ -23,14 +23,14 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
     public final AtomicInteger writeCount = new AtomicInteger();
 
     @Override
-    public void add(StatisticAdder<IODetail>  that) {
+    public void add(StatisticAdder<IOEvent> that) {
         if(that instanceof IODetailAdder) {
             add((IODetailAdder)that);
         }
     }
 
     public void add(IODetailAdder that) {
-        addresses.addAll(that.addresses);
+        targets.addAll(that.targets);
         readBytes.addAndGet(that.readBytes.get());
         readTime.addAndGet(that.readTime.get());
         readCount.addAndGet(that.readCount.get());
@@ -40,14 +40,17 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
 
     }
     @Override
-    public void add(IODetail value) {
-        addresses.add(value.address);
-        readBytes.addAndGet(value.readBytes);
-        readTime.addAndGet(value.readTime);
-        readCount.addAndGet(value.readCount);
-        writeBytes.addAndGet(value.writeBytes);
-        writeTime.addAndGet(value.writeTime);
-        writeCount.addAndGet(value.writeCount);
+    public void add(IOEvent event) {
+        targets.add(event.getTarget());
+        if(event.isRead()) {
+            readBytes.addAndGet(event.getBytes());
+            readTime.addAndGet(event.getElapsed());
+            readCount.incrementAndGet();
+        } else {
+            writeBytes.addAndGet(event.getBytes());
+            writeTime.addAndGet(event.getElapsed());
+            writeCount.incrementAndGet();
+        }
     }
 
     @Override
@@ -55,7 +58,7 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
         final Object[] arg = {
                 readCount.get(), readBytes.get(), readTime.get(),
                 writeCount.get(), writeBytes.get(), writeTime.get(),
-                addresses.toString().replaceAll("[\\[\\]]", "")
+                targets.toString().replaceAll("[\\[\\]]", "")
         };
 
         synchronized(FORMAT) {
@@ -77,8 +80,8 @@ public abstract class IODetailAdder implements StatisticAdder<IODetail> {
         this.writeTime.set(((Number)fields[5]).longValue());
 
         final String addressCSV = (String)fields[6];
-        this.addresses.clear();
-        this.addresses.addAll(Arrays.asList(addressCSV.replaceAll(" ", "").split(",")));
+        this.targets.clear();
+        this.targets.addAll(Arrays.asList(addressCSV.replaceAll(" ", "").split(",")));
     }
 
 }

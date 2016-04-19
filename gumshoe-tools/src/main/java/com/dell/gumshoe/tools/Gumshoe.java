@@ -17,6 +17,7 @@ import javax.swing.border.BevelBorder;
 import java.awt.BorderLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import static com.dell.gumshoe.tools.Swing.*;
 
 /** gumshoe main window and launcher
  *
@@ -91,12 +92,10 @@ public class Gumshoe extends JPanel {
         final JScrollPane scroll = new JScrollPane(detailField);
         detailPanel.add(scroll, BorderLayout.CENTER);
 
-        final JPanel statsPanel = new JPanel();
-        statsPanel.add(statsRelay);
+        final JPanel statsPanel = flow(statsRelay);
 
         final FilterEditor filterEditor = new FilterEditor();
         filterEditor.setGraph(graph);
-        filterEditor.setProbeManager(probe);
 
         final JTabbedPane settings = new JTabbedPane();
         settings.setBorder(BorderFactory.createEmptyBorder(10,5,5,5));

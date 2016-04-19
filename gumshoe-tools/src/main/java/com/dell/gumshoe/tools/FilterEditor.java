@@ -5,6 +5,7 @@ import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
+import static com.dell.gumshoe.tools.Swing.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -46,36 +47,19 @@ public class FilterEditor extends JPanel {
     private final JTextArea accept = new JTextArea();
     private final JTextArea reject = new JTextArea();
 
-    private final JButton localButton = new JButton("Apply to display");
-    private final JButton probeButton = new JButton("Apply to probe");
+    private final JButton localButton = new JButton("Apply");
     private final JButton generate = new JButton("Generate cmdline options");
 
-    private ProbeManager probe;
     private StackGraphPanel graph;
 
     public FilterEditor() {
-        ButtonGroup zeroGroup = new ButtonGroup();
-//        zeroGroup.add(dropZero);
-        zeroGroup.add(revertZero);
-        zeroGroup.add(bucketZero);
-
-        final JPanel zeroPanel = new JPanel();
-        zeroPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "When stack filter matches no frames:", TitledBorder.LEFT, TitledBorder.TOP));
-//        zeroPanel.add(dropZero);
-        zeroPanel.add(revertZero);
-        zeroPanel.add(bucketZero);
+        groupButtons(revertZero, bucketZero);
+        final JPanel zeroPanel = titled("When stack filter matches no frames:", flow(revertZero, bucketZero));
 
         topCount.setColumns(3);
         bottomCount.setColumns(3);
-        final JPanel countPanel = new JPanel();
-        countPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Retain only:", TitledBorder.LEFT, TitledBorder.TOP));
-        countPanel.add(topLabel1);
-        countPanel.add(topCount);
-        countPanel.add(topLabel2);
-        countPanel.add(bothLabel);
-        countPanel.add(bottomLabel1);
-        countPanel.add(bottomCount);
-        countPanel.add(bottomLabel2);
+        final JPanel countPanel = titled("Retain only:",
+                flow(topLabel1, topCount, topLabel2, bothLabel, bottomLabel1, bottomCount, bottomLabel2));
 
         // lighten/darken words to help make filter intent more clear
         topLabel1.setEnabled(false);
@@ -100,18 +84,10 @@ public class FilterEditor extends JPanel {
                 bothLabel.setEnabled(bottomPositive && isPositive(topCount));
             } });
 
-        final JPanel acceptPanel = new JPanel();
-        acceptPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Include classes:", TitledBorder.LEFT, TitledBorder.TOP));
-        acceptPanel.setLayout(new BorderLayout());
-        acceptPanel.add(accept, BorderLayout.CENTER);
+        final JPanel acceptPanel = titled("Include classes:", accept);
+        final JPanel rejectPanel = titled("Exclude classes:", reject);
 
-        final JPanel rejectPanel = new JPanel();
-        rejectPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Exclude classes:", TitledBorder.LEFT, TitledBorder.TOP));
-        rejectPanel.setLayout(new BorderLayout());
-        rejectPanel.add(reject, BorderLayout.CENTER);
-
-        final JPanel jvmPanel = new JPanel();
-        jvmPanel.add(dropJVM);
+        final JPanel jvmPanel = flow(dropJVM);
 
         localButton.addActionListener(new ActionListener() {
             @Override
@@ -119,26 +95,8 @@ public class FilterEditor extends JPanel {
                 updateGraph();
             }
         });
-        probeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateProbe();
-            }
-        });
-        probeButton.setEnabled(false);
-        final JPanel buttonPanel = new JPanel();
-        buttonPanel.add(localButton);
-        buttonPanel.add(probeButton);
-//        buttonPanel.add(generate);  TODO: popup window showing cmdline properties to make this filter the default
 
-        addNorth(this, zeroPanel, countPanel, acceptPanel, rejectPanel, jvmPanel, buttonPanel);
-    }
-
-    public void setProbeManager(ProbeManager probe) {
-        this.probe = probe;
-        if(probe!=null) {
-            probeButton.setEnabled(true);
-        }
+        stackNorth(this, zeroPanel, countPanel, acceptPanel, rejectPanel, jvmPanel, flow(localButton));
     }
 
     public void setGraph(StackGraphPanel graph) {
@@ -166,16 +124,6 @@ public class FilterEditor extends JPanel {
         } catch(Exception ignore) { }
         return 0;
     }
-    private void addNorth(Container container, JComponent... components) {
-        Container c = container;
-        for(JComponent component : components) {
-            c.setLayout(new BorderLayout());
-            c.add(component, BorderLayout.NORTH);
-            final JPanel innerContainer = new JPanel();
-            c.add(innerContainer, BorderLayout.CENTER);
-            c = innerContainer;
-        }
-    }
 
     public StackFilter getFilter() {
         final Builder builder = Filter.builder();
@@ -198,13 +146,6 @@ public class FilterEditor extends JPanel {
             }
         }
         return out;
-    }
-
-    private void updateProbe() {
-        if(probe!=null) {
-            final StackFilter filter = getFilter();
-            probe.getIOAccumulator().setFilter(filter);
-        }
     }
 
     private void updateGraph() {

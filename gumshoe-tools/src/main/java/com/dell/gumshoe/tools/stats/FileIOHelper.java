@@ -5,7 +5,7 @@ import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
+import com.dell.gumshoe.file.io.FileIODetailAdder;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.StatisticAdder;
@@ -25,7 +25,7 @@ import java.text.ParseException;
 import java.util.Map;
 import java.util.Set;
 
-public class SocketIOHelper extends DataTypeHelper {
+public class FileIOHelper extends DataTypeHelper {
     private final JRadioButton readStat = new JRadioButton("read", true);
     private final JRadioButton writeStat = new JRadioButton("write");
     private final JRadioButton bothStat = new JRadioButton("read+write");
@@ -33,13 +33,13 @@ public class SocketIOHelper extends DataTypeHelper {
     private final JRadioButton bytesUnit = new JRadioButton("bytes");
     private final JRadioButton timeUnit = new JRadioButton("time(ms)");
 
-    private final JCheckBox acceptSocketIO = new JCheckBox("socket IO", true);
+    private final JCheckBox acceptFileIO = new JCheckBox("file IO", true);
 
     @Override
-    public JComponent getSelectionComponent() { return acceptSocketIO; }
+    public JComponent getSelectionComponent() { return acceptFileIO; }
 
     @Override
-    public boolean isSelected() { return acceptSocketIO.isSelected(); }
+    public boolean isSelected() { return acceptFileIO.isSelected(); }
 
     @Override
     public String getToolTipText(StackFrameNode boxNode, StackFrameNode parentNode) {
@@ -47,7 +47,7 @@ public class SocketIOHelper extends DataTypeHelper {
         final IODetailAdder parentDetail = (IODetailAdder)parentNode.getDetail();
         return String.format("<html>\n"
                                 + "%s<br>\n"
-                                + "%d addresses<br>\n"
+                                + "%d files<br>\n"
                                 + "R %d ops%s %d bytes%s %d ms%s<br>\n"
                                 + "W %d ops%s %d bytes%s %d ms%s<br>\n"
                                 + "R+W %d ops%s %d bytes%s %d ms%s<br>\n"
@@ -79,7 +79,7 @@ public class SocketIOHelper extends DataTypeHelper {
         final Set<StackTraceElement> callingFrames = boxNode.getCallingFrames();
         final Set<StackTraceElement> calledFrames = boxNode.getCalledFrames();
         return String.format("Frame: %s\n\n"
-                                + "Network:\n%d addresses: %s\n\n"
+                                + "Network:\n%d files: %s\n\n"
                                 + "Traffic:\nRead: %d operations%s, %d bytes%s, %d ms %s\n"
                                 + "Write: %d operations%s, %d bytes%s, %d ms %s\n"
                                 + "Combined: %d operations%s, %d bytes%s, %d ms %s\n\n"
@@ -105,12 +105,12 @@ public class SocketIOHelper extends DataTypeHelper {
 
     @Override
     public StatisticAdder parse(String value) throws ParseException {
-        return SocketIODetailAdder.fromString(value);
+        return FileIODetailAdder.fromString(value);
     }
 
     @Override
     public String getSummary(Map<Stack, StatisticAdder> data) {
-        IODetailAdder tally = new SocketIODetailAdder();
+        IODetailAdder tally = new FileIODetailAdder();
         for(StatisticAdder item : data.values()) {
             tally.add((IODetailAdder)item);
         }
@@ -175,7 +175,7 @@ public class SocketIOHelper extends DataTypeHelper {
 
     @Override
     public void addListener(ProbeManager probe, Listener listener) {
-        final ValueReporter<IODetailAdder> reporter = probe.getSocketIOReporter();
+        final ValueReporter<IODetailAdder> reporter = probe.getFileIOReporter();
         if(reporter!=null) {
             reporter.addListener(listener);
         }

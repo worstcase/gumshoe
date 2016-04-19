@@ -1,11 +1,14 @@
 package com.dell.gumshoe;
 
 import com.dell.gumshoe.Probe.ProbeServices;
+import com.dell.gumshoe.file.io.FileIOProbe;
+import com.dell.gumshoe.io.IOAccumulator;
 import com.dell.gumshoe.socket.io.SocketIOAccumulator;
 import com.dell.gumshoe.socket.io.SocketIODetailAdder;
 import com.dell.gumshoe.socket.io.SocketIOProbe;
 import com.dell.gumshoe.socket.unclosed.UnclosedSocketProbe;
 import com.dell.gumshoe.socket.unclosed.UnclosedStats;
+import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.ValueReporter;
 import com.dell.gumshoe.thread.CPUStats;
 import com.dell.gumshoe.thread.ProcessorProbe;
@@ -32,6 +35,7 @@ import java.util.Properties;
  */
 public class ProbeManager {
     public static final String SOCKET_IO_LABEL = SocketIOProbe.LABEL;
+    public static final String FILE_IO_LABEL = FileIOProbe.LABEL;
     public static final String UNCLOSED_SOCKET_LABEL = UnclosedSocketProbe.LABEL;
     public static final String CPU_USAGE_LABEL = ProcessorProbe.LABEL;
 
@@ -57,6 +61,7 @@ public class ProbeManager {
 
     private ProbeServices sharedServices;
     private SocketIOProbe socketIOProbe;
+    private FileIOProbe fileIOProbe;
     private UnclosedSocketProbe unclosedSocketProbe;
     private ProcessorProbe cpuProbe;
 
@@ -108,11 +113,14 @@ public class ProbeManager {
     public void initialize(Properties p) throws Exception {
         sharedServices = new ProbeServices();
         sharedServices.installShutdownHook();
+
         socketIOProbe = new SocketIOProbe(sharedServices);
+        fileIOProbe = new FileIOProbe(sharedServices);
         unclosedSocketProbe = new UnclosedSocketProbe(sharedServices);
         cpuProbe = new ProcessorProbe(sharedServices);
 
         socketIOProbe.initialize(p);
+        fileIOProbe.initialize(p);
         unclosedSocketProbe.initialize(p);
         cpuProbe.initialize(p);
     }
@@ -125,12 +133,12 @@ public class ProbeManager {
         return unclosedSocketProbe.getReporter();
     }
 
-    public SocketIOAccumulator getIOAccumulator() {
-        return socketIOProbe.getAccumulator();
+    public ValueReporter<IODetailAdder> getSocketIOReporter() {
+        return socketIOProbe.getReporter();
     }
 
-    public ValueReporter<SocketIODetailAdder> getIOReporter() {
-        return socketIOProbe.getReporter();
+    public ValueReporter<IODetailAdder> getFileIOReporter() {
+        return fileIOProbe.getReporter();
     }
 
     public ValueReporter<CPUStats> getCPUReporter() {

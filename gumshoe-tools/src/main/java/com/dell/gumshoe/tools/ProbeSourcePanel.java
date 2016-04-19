@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.tools.Swing.*;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
@@ -78,17 +78,10 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
             acceptPanel.add(DataTypeHelper.forType(type).getSelectionComponent());
         }
 
-        final ButtonGroup fullGroup = new ButtonGroup();
-        fullGroup.add(ignoreIncoming);
-        fullGroup.add(dropOldest);
+        groupButtons(ignoreIncoming, dropOldest);
 
-        final JPanel handleIncoming = new JPanel();
-        handleIncoming.add(sendLive);
         final JLabel fullLabel = new JLabel("When buffer full:");
-        handleIncoming.add(fullLabel);
-        handleIncoming.add(ignoreIncoming);
-        handleIncoming.add(dropOldest);
-
+        final JPanel handleIncoming = flow(sendLive,  fullLabel, ignoreIncoming, dropOldest);
         sendLive.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -100,11 +93,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
             }
         });
 
-        final JPanel optionPanel = new JPanel();
-        optionPanel.setLayout(new GridLayout(3,1));
-        optionPanel.add(received);
-        optionPanel.add(acceptPanel);
-        optionPanel.add(handleIncoming);
+        final JPanel optionPanel = rows(received, acceptPanel, handleIncoming);
 
         JScrollPane sampleScroll = new JScrollPane(sampleList, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 

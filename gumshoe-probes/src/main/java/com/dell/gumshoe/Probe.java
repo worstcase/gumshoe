@@ -1,7 +1,5 @@
 package com.dell.gumshoe;
 
-import com.dell.gumshoe.socket.SocketMatcher;
-import com.dell.gumshoe.socket.SubnetAddress;
 import com.dell.gumshoe.stack.Filter;
 import com.dell.gumshoe.stack.Filter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
@@ -14,7 +12,6 @@ import javax.management.StandardMBean;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,20 +64,6 @@ public abstract class Probe {
             out[i] = out[i].trim();
         }
         return out;
-    }
-
-    protected static SocketMatcher[] parseSocketMatchers(String csv) throws ParseException {
-        if(csv==null || csv.trim().equals("")) {
-            return new SocketMatcher[0];
-        }
-
-        final String[] addressDescriptions = csv.split(",");
-        final int len = addressDescriptions.length;
-        final SocketMatcher[] matchers = new SocketMatcher[len];
-        for(int i=0;i<len;i++) {
-            matchers[i] = new SubnetAddress(addressDescriptions[i].trim());
-        }
-        return matchers;
     }
 
     protected static String getMBeanName(Properties p, String key, Class clazz) {
