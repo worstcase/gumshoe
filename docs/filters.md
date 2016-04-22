@@ -60,6 +60,26 @@ that carefully identify the points of entry and exit you are interested in.
 It will remove the middle business logic and leave just those points of entry and exit
 or a couple frames showing the main branches at the top or bottom.
 
+Simplification
+--------------
+
+Sometimes the full frame is not needed and can be simplified to drop line number, inner classes, etc.
+There are four levels of simplification that can be performed:
+    NO_LINE_NUMBERS     drop line numbers
+    NO_METHOD           drop line number and method name
+    NO_INNER_CLASSES    drop line number, method and inner classes
+    NO_CLASSES          keep only the package name
+    NONE                do not simplify frame
+
+Recursion
+---------
+
+Recursive code can lead to especially long stack traces that repeat the same frame or sequence of frames
+over and over.  The recursion filter will remove repeated sequences up to a configurable length.
+There may be a lot of overhead comparing frames for each stack generated, and the overhead is directly
+related to the length chosen.  Use the recursion filter sparingly and with as low a length value as
+reasonable.
+
 Empty Stacks
 ------------
 

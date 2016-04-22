@@ -129,16 +129,29 @@ public class StackGraphPanel extends JPanel {
         t.run();
     }
 
+    private void debugModel() {
+//        System.out.println(model);
+    }
+
+    private void debugBoxes() {
+//        System.out.println("boxes:");
+//        for(Box box : boxes) {
+//            System.out.println(box);
+//        }
+    }
+
     private void update() {
         if(model==null) {
             model = new StackFrameNode(values, options, filter);
             modelRows = model.getDepth(options);
-            modelValueTotal = model.getValue();
             boxes = null;
+            debugModel();
         }
         if(boxes==null) {
+            modelValueTotal = model.getValue();
             boxes = model.createBoxes(options);
             updateDetails();
+            debugBoxes();
         }
         image = createImage();
     }

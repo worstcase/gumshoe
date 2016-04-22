@@ -9,9 +9,9 @@ import com.dell.gumshoe.tools.graph.StackFrameNode;
 import javax.swing.JComponent;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 public abstract class DataTypeHelper {
     public abstract String getToolTipText(StackFrameNode boxNode, StackFrameNode parentNode);
@@ -44,12 +44,13 @@ public abstract class DataTypeHelper {
 
     /////
 
-    private static final Map<String,DataTypeHelper> impl = new TreeMap<>();
+    private static final Map<String,DataTypeHelper> impl = new LinkedHashMap<>();
 
     private static Map<String,DataTypeHelper> getImpl() {
         if(impl.isEmpty()) {
             impl.put(ProbeManager.CPU_USAGE_LABEL, new CPUUsageHelper());
             impl.put(ProbeManager.SOCKET_IO_LABEL, new SocketIOHelper());
+            impl.put(ProbeManager.DATAGRAM_IO_LABEL, new DatagramIOHelper());
             impl.put(ProbeManager.FILE_IO_LABEL, new FileIOHelper());
             impl.put(ProbeManager.UNCLOSED_SOCKET_LABEL, new UnclosedSocketHelper());
         }

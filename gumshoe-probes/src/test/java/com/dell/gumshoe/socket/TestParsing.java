@@ -1,9 +1,9 @@
 package com.dell.gumshoe.socket;
 
-import com.dell.gumshoe.socket.io.SocketEvent;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
-import com.dell.gumshoe.socket.io.SocketReadEvent;
-import com.dell.gumshoe.socket.io.SocketWriteEvent;
+import com.dell.gumshoe.network.SocketEvent;
+import com.dell.gumshoe.network.SocketIODetailAdder;
+import com.dell.gumshoe.network.SocketReadEvent;
+import com.dell.gumshoe.network.SocketWriteEvent;
 import com.dell.gumshoe.stack.Stack;
 
 import java.net.InetAddress;

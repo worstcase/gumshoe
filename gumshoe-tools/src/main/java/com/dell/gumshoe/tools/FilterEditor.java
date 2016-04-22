@@ -1,10 +1,12 @@
 package com.dell.gumshoe.tools;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.stack.Filter;
-import com.dell.gumshoe.stack.Filter.Builder;
+import com.dell.gumshoe.stack.FilterSequence;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stack.StandardFilter;
+import com.dell.gumshoe.stack.StandardFilter.Builder;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
+
 import static com.dell.gumshoe.tools.Swing.*;
 
 import javax.swing.BorderFactory;
@@ -126,7 +128,7 @@ public class FilterEditor extends JPanel {
     }
 
     public StackFilter getFilter() {
-        final Builder builder = Filter.builder();
+        final Builder builder = StandardFilter.builder();
         builder.withEndsOnly(getCount(topCount), getCount(bottomCount));
         if(dropJVM.isSelected()) { builder.withExcludePlatform(); }
         if(revertZero.isSelected()) { builder.withOriginalIfBlank(); }

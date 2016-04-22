@@ -32,16 +32,8 @@ Collection may be limited to certain file or directories:
                                 
 Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
                                 
-    gumshoe.file-io.filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
-    gumshoe.file-io.filter.include        Include only these packages or classes (comma-separated)
-    gumshoe.file-io.filter.exclude        Exclude these packages or classes 
-    gumshoe.file-io.filter.top            Number of frames at top of stack to retain
-    gumshoe.file-io.filter.bottom         Number of frames at bottom of stack to retain
-    gumshoe.file-io.filter.allow-empty-stack    If filters excluded all frames from a stack,
-                                                  the full unfiltered stack can be restored (if false),
-                                                  or the empty stack will be used and collect stats
-                                                  as an "other" category.
-    gumshoe.file-io.filter.none           If true, override other filter settings: no filtering is done. 
+    gumshoe.file-io.filter...    See common filter properties [here](filter-properties.md) 
+
 
 Collected data samples are written to:
 

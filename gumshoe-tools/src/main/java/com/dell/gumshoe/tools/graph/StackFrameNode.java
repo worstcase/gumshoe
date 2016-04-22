@@ -145,7 +145,6 @@ public class StackFrameNode {
                 final long parentPosition = parentEntry.getValue();
                 final StackFrameNode parent = parentEntry.getKey();
                 final List<StackTraceElement> keys = getDivisions(parent, options.order);
-
                 // first division left-aligned to parent position
                 long position = parentPosition;
                 for(StackTraceElement key : keys) {
@@ -154,6 +153,9 @@ public class StackFrameNode {
                         out.add(new Box(row, position, divModel, parent));
                         thisRowModels.put(divModel, position);
                         position += divModel.value;
+                    }
+                    if(divModel.value==0) {
+                        int x = 2+2;
                     }
                 }
             }
@@ -174,6 +176,8 @@ public class StackFrameNode {
     private void addNode(StringBuilder builder, String indent) {
         for(Map.Entry<StackTraceElement,StackFrameNode> entry : divisions.entrySet()) {
             builder.append(indent)
+                   .append(entry.getValue().value)
+                   .append(" ")
                    .append(entry.getKey())
                    .append(" ")
                    .append(entry.getValue().detail)

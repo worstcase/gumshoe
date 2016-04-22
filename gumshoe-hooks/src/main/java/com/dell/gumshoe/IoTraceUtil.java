@@ -22,6 +22,7 @@ public class IoTraceUtil {
         } else {
             final IoTraceMultiplexer multi = new IoTraceMultiplexer();
             multi.addDelegate((IoTraceDelegate)oldValue);
+            multi.addDelegate(delegate);
             delegateField.set(IoTrace.class, multi);
         }
     }
@@ -42,5 +43,11 @@ public class IoTraceUtil {
         } else {
             throw new IllegalArgumentException("unable to remove, that IoTraceDelegate was not installed: " + delegate);
         }
+    }
+
+    public static IoTraceDelegate getTrace() throws Exception {
+        final Field delegateField = IoTrace.class.getDeclaredField("delegate");
+        delegateField.setAccessible(true);
+        return (IoTraceDelegate) delegateField.get(IoTrace.class);
     }
 }

@@ -1,15 +1,18 @@
 Gumshoe Features
 ================
 
-Measure CPU usage
+Measure CPU Usage
 -----------------
 
-Measure Socket I/O
-------------------
+Measure TCP Socket I/O
+----------------------
 
 Measure File I/O
 ----------------
  
+Measure UDP Datagram I/O
+------------------------
+
 Detect Unclosed Sockets
 -----------------------
 
@@ -21,5 +24,3 @@ Root Graph
 
 Live capture and view 
 ---------------------
-
-

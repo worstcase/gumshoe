@@ -1,7 +1,5 @@
 package com.dell.gumshoe.file;
 
-import com.dell.gumshoe.file.io.FileMatcher;
-
 import java.util.regex.Pattern;
 
 /** match file using wildcard patterns
