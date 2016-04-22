@@ -1,13 +1,14 @@
 package com.dell.gumshoe;
 
 import com.dell.gumshoe.Probe.ProbeServices;
-import com.dell.gumshoe.file.io.FileIOProbe;
+import com.dell.gumshoe.file.FileIOProbe;
 import com.dell.gumshoe.io.IOAccumulator;
-import com.dell.gumshoe.socket.io.SocketIOAccumulator;
-import com.dell.gumshoe.socket.io.SocketIODetailAdder;
-import com.dell.gumshoe.socket.io.SocketIOProbe;
-import com.dell.gumshoe.socket.unclosed.UnclosedSocketProbe;
-import com.dell.gumshoe.socket.unclosed.UnclosedStats;
+import com.dell.gumshoe.network.DatagramIOProbe;
+import com.dell.gumshoe.network.SocketIOAccumulator;
+import com.dell.gumshoe.network.SocketIODetailAdder;
+import com.dell.gumshoe.network.SocketIOProbe;
+import com.dell.gumshoe.network.UnclosedSocketProbe;
+import com.dell.gumshoe.network.UnclosedStats;
 import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.ValueReporter;
 import com.dell.gumshoe.thread.CPUStats;
@@ -38,6 +39,7 @@ public class ProbeManager {
     public static final String FILE_IO_LABEL = FileIOProbe.LABEL;
     public static final String UNCLOSED_SOCKET_LABEL = UnclosedSocketProbe.LABEL;
     public static final String CPU_USAGE_LABEL = ProcessorProbe.LABEL;
+    public static final String DATAGRAM_IO_LABEL = DatagramIOProbe.LABEL;
 
     public static ProbeManager MAIN_INSTANCE;
 
@@ -61,6 +63,7 @@ public class ProbeManager {
 
     private ProbeServices sharedServices;
     private SocketIOProbe socketIOProbe;
+    private DatagramIOProbe datagramIOProbe;
     private FileIOProbe fileIOProbe;
     private UnclosedSocketProbe unclosedSocketProbe;
     private ProcessorProbe cpuProbe;
@@ -115,17 +118,17 @@ public class ProbeManager {
         sharedServices.installShutdownHook();
 
         socketIOProbe = new SocketIOProbe(sharedServices);
+        datagramIOProbe = new DatagramIOProbe(sharedServices);
         fileIOProbe = new FileIOProbe(sharedServices);
         unclosedSocketProbe = new UnclosedSocketProbe(sharedServices);
         cpuProbe = new ProcessorProbe(sharedServices);
 
         socketIOProbe.initialize(p);
+        datagramIOProbe.initialize(p);
         fileIOProbe.initialize(p);
         unclosedSocketProbe.initialize(p);
         cpuProbe.initialize(p);
     }
-
-    public void destroy() { }
 
     /////
 
@@ -135,6 +138,10 @@ public class ProbeManager {
 
     public ValueReporter<IODetailAdder> getSocketIOReporter() {
         return socketIOProbe.getReporter();
+    }
+
+    public ValueReporter<IODetailAdder> getDatagramIOReporter() {
+        return datagramIOProbe.getReporter();
     }
 
     public ValueReporter<IODetailAdder> getFileIOReporter() {

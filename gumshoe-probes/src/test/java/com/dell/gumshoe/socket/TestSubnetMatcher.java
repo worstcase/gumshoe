@@ -1,5 +1,7 @@
 package com.dell.gumshoe.socket;
 
+import com.dell.gumshoe.network.SubnetAddress;
+
 import java.text.ParseException;
 
 import junit.framework.TestCase;

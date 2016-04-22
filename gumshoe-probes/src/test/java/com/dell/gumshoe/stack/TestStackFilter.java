@@ -1,9 +1,13 @@
 package com.dell.gumshoe.stack;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import junit.framework.TestCase;
 
 public class TestStackFilter extends TestCase {
-    private StackFilter EXCLUDE_BUILTIN = Filter.builder().withExcludePlatform().build();
+    private StackFilter EXCLUDE_BUILTIN = StandardFilter.builder().withExcludePlatform().build();
 
     public String testCase1 = "com.dell.gumshoe.socket.Stack.<init>(Stack.java:11)\n" +
             "com.dell.gumshoe.socket.SocketIOMonitor$Event.<init>(SocketIOMonitor.java:91)\n" +
@@ -69,6 +73,26 @@ public class TestStackFilter extends TestCase {
             "java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)\n" +
             "java.lang.Thread.run(Thread.java:745)";
 
+    public String testCase3 =
+            "A.SocketIOMonitor$Event.<init>(SocketIOMonitor.java:91)\n" +
+            "B.SocketIOMonitor.socketWriteBegin(SocketIOMonitor.java:64)\n" +
+            "C.IoTrace.socketWriteBegin(IoTrace.java:56)\n" +
+            "C.IoTrace.socketWriteBegin(IoTrace.java:56)\n" +
+            "C.IoTrace.socketWriteBegin(IoTrace.java:56)\n" +
+            "C.IoTrace.socketWriteBegin(IoTrace.java:56)\n" +
+            "D.SocketOutputStream.socketWrite(SocketOutputStream.java:109)\n" +
+            "E.SocketOutputStream.write(SocketOutputStream.java:159)\n" +
+            "F.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:82)\n" +
+            "G.BufferedOutputStream.flush(BufferedOutputStream.java:140)\n" +
+            "H.MysqlIO.send(MysqlIO.java:3832)\n" +
+            "G.BufferedOutputStream.flush(BufferedOutputStream.java:140)\n" +
+            "H.MysqlIO.send(MysqlIO.java:3832)\n" +
+            "I.MysqlIO.quit(MysqlIO.java:2196)\n" +
+            "E.SocketOutputStream.write(SocketOutputStream.java:159)\n" +
+            "G.BufferedOutputStream.flush(BufferedOutputStream.java:140)\n" +
+            "H.MysqlIO.send(MysqlIO.java:3832)\n" +
+            "J.ConnectionImpl.realClose(ConnectionImpl.java:4446)\n" +
+            "K.TimerThread.run(Timer.java:505)";
 
     private Stack parse(String value) {
         String[] lines = value.split("\n");
@@ -123,15 +147,24 @@ public class TestStackFilter extends TestCase {
     public void testTopBottom() {
         Stack stack = parse(testCase1);
 
-        StackFilter platform = Filter.builder().withExcludePlatform().build();
-        StackFilter filter00 = Filter.builder().withExcludePlatform().withEndsOnly(0, 0).build();
-        StackFilter filter02 = Filter.builder().withExcludePlatform().withEndsOnly(0, 2).build();
-        StackFilter filter40 = Filter.builder().withExcludePlatform().withEndsOnly(4, 0).build();
-        StackFilter filter21 = Filter.builder().withExcludePlatform().withEndsOnly(2, 1).build();
+        StackFilter platform = StandardFilter.builder().withExcludePlatform().build();
+        StackFilter filter00 = StandardFilter.builder().withExcludePlatform().withEndsOnly(0, 0).build();
+        StackFilter filter02 = StandardFilter.builder().withExcludePlatform().withEndsOnly(0, 2).build();
+        StackFilter filter40 = StandardFilter.builder().withExcludePlatform().withEndsOnly(4, 0).build();
+        StackFilter filter21 = StandardFilter.builder().withExcludePlatform().withEndsOnly(2, 1).build();
 
         assertEquals(stack.applyFilter(platform).getFrames().length, stack.applyFilter(filter00).getFrames().length);
         assertEquals(2, stack.applyFilter(filter02).getFrames().length);
         assertEquals(3, stack.applyFilter(filter21).getFrames().length);
         assertEquals(4, stack.applyFilter(filter40).getFrames().length);
+    }
+
+    public void testRecursion() {
+        Stack stack = parse(testCase3);
+        RecursionFilter filter = new RecursionFilter();
+        StackTraceElement[] frames = stack.applyFilter(filter).getFrames();
+        assertEquals(14, frames.length);
+        Set<StackTraceElement> unique = new HashSet<>(Arrays.asList(frames));
+        assertEquals(11, unique.size());
     }
 }

@@ -10,7 +10,7 @@ Data can be logged to a file or viewed live.
 [Features](features.md)
 -----------------------
 
-- socket I/O analysis
+- Network I/O analysis (TCP and UDP)
 - CPU utilization analysis
 - unclosed socket detection  
 - file I/O analysis
@@ -34,3 +34,17 @@ Collecting Samples
 
 Viewing Samples
 ---------------
+
+- Running gumshoe GUI from your JVM
+- Running standalone GUI
+- Selecting a data sample
+- Navigating the graph
+- Graph display options
+- Configuring filters
+
+Understanding Performance
+-------------------------
+
+- Identifying bottlenecks
+- Stacks vs Statistics
+- Scalability

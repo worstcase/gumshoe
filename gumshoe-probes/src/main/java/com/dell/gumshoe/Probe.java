@@ -1,8 +1,10 @@
 package com.dell.gumshoe;
 
-import com.dell.gumshoe.stack.Filter;
-import com.dell.gumshoe.stack.Filter.Builder;
+import com.dell.gumshoe.stack.FilterSequence;
+import com.dell.gumshoe.stack.MinutiaFilter;
+import com.dell.gumshoe.stack.StandardFilter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.stack.StandardFilter;
 import com.dell.gumshoe.stats.ValueReporter;
 import com.dell.gumshoe.util.DefineLaterPrintStream;
 
@@ -123,7 +125,7 @@ public abstract class Probe {
     protected static StackFilter createStackFilter(String prefix, Properties p) {
         if(isTrue(p, prefix + "none", false)) { return StackFilter.NONE; }
 
-        final Builder builder = Filter.builder();
+        final Builder builder = StandardFilter.builder();
         if( ! isTrue(p, prefix + "allow-empty-stack", true)) { builder.withOriginalIfBlank(); }
         if(isTrue(p, prefix + "exclude-jdk", true)) { builder.withExcludePlatform(); }
         for(String matching : getList(p, prefix + "include")) {
@@ -136,6 +138,17 @@ public abstract class Probe {
         final int bottomCount = (int)getNumber(p, prefix + "bottom", 0);
         if(topCount>0 || bottomCount>0) {
             builder.withEndsOnly(topCount, bottomCount);
+        }
+
+        final Long recursionThreshold = getNumber(p, prefix + "recursion.threshold");
+        if(recursionThreshold!=null) {
+            final int recursionLevel = (int)getNumber(p, prefix + "recursion.depth", 1);
+            builder.withRecursionFilter(recursionLevel, recursionThreshold.intValue());
+        }
+
+        final String simplifyLevel = p.getProperty(prefix + "simplify");
+        if(simplifyLevel!=null) {
+            builder.withSimpleFrames(simplifyLevel);
         }
         return builder.build();
     }

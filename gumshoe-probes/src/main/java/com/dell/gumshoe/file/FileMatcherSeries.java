@@ -1,7 +1,5 @@
 package com.dell.gumshoe.file;
 
-import com.dell.gumshoe.file.io.FileMatcher;
-
 import java.util.List;
 import java.util.ArrayList;
 

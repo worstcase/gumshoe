@@ -33,16 +33,7 @@ Collection may be limited to certain networks, systems or ports:
          
 Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
                                 
-    gumshoe.socket-io.filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
-    gumshoe.socket-io.filter.include        Include only these packages or classes (comma-separated)
-    gumshoe.socket-io.filter.exclude        Exclude these packages or classes 
-    gumshoe.socket-io.filter.top            Number of frames at top of stack to retain
-    gumshoe.socket-io.filter.bottom         Number of frames at bottom of stack to retain
-    gumshoe.socket-io.filter.allow-empty-stack    If filters excluded all frames from a stack,
-                                                  the full unfiltered stack can be restored (if false),
-                                                  or the empty stack will be used and collect stats
-                                                  as an "other" category.
-    gumshoe.socket-io.filter.none           If true, override other filter settings: no filtering is done. 
+    gumshoe.socket-io.filter...    See common filter properties [here](filter-properties.md) 
 
 Collected data samples are written to:
 

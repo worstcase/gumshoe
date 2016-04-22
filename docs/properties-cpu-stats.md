@@ -25,16 +25,7 @@ Initialization can use system properties by calling Probe.initialize() or with a
 
 Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
                                 
-    gumshoe.cpu-usage.filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
-    gumshoe.cpu-usage.filter.include        Include only these packages or classes (comma-separated)
-    gumshoe.cpu-usage.filter.exclude        Exclude these packages or classes 
-    gumshoe.cpu-usage.filter.top            Number of frames at top of stack to retain
-    gumshoe.cpu-usage.filter.bottom         Number of frames at bottom of stack to retain
-    gumshoe.cpu-usage.filter.allow-empty-stack    If filters excluded all frames from a stack,
-                                                  the full unfiltered stack can be restored (if false),
-                                                  or the empty stack will be used and collect stats
-                                                  as an "other" category.
-    gumshoe.cpu-usage.filter.none           If true, override other filter settings: no filtering is done. 
+    gumshoe.cpu-usage.filter...    See common filter properties [here](filter-properties.md) 
 
 Collected data samples are written to:
 

@@ -1,8 +1,8 @@
 package com.dell.gumshoe.io;
 
 import com.dell.gumshoe.Probe;
-import com.dell.gumshoe.file.io.FileIOAccumulator;
-import com.dell.gumshoe.socket.io.SocketIOAccumulator;
+import com.dell.gumshoe.file.FileIOAccumulator;
+import com.dell.gumshoe.network.SocketIOAccumulator;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.IODetailAdder;
@@ -20,6 +20,7 @@ public abstract class IOProbe extends Probe implements IOMBean {
 
     public abstract String getLabel();
     protected abstract IOMonitor createMonitor(Properties p) throws Exception;
+    protected abstract IOAccumulator createAccumulator(StackFilter stackFilter);
 
     public IOProbe(ProbeServices services) {
         super(services);
@@ -65,7 +66,7 @@ public abstract class IOProbe extends Probe implements IOMBean {
         if(this.monitor!=null) throw new IllegalStateException("probe is already installed");
         monitor = m;
 
-        accumulator = new FileIOAccumulator(stackFilter);
+        accumulator = createAccumulator(stackFilter);
         monitor.addListener(accumulator);
         reporter = new ValueReporter(getLabel(), accumulator);
         if(shutdownReportEnabled) {

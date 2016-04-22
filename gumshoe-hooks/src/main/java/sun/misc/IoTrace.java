@@ -7,8 +7,8 @@ import java.net.InetAddress;
 
 /** redefine template from rt.jar
  *
- *  do as little work as possible here in this hack -- define a proper interface and way to set it,
- *  then do any real work in the normal package structure
+ *  do as little work as possible here -- define a proper interface and way to set it,
+ *  then do any real work outside of hacking sun.misc package
  */
 public final class IoTrace {
     private static IoTraceDelegate NULL_OBJECT = new IoTraceAdapter();
@@ -20,7 +20,6 @@ public final class IoTrace {
      * @return a context object
      */
     public static Object socketReadBegin() {
-
         return delegate.socketReadBegin();
     }
 
