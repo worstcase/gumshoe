@@ -161,7 +161,7 @@ public class TestStackFilter extends TestCase {
 
     public void testRecursion() {
         Stack stack = parse(testCase3);
-        RecursionFilter filter = new RecursionFilter();
+        RecursionFilter filter = new RecursionFilter(5, 1);
         StackTraceElement[] frames = stack.applyFilter(filter).getFrames();
         assertEquals(14, frames.length);
         Set<StackTraceElement> unique = new HashSet<>(Arrays.asList(frames));
