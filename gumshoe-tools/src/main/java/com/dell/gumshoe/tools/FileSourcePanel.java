@@ -1,5 +1,7 @@
 package com.dell.gumshoe.tools;
 
+import static com.dell.gumshoe.tools.Swing.flow;
+
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
@@ -16,7 +18,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
-import static com.dell.gumshoe.tools.Swing.*;
 
 public class FileSourcePanel extends JPanel {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");

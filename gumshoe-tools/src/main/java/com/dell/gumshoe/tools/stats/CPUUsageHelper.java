@@ -3,6 +3,7 @@ package com.dell.gumshoe.tools.stats;
 import static com.dell.gumshoe.tools.Swing.grid;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.rows;
+import static com.dell.gumshoe.tools.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
@@ -149,7 +150,9 @@ public class CPUUsageHelper extends DataTypeHelper {
         out.setLayout(new BorderLayout());
         out.add(labels, BorderLayout.WEST);
         out.add(grid, BorderLayout.CENTER);
-        return out;
+
+        final JPanel squishNorth = stackNorth(out);
+        return squishNorth;
     }
 
     @Override

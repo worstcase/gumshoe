@@ -1,13 +1,13 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.*;
+import static com.dell.gumshoe.tools.Swing.columns;
 import static com.dell.gumshoe.tools.Swing.flow;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.stackNorth;
 import static com.dell.gumshoe.tools.Swing.stackSouth;
 import static com.dell.gumshoe.tools.Swing.stackWest;
+import static com.dell.gumshoe.tools.Swing.titled;
 
-import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.tools.graph.DisplayOptions;
 import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
@@ -19,11 +19,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 

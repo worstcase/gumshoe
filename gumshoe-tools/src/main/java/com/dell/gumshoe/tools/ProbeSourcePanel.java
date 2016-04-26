@@ -1,6 +1,8 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.*;
+import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
@@ -8,7 +10,6 @@ import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
 import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -20,7 +21,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;

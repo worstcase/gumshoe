@@ -2,6 +2,7 @@ package com.dell.gumshoe.tools.stats;
 
 import static com.dell.gumshoe.tools.Swing.columns;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.network.UnclosedStats;
@@ -80,7 +81,7 @@ public class UnclosedSocketHelper extends DataTypeHelper {
     @Override
     public JComponent getOptionEditor() {
         groupButtons(countStat, ageStat);
-        return columns(new JLabel("Value: "), countStat, ageStat);
+        return stackNorth(columns(new JLabel("Value: "), countStat, ageStat));
     }
 
     @Override

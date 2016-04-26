@@ -1,5 +1,7 @@
 package com.dell.gumshoe.tools;
 
+import static com.dell.gumshoe.tools.Swing.flow;
+
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
@@ -17,7 +19,6 @@ import javax.swing.border.BevelBorder;
 import java.awt.BorderLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import static com.dell.gumshoe.tools.Swing.*;
 
 /** gumshoe main window and launcher
  *

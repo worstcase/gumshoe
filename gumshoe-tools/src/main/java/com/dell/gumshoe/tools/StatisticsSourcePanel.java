@@ -1,12 +1,12 @@
 package com.dell.gumshoe.tools;
-import static com.dell.gumshoe.tools.Swing.*;
+import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
