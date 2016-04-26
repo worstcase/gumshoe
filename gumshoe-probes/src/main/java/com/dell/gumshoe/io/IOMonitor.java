@@ -3,28 +3,37 @@ package com.dell.gumshoe.io;
 import com.dell.gumshoe.IoTraceAdapter;
 import com.dell.gumshoe.IoTraceUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** monitor socket IO and report each as an event to registered listeners
  */
 public class IOMonitor extends IoTraceAdapter {
 
+    private boolean enabled = true;
+
     private BlockingQueue<IOEvent> queue;
     private final List<IOListener> listeners = new CopyOnWriteArrayList<>();
 
-    private final AtomicInteger failCounter = new AtomicInteger();
-    private final AtomicInteger successCounter = new AtomicInteger();
-    private final EventConsumer consumer = new EventConsumer();
-    private final Thread consumerThread = new Thread(consumer);
-
-    private boolean enabled = true;
+    private boolean queueStatsEnabled;
     private int eventQueueSize = 500;
     private long queueOverflowReportInterval = 300000;
     private long lastFailReport;
+    private final AtomicInteger emptyCounter = new AtomicInteger();
+    private final AtomicInteger failCounter = new AtomicInteger();
+    private final AtomicInteger successCounter = new AtomicInteger();
+    private final AtomicLong sumSize = new AtomicLong();
+    private final AtomicInteger maxSize = new AtomicInteger();
+
+    private final List<EventConsumer> consumers = new CopyOnWriteArrayList<>();
+    private final AtomicInteger consumerCount = new AtomicInteger();
+    private int threadCount;
+    private int threadPriority;
 
     public boolean isEnabled() {
         return enabled;
@@ -41,7 +50,7 @@ public class IOMonitor extends IoTraceAdapter {
         return eventQueueSize;
     }
 
-    public void setEventQueueSize(int eventQueueSize) {
+    public synchronized void setEventQueueSize(int eventQueueSize) {
         if(queue!=null) { throw new IllegalStateException("cannot resize queue after probe has been installed"); }
         this.eventQueueSize = eventQueueSize;
     }
@@ -56,13 +65,13 @@ public class IOMonitor extends IoTraceAdapter {
 
     public void initializeProbe() throws Exception {
         queue = new LinkedBlockingQueue<>(eventQueueSize);
-        startConsumer();
+        startConsumers();
         IoTraceUtil.addTrace(this);
     }
 
     public void destroyProbe() throws Exception {
         IoTraceUtil.removeTrace(this);
-        stopConsumer();
+        setThreadCount(0);
         queue = null;
     }
 
@@ -85,38 +94,137 @@ public class IOMonitor extends IoTraceAdapter {
     /////
 
     protected void queueEvent(IOEvent operation) {
+        final int size = queueStatsEnabled ? queue.size() : 0;
+
         final boolean success = queue.offer(operation);
 
-        if(success) {
-            successCounter.incrementAndGet();
-        } else {
-            final int failCount = failCounter.incrementAndGet();
+        if(queueStatsEnabled) {
+            if(size==0) {
+                emptyCounter.incrementAndGet();
+            }
+            sumSize.addAndGet(size);
+            updateMax(size);
+            if(success) {
+                successCounter.incrementAndGet();
+            } else {
+                failCounter.incrementAndGet();
+            }
+        }
+
+        if( ! success) {
             final long now = System.currentTimeMillis();
             if(now - lastFailReport > queueOverflowReportInterval) {
-                final int successCount = successCounter.get();
                 lastFailReport = now;
-                System.out.println(String.format("DIAG: IO tracing queue full (%d) for %d events out of %d",
-                        eventQueueSize, failCount, failCount+successCount));
+                System.out.println(String.format("DIAG: IO event queue full (%d) for %s",
+                        eventQueueSize, getClass().getSimpleName()));
             }
         }
     }
 
-    private void startConsumer() {
-        consumerThread.setDaemon(true);
-        consumerThread.start();
+    // http://stackoverflow.com/questions/6072040
+    private void updateMax(int sample) {
+        while(true) {
+            final int currentMax = maxSize.get();
+            // no need to update
+            if (currentMax >= sample) { return; }
+
+            // check if another thread updated first
+            final boolean setSuccessful = maxSize.compareAndSet(currentMax, sample);
+            if (setSuccessful) { break; }
+
+            // another thread did, start over
+        }
     }
 
-    private void stopConsumer() {
-        consumer.shutdown();
-        consumerThread.interrupt();
+    public int getFailureCount() {
+        return failCounter.get();
     }
 
-    private class EventConsumer implements Runnable {
+    public int getSuccessCount() {
+        return successCounter.get();
+    }
+
+    public String getQueueStats() {
+        final int success = successCounter.get();
+        final int failure = failCounter.get();
+        final int total = success+failure;
+        final int empty = emptyCounter.get();
+        final float emptyPercent = (100f * empty) / total;
+        final float fullPercent = (100f * failure) / total;
+        final float avg = sumSize.get() / total;
+        return String.format("%d events: depth avg %.0f, max %d, empty %d (%.0f%%), dropped %d (%.0f%%)",
+                total, avg, maxSize.get(), empty, emptyPercent, failure, fullPercent);
+    }
+
+    public void resetQueueCounters() {
+        successCounter.set(0);
+        failCounter.set(0);
+        maxSize.set(0);
+        sumSize.set(0);
+    }
+
+    public void setThreadCount(int count) {
+        if(this.threadCount!=count) {
+            synchronized(consumers) {
+                final boolean increase = count > this.threadCount;
+                this.threadCount = count;
+                if(increase) { startConsumers(); }
+                else { stopConsumers(); }
+            }
+        }
+    }
+
+    public int getThreadCount() {
+        return threadCount;
+    }
+
+    public void setThreadPriority(int priority) {
+        this.threadPriority = priority;
+    }
+
+    public int getThreadPriority() {
+        return threadPriority;
+    }
+
+    private String createThreadName() {
+        return getClass().getSimpleName() + "-event-" + consumerCount.incrementAndGet();
+    }
+    private void startConsumers() {
+        synchronized(consumers) {
+            while(consumers.size()<threadCount) {
+                final EventConsumer consumer = new EventConsumer();
+                consumer.start();
+            }
+        }
+    }
+
+    private void stopConsumers() {
+        synchronized(consumers) {
+            final int count = consumers.size()-threadCount;
+            for(int i=0;i<count;i++) {
+                consumers.get(i).shutdown();
+            }
+        }
+    }
+
+    private class EventConsumer extends Thread {
         private boolean keepRunning = true;
+
+        public EventConsumer() {
+            setPriority(threadPriority);
+            setName(createThreadName());
+            setDaemon(true);
+        }
+
+        public void start() {
+            super.start();
+            consumers.add(EventConsumer.this);
+        }
 
         public void shutdown() {
             if( ! keepRunning) throw new IllegalStateException("consumer was not running");
             keepRunning = false;
+            interrupt();
         }
 
         @Override
@@ -127,6 +235,7 @@ public class IOMonitor extends IoTraceAdapter {
                     notifyListeners(event);
                 } catch(InterruptedException ignore) { }
             }
+            consumers.remove(EventConsumer.this);
         }
     }
 }

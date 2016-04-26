@@ -13,4 +13,16 @@ public interface IOMBean {
 
     public void setShutdownReportEnabled(boolean enabled);
     public boolean isShutdownReportEnabled();
+
+    public void setHandlerThreadCount(int count);
+    public int getHandlerThreadCount();
+
+    public void setHandlerPriority(int value);
+    public int getHandlerPriority();
+
+    public int getEventQueueSize();
+
+    public String getQueueStats();
+    public void resetQueueCounters();
+
 }

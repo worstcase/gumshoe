@@ -1,4 +1,4 @@
-package com.dell.gumshoe.io;
+package com.dell.gumshoe.network;
 
 import com.dell.gumshoe.IoTraceAdapter;
 import com.dell.gumshoe.IoTraceDelegate;

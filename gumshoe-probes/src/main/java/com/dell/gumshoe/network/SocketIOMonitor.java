@@ -1,7 +1,6 @@
 package com.dell.gumshoe.network;
 
 import com.dell.gumshoe.io.IOMonitor;
-import com.dell.gumshoe.io.IoTraceSelectorProvider;
 
 import java.net.InetAddress;
 
@@ -11,12 +10,15 @@ public class SocketIOMonitor extends IOMonitor {
     private final AddressMatcher socketFilter;
     private boolean useNIOHooks;
     public SocketIOMonitor() {
-        this(SubnetAddress.ANY, false);
+        this(SubnetAddress.ANY, false, 500, Thread.MIN_PRIORITY, 1);
     }
 
-    public SocketIOMonitor(AddressMatcher socketFilter, boolean useNIOHooks) {
+    public SocketIOMonitor(AddressMatcher socketFilter, boolean useNIOHooks, int queueSize, int priority, int count) {
         this.socketFilter = socketFilter;
         this.useNIOHooks = useNIOHooks;
+        setEventQueueSize(queueSize);
+        setThreadCount(count);
+        setThreadPriority(priority);
     }
 
     @Override

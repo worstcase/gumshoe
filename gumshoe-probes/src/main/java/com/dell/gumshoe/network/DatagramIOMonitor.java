@@ -4,7 +4,6 @@ import com.dell.gumshoe.IoTraceAdapter;
 import com.dell.gumshoe.IoTraceDelegate;
 import com.dell.gumshoe.IoTraceUtil;
 import com.dell.gumshoe.io.IOMonitor;
-import com.dell.gumshoe.io.IoTraceSelectorProvider;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -29,10 +28,14 @@ public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFa
     private final Method delegateCreateImplMethod;
     private final boolean useMulticast;
 
-    public DatagramIOMonitor(AddressMatcher filter, boolean useNIOHooks, boolean useMulticast) throws Exception {
+    public DatagramIOMonitor(AddressMatcher filter, boolean useNIOHooks, boolean useMulticast, int queueSize, int priority, int count) throws Exception {
         this.filter = filter;
         this.useNIOHooks = useNIOHooks;
         this.useMulticast = useMulticast;
+        setEventQueueSize(queueSize);
+        setThreadCount(count);
+        setThreadPriority(priority);
+
         final Method[] methods = DatagramSocketImpl.class.getDeclaredMethods();
         for(Method method : methods) {
             if(Modifier.isProtected(method.getModifiers())) {

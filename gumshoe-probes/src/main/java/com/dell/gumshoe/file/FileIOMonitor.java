@@ -8,11 +8,14 @@ public class FileIOMonitor extends IOMonitor {
     private final FileMatcher fileFilter;
 
     public FileIOMonitor() {
-        this(FileMatcher.ANY);
+        this(FileMatcher.ANY, 500, Thread.MIN_PRIORITY, 1);
     }
 
-    public FileIOMonitor(FileMatcher fileFilter) {
+    public FileIOMonitor(FileMatcher fileFilter, int queueSize, int priority, int count) {
         this.fileFilter = fileFilter;
+        setEventQueueSize(queueSize);
+        setThreadCount(count);
+        setThreadPriority(priority);
     }
 
     @Override

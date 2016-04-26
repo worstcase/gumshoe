@@ -22,10 +22,13 @@ public class FileIOProbe extends IOProbe {
 
     @Override
     protected IOMonitor createMonitor(Properties p) throws ParseException {
+        final int handlerPriority = (int)getNumber(p, getPropertyName("handler.priority"), Thread.MIN_PRIORITY);
+        final int handlerCount = (int)getNumber(p, getPropertyName("handler.count"), 1);
+        final int queueSize = (int)getNumber(p, getPropertyName("handler.queue-size"), 500);
         final FileMatcher[] acceptList = parseFileMatchers(p.getProperty(getPropertyName("include")));
         final FileMatcher[] rejectList = parseFileMatchers(p.getProperty(getPropertyName("exclude"), "**/gumshoe/**,*.jar,*.class"));
         final FileMatcherSeries socketFilter = new FileMatcherSeries(acceptList, rejectList);
-        return new FileIOMonitor(socketFilter);
+        return new FileIOMonitor(socketFilter, queueSize, handlerPriority, handlerCount);
     }
 
     protected static FileMatcher[] parseFileMatchers(String csv) throws ParseException {

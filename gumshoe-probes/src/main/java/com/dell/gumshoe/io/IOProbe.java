@@ -136,4 +136,30 @@ public abstract class IOProbe extends Probe implements IOMBean {
     public boolean isShutdownReportEnabled() {
         return isShutdownHookEnabled(getReporter().getShutdownHook());
     }
+
+    public void setHandlerThreadCount(int count) {
+        monitor.setThreadCount(count);
+    }
+    public int getHandlerThreadCount() {
+        return monitor.getThreadCount();
+    }
+
+    public void setHandlerPriority(int priority) {
+        monitor.setThreadPriority(priority);
+    }
+    public int getHandlerPriority() {
+        return monitor.getThreadPriority();
+    }
+
+    public int getEventQueueSize() {
+        return monitor.getEventQueueSize();
+    }
+
+    public String getQueueStats() {
+        return monitor.getQueueStats();
+    }
+
+    public void resetQueueCounters() {
+        monitor.resetQueueCounters();
+    }
 }

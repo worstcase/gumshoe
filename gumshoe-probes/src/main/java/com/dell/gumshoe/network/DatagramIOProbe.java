@@ -22,6 +22,9 @@ public class DatagramIOProbe extends IOProbe {
 
     @Override
     protected IOMonitor createMonitor(Properties p) throws Exception {
+        final int handlerPriority = (int)getNumber(p, getPropertyName("handler.priority"), Thread.MIN_PRIORITY);
+        final int handlerCount = (int)getNumber(p, getPropertyName("handler.count"), 1);
+        final int queueSize = (int)getNumber(p, getPropertyName("handler.queue-size"), 500);
         final boolean includeNIO = isTrue(p, getPropertyName("use-nio-hooks"), false);
         final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty(getPropertyName("include")));
         final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty(getPropertyName("exclude"), "127.0.0.1/32:*"));
@@ -31,7 +34,7 @@ public class DatagramIOProbe extends IOProbe {
         final String usingOnly = p.getProperty(getPropertyName("using-only"), "unicast");
         final boolean useMulticast = "multicast".equals(usingOnly);
 
-        return new DatagramIOMonitor(socketFilter, includeNIO, useMulticast);
+        return new DatagramIOMonitor(socketFilter, includeNIO, useMulticast, queueSize, handlerPriority, handlerCount);
     }
 
     private static AddressMatcher[] parseSocketMatchers(String csv) throws ParseException {
