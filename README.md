@@ -27,8 +27,13 @@ Documentation
 * [Quick start guide](QUICK-START.md) walks through using with a sample application.
 * Full [user guide](docs/index.md)
 
-Flame Graph Example
--------------------
+Don't Just Measure and Report:  Understand
+------------------------------------------
+
+Looking at stack traces scaled by metrics gives a fast, intuitive way to understand application resource usage.  Consider
+network I/O in a hypothetical application...
+
+Flame graph example:
 
 ![image](docs/flame-graph.png)
 
@@ -37,8 +42,7 @@ in this application.  It always calls RestRequestHandler.handle which in turn ca
 operations.  One -- showItemDetails -- is responsible for >80% of read operations as it makes different calls
 into the DAO layer.
 
-Root Graph Example
-------------------
+Root graph example:
 
 ![image](docs/root-graph.png)
 
@@ -46,9 +50,7 @@ Grouping now by the last frame where the application calls out to a resource,
 the couchdb Database.getDocument is responsible for over half of the read operations,
 while the JDBC Statement.execute about 25%, the vast majority of those from getItemDetails.
 
-[Stack Filters](docs/filters.md)
--------------
-
 These two examples are completely contrived, but not overly simplified.  The original call stacks in
-your application are generally huge, with hundreds of frames, but gumshoe uses stack filters to find
+your application are generally huge, with hundreds of frames,
+but gumshoe uses [stack filters](docs/filters.md) to find
 just the relevant portions and focus the view on just those parts.
