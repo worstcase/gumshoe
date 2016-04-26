@@ -24,4 +24,4 @@ Live capture and view
 ---------------------
 
 Often data is collected from the target application in a text file and analyzed later with the gumshoe viewer.
-However, the viewer can also be launched from within the same JVM and data viewed as it is collected.
+However, the viewer can also be launched from within the same JVM and data viewed as it is collected.  

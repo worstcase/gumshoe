@@ -10,15 +10,16 @@ public class SocketIOMonitor extends IOMonitor {
     private final AddressMatcher socketFilter;
     private boolean useNIOHooks;
     public SocketIOMonitor() {
-        this(SubnetAddress.ANY, false, 500, Thread.MIN_PRIORITY, 1);
+        this(SubnetAddress.ANY, false, 500, Thread.MIN_PRIORITY, 1, false);
     }
 
-    public SocketIOMonitor(AddressMatcher socketFilter, boolean useNIOHooks, int queueSize, int priority, int count) {
+    public SocketIOMonitor(AddressMatcher socketFilter, boolean useNIOHooks, int queueSize, int priority, int count, boolean statsEnabled) {
         this.socketFilter = socketFilter;
         this.useNIOHooks = useNIOHooks;
         setEventQueueSize(queueSize);
         setThreadCount(count);
         setThreadPriority(priority);
+        setQueueStatisticsEnabled(statsEnabled);
     }
 
     @Override

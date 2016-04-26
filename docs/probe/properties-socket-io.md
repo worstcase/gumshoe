@@ -31,7 +31,7 @@ Collection may be limited to certain networks, systems or ports:
                                 - matches "include" or "include" is blank
                                 - does not match "exclude" or "exclude" is blank
          
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
     gumshoe.socket-io.filter...    See common filter properties [here](filter-properties.md) 
 

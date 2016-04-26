@@ -2,6 +2,8 @@ package com.dell.gumshoe.thread;
 
 
 public interface CpuUsageMBean {
+    public long getJitter();
+    public void setJitter(long jitter);
     public long getDumpInterval();
     public void setDumpInterval(long dumpInterval);
     public long getEffectiveInterval();

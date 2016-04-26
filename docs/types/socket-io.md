@@ -16,14 +16,13 @@ Socket I/O collection relies on [IoTrace](../hooks/io-trace.md)
 which provides a callback mechanism
 for all I/O on normal (non-NIO) sockets, all NIO writes and NIO reads when in blocking mode.
 To use this mechanism the gumshoe hook must override the JRE version of IoTrace
-using the [bootclasspath argument](../hook.md).
+using the bootclasspath argument.
 
-For NIO reads in non-blocking mode, a custom [SelectorProvider hook](../hooks/selector-provider.md) 
+For NIO reads in non-blocking mode, a custom [SelectorProvider](../hooks/selector-provider.md) 
 wraps default implementations and includes these reads using the normal IoTrace mechanism.
 
-The callback to IoTrace creates an event which is queued and handled off the I/O thread.  
-The [event handler](../probe/event-handling.md) accumulates these events 
-and reports a total per calling stack.
+The callback to IoTrace creates an event which is queued and handled off the I/O thread.  The 
+[event handler](../probe/event-handling.md) accumulates these events and reports a total per calling stack.
 
 Limitations
 -----------
@@ -59,7 +58,7 @@ Limitations
   
     The event queue may back up if the target application is CPU bound.  This could be
     an issue in the target application itself, and you may want to look at
-    [processor utilization statistics](processor.md) before socket I/O.
+    [processor utilization statistics](../types/cpu-stats.md) before socket I/O.
     
     Or it could be due to gumshoe stack filters.  Each stack filter configured has to
     modify the event call stack on the same event handling thread.  Complex filters

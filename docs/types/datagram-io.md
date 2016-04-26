@@ -57,7 +57,7 @@ Limitations
   
     The event queue may back up if the target application is CPU bound.  This could be
     an issue in the target application itself, and you may want to look at
-    [processor utilization statistics](processor.md) before socket I/O.
+    [processor utilization statistics](../types/cpu-stats.md) before socket I/O.
     
     Or it could be due to gumshoe stack filters.  Each stack filter configured has to
     modify the event call stack on the same event handling thread.  Complex filters

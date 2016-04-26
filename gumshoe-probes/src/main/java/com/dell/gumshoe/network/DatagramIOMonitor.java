@@ -28,13 +28,14 @@ public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFa
     private final Method delegateCreateImplMethod;
     private final boolean useMulticast;
 
-    public DatagramIOMonitor(AddressMatcher filter, boolean useNIOHooks, boolean useMulticast, int queueSize, int priority, int count) throws Exception {
+    public DatagramIOMonitor(AddressMatcher filter, boolean useNIOHooks, boolean useMulticast, int queueSize, int priority, int count, boolean statsEnabled) throws Exception {
         this.filter = filter;
         this.useNIOHooks = useNIOHooks;
         this.useMulticast = useMulticast;
         setEventQueueSize(queueSize);
         setThreadCount(count);
         setThreadPriority(priority);
+        setQueueStatisticsEnabled(statsEnabled);
 
         final Method[] methods = DatagramSocketImpl.class.getDeclaredMethods();
         for(Method method : methods) {

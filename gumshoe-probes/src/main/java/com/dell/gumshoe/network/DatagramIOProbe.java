@@ -33,8 +33,9 @@ public class DatagramIOProbe extends IOProbe {
         // TODO: detect OS; print warning if not set and OS is windows
         final String usingOnly = p.getProperty(getPropertyName("using-only"), "unicast");
         final boolean useMulticast = "multicast".equals(usingOnly);
+        final boolean statsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
 
-        return new DatagramIOMonitor(socketFilter, includeNIO, useMulticast, queueSize, handlerPriority, handlerCount);
+        return new DatagramIOMonitor(socketFilter, includeNIO, useMulticast, queueSize, handlerPriority, handlerCount, statsEnabled);
     }
 
     private static AddressMatcher[] parseSocketMatchers(String csv) throws ParseException {

@@ -27,7 +27,7 @@ Getting Started
 Collecting Samples
 ------------------
 
-- [About the hook](hook.md)
+- [About the hooks](hooks.md)
 - [Configuring the probe](probe.md)
 - [Using filters](filters.md)
 - [Running your program](run.md)

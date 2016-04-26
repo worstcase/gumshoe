@@ -30,7 +30,7 @@ Collection may be limited to certain file or directories:
                                 - does not matches "exclude" or "exclude" is blank
                                 - matches "include"
                                 
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
     gumshoe.file-io.filter...    See common filter properties [here](filter-properties.md) 
 

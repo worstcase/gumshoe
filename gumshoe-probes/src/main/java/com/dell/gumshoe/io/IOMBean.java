@@ -25,4 +25,6 @@ public interface IOMBean {
     public String getQueueStats();
     public void resetQueueCounters();
 
+    public void setQueueStatisticsEnabled(boolean enabled);
+    public boolean isQueueStatisticsEnabled();
 }

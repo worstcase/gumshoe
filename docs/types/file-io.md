@@ -15,7 +15,7 @@ Hooks
 
 File I/O collection relies on a callback mechanism defined in [IoTrace](../hooks/io-trace.md).
 To use this mechanism the gumshoe hook must override the JRE version of IoTrace
-using the [bootclasspath argument](../hook.md).
+using the bootclasspath argument.
 
 Operations are reported as events which are queued and handled off the I/O thread.  
 The [event handler](../probe/event-handling.md) accumulates these events 
@@ -55,7 +55,7 @@ Limitations
   
     The event queue may back up if the target application is CPU bound.  This could be
     an issue in the target application itself, and you may want to look at
-    [processor utilization statistics](processor.md) before socket I/O.
+    [processor utilization statistics](../types/cpu-stats.md) before socket I/O.
     
     Or it could be due to gumshoe stack filters.  Each stack filter configured has to
     modify the event call stack on the same event handling thread.  Complex filters

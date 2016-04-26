@@ -30,7 +30,8 @@ public class SocketIOProbe extends IOProbe {
         final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty(getPropertyName("include")));
         final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty(getPropertyName("exclude"), "127.0.0.1/32:*"));
         final MultiAddressMatcher socketFilter = new MultiAddressMatcher(acceptList, rejectList);
-        return new SocketIOMonitor(socketFilter, includeNIO, queueSize, handlerPriority, handlerCount);
+        final boolean statsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
+        return new SocketIOMonitor(socketFilter, includeNIO, queueSize, handlerPriority, handlerCount, statsEnabled);
     }
 
     private static AddressMatcher[] parseSocketMatchers(String csv) throws ParseException {

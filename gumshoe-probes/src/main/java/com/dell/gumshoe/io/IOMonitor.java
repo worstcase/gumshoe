@@ -32,8 +32,8 @@ public class IOMonitor extends IoTraceAdapter {
 
     private final List<EventConsumer> consumers = new CopyOnWriteArrayList<>();
     private final AtomicInteger consumerCount = new AtomicInteger();
-    private int threadCount;
-    private int threadPriority;
+    private int threadCount = 1;
+    private int threadPriority = Thread.MIN_PRIORITY;
 
     public boolean isEnabled() {
         return enabled;
@@ -115,8 +115,7 @@ public class IOMonitor extends IoTraceAdapter {
             final long now = System.currentTimeMillis();
             if(now - lastFailReport > queueOverflowReportInterval) {
                 lastFailReport = now;
-                System.out.println(String.format("DIAG: IO event queue full (%d) for %s",
-                        eventQueueSize, getClass().getSimpleName()));
+                System.out.println(String.format("GUMSHOE: IO event queue for %s is full", getClass().getSimpleName()));
             }
         }
     }
@@ -145,15 +144,27 @@ public class IOMonitor extends IoTraceAdapter {
     }
 
     public String getQueueStats() {
-        final int success = successCounter.get();
-        final int failure = failCounter.get();
-        final int total = success+failure;
-        final int empty = emptyCounter.get();
-        final float emptyPercent = (100f * empty) / total;
-        final float fullPercent = (100f * failure) / total;
-        final float avg = sumSize.get() / total;
-        return String.format("%d events: depth avg %.0f, max %d, empty %d (%.0f%%), dropped %d (%.0f%%)",
-                total, avg, maxSize.get(), empty, emptyPercent, failure, fullPercent);
+        if(queueStatsEnabled) {
+            final int success = successCounter.get();
+            final int failure = failCounter.get();
+            final int total = success+failure;
+            final int empty = emptyCounter.get();
+            final float emptyPercent = (100f * empty) / total;
+            final float fullPercent = (100f * failure) / total;
+            final float avg = sumSize.get() / total;
+            return String.format("%d events: depth avg %.0f, max %d, empty %d (%.0f%%), dropped %d (%.0f%%)",
+                    total, avg, maxSize.get(), empty, emptyPercent, failure, fullPercent);
+        } else {
+            return "queue statistics are not enabled";
+        }
+    }
+
+    public void setQueueStatisticsEnabled(boolean enabled) {
+        this.queueStatsEnabled = enabled;
+    }
+
+    public boolean isQueueStatisticsEnabled() {
+        return this.queueStatsEnabled;
     }
 
     public void resetQueueCounters() {

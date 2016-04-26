@@ -31,7 +31,7 @@ Collection may be limited to certain networks, systems or ports:
                                 - matches "include" or "include" is blank
                                 - does not match "exclude" or "exclude" is blank
          
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
     gumshoe.datagram-io.filter...    See common filter properties [here](filter-properties.md) 
 
@@ -41,3 +41,14 @@ Collected data samples are written to:
                                     adding its own explicit Listener to receive samples)
     gumshoe.datagram-io.output=stdout Write to System.out (the default)
     gumshoe.datagram-io.output=file:/some/path    Write to a text file.
+    
+The event queue and consumer can be monitored and managed using:
+
+    gumshoe.datagram-io.handler.stats-enabled   Should statistics be collected on event queue size
+                                                and number of events dropped due to a full 
+                                                queue (default is false)    
+    gumshoe.datagram-io.handler.queue-size      Number of events that can be queued (default is 500)
+    gumshoe.datagram-io.handler.count           Number of consumer threads (default 1)
+    gumshoe.datagram-io.handler.priority        Thread priority (default 1=Thread.MIN_PRIORITY)
+
+See [event queue documentation](event-handling.md) for more information.

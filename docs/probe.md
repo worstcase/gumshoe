@@ -17,7 +17,7 @@ The Probe is used to initialize and begin monitoring:
 
 It can stop monitoring or update configuration:
 - Explicitly invoke Probe methods from your application
-- [Invoke JMX operations](jmx.md)
+- Invoke JMX operations
 
 Handling Data
 -------------
@@ -34,9 +34,9 @@ The values will install JVM hooks, manage filters and data collection,
 and determine when and where results are reported.
 
 For details:
-- [Properties for socket I/O reporting](properties-socket-io.md)
-- [Properties for CPU usage reporting](properties-cpu-stats.md)
-- [Properties for unclosed socket reporting](properties-unclosed-socket.md)
+- [Properties for socket I/O reporting](probe/properties-socket-io.md)
+- [Properties for CPU usage reporting](probe/properties-cpu-stats.md)
+- [Properties for unclosed socket reporting](probe/properties-unclosed-socket.md)
 
 Managing Configuration with JMX
 -------------------------------
@@ -59,6 +59,6 @@ and connect to your JVM using a JMX client such as jconsole.
 By default, the MBeans installed will have names beginning with "com.dell.gumshoe".  
   
 For details:
-- [Socket I/O MBean](jmx-socket-io.md)
-- [CPU Stats MBean](jmx-cpu-stats.md)
-- [Unclosed Socket MBean](jmx-unclosed-socket.md) 
+- [Socket I/O MBean](probe/jmx-socket-io.md)
+- [CPU Stats MBean](probe/jmx-cpu-stats.md)
+- [Unclosed Socket MBean](probe/jmx-unclosed-socket.md) 

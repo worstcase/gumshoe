@@ -31,7 +31,7 @@ public class TestIOAccumulator {
         AddressMatcher[] reject = { new SubnetAddress("127.0.0.1/32:*") };
         final MultiAddressMatcher socketFilter = new MultiAddressMatcher(accept, reject);
 
-        SocketIOMonitor ioMonitor = new SocketIOMonitor(socketFilter, false);
+        SocketIOMonitor ioMonitor = new SocketIOMonitor(socketFilter, false, 500, Thread.MIN_PRIORITY, 1, false);
         StackFilter filter = StandardFilter.builder().withEndsOnly(1, 0).build();
         SocketIOAccumulator ioAccumulator = new SocketIOAccumulator(filter);
 
