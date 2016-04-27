@@ -17,13 +17,15 @@ Initialization can use system properties by calling Probe.initialize() or with a
                                  reporting is enabled.  Override this behavior to install the probe
                                  now but enable/disable the reporting at another time.
     gumshoe.cpu-usage.priority   Thread priority for data collection thread (default value is Thread.MIN_PRIORITY)
-    gumshoe.cpu-usage.sample     Thread data collection rate (milliseconds, default is 5000)
+    gumshoe.cpu-usage.sample            Thread data collection rate (milliseconds, default 5000)
+    gumshoe.cpu-usage.jitter            Collection rate should vary randomly by this 
+                                        amount (milliseconds, default 0)
     gumshoe.cpu-usage.use-wait-times    Thread contention monitoring is enabled by default on
                                         JVMs that support it.  If false, contention monitoring
                                         is disabled.  This may reduce overhead, but thread blocked and
                                         waiting times will not be reported.  (Default is true.)
 
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
     gumshoe.cpu-usage.filter...    See common filter properties [here](filter-properties.md) 
 

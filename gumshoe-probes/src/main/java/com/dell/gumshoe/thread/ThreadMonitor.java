@@ -35,20 +35,35 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
     private StackFilter stackFilter = StackFilter.NONE;
     private ThreadFilter threadFilter = ThreadFilter.NONE;
     private long dumpInterval = 5000;
+    private float jitter;
     private int threadPriority = Thread.MIN_PRIORITY;
     private int dumpCount;
     private long dumpTimeSum;
 
+    public long getJitter() {
+        return (long)jitter*dumpInterval;
+    }
+
+    public void setJitter(long jitter) {
+        setDumpInterval(getDumpInterval(), jitter);
+    }
+
     public long getDumpInterval() { return dumpInterval; }
 
     public void setDumpInterval(long dumpInterval) {
+        setDumpInterval(dumpInterval, getJitter());
+    }
+
+    private void setDumpInterval(long dumpInterval, long jitter) {
         if(dumper==null) {
-            this.dumpInterval = dumpInterval;
+            this.dumpInterval = this.effectiveInterval = dumpInterval;
+            this.jitter = ((float)jitter)/dumpInterval; // store as ratio so can apply to effective interval
         } else {
             synchronized(dumper) {
                 this.dumpInterval = this.effectiveInterval = dumpInterval;
+                this.jitter = ((float)jitter)/dumpInterval;
                 this.lastDumpTime = System.currentTimeMillis();
-                this.nextDumpTime = this.lastDumpTime + dumpInterval;
+                this.nextDumpTime = this.lastDumpTime + dumpInterval + (long) (dumpInterval*jitter*(Math.random()-0.5));
                 this.thread.interrupt();
             }
         }
@@ -254,13 +269,13 @@ public class ThreadMonitor implements StackStatisticSource<CPUStats> {
                 maybeSlowReporting();
                 successCountSinceLastTooLong = 0;
 
-                nextDumpTime = System.currentTimeMillis() + effectiveInterval;
+                nextDumpTime = System.currentTimeMillis() + effectiveInterval + (long)(effectiveInterval*jitter*(Math.random()-0.5));
             } else {
                 successCountSinceLastTooLong++;
                 maybeSpeedReporting(elapsed);
                 tooLongCountSinceLastSuccess = 0;
 
-                nextDumpTime = lastDumpTime + effectiveInterval;
+                nextDumpTime = lastDumpTime + effectiveInterval + (long)(effectiveInterval*jitter*(Math.random()-0.5));
             }
         }
 

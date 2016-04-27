@@ -23,28 +23,31 @@ import java.util.Set;
  */
 public class StackFrameNode {
     private long value;
-    private StackTraceElement frame;
     private StatisticAdder detail;
     private Map<StackTraceElement,StackFrameNode> divisions = new LinkedHashMap<>();
     private StackFrameNode parent;
     private boolean byCalled;
+    private StackTraceElement[] frames;
+    private int frameIndex;
 
-    private StackFrameNode(boolean byCalled, StackFrameNode node, long nodeValue, StackTraceElement frame, StatisticAdder detail) {
+    private StackFrameNode(boolean byCalled, StackFrameNode node, long nodeValue, StackTraceElement[] frames, int frameIndex, StatisticAdder detail) {
         this.byCalled = byCalled;
         this.parent = node;
         this.value = nodeValue;
-        this.frame = frame;
+        this.frames = frames;
+        this.frameIndex = frameIndex;
         this.detail = detail;
     }
 
     public StackFrameNode(Map<Stack, StatisticAdder> values, DisplayOptions options, StackFilter filter) {
         this.byCalled = options.byCalled;
+        this.frames = null;
 
         for(Map.Entry<Stack, StatisticAdder> entry : values.entrySet()) {
             final Stack origStack = entry.getKey();
             final StatisticAdder details = entry.getValue();
             final Stack displayStack = filter==null ? origStack : origStack.applyFilter(filter);
-            final List<StackTraceElement> frames = Arrays.asList(displayStack.getFrames());
+            final StackTraceElement[] frames = displayStack.getFrames();
 
             // default is root graph -- group by top frame in stack performing the I/O.
             // root nodes will be rendered at the top of the image.
@@ -52,7 +55,7 @@ public class StackFrameNode {
             // for flame graph, reverse the stack frames to process entry point first [ie- Thread.run()]
             // child nodes in tree will be next frame up, the various things Thread.run() is calling.
             // the roots of this tree model are rendered at the bottom of the image in Box.draw().
-            if(options.byCalled) { Collections.reverse(frames); }
+            if(options.byCalled) { Collections.reverse(Arrays.asList(frames)); }
 
             StackFrameNode node = this;
             if(node.detail==null) {
@@ -61,10 +64,11 @@ public class StackFrameNode {
             node.detail.add(details);
             final long nodeValue = getValue(details, options);
             node.value += nodeValue;
-            for(StackTraceElement frame : frames) {
+            for(int frameIndex=0;frameIndex<frames.length;frameIndex++) {
+                StackTraceElement frame = frames[frameIndex];
                 StackFrameNode frameNode = node.divisions.get(frame);
                 if(frameNode==null) {
-                    frameNode = new StackFrameNode(byCalled, node, nodeValue, frame, details.newInstance());
+                    frameNode = new StackFrameNode(byCalled, node, nodeValue, frames, frameIndex, details.newInstance());
                     node.divisions.put(frame, frameNode);
                 } else {
                     frameNode.value += nodeValue;
@@ -76,8 +80,20 @@ public class StackFrameNode {
     }
 
     public StatisticAdder getDetail() { return detail; }
-    public StackTraceElement getFrame() { return frame; }
+    public StackTraceElement getFrame() { return frames==null ? null : frames[frameIndex]; }
     public long getValue() { return value; }
+
+    public void appendContext(StringBuilder msg) {
+        if(byCalled) {
+            for(int index=frameIndex;index>=0;index--) {
+                msg.append(frames[index]).append("\n");
+            }
+        } else {
+            for(int index=0;index<=frameIndex;index++) {
+                msg.append(frames[index]).append("\n");
+            }
+        }
+    }
 
     public Set<StackTraceElement> getCalledFrames() {
         return byCalled ? divisions.keySet() : getParentFrame();
@@ -88,8 +104,8 @@ public class StackFrameNode {
     }
 
     private Set<StackTraceElement> getParentFrame() {
-        return parent.frame==null ? Collections.<StackTraceElement>emptySet() : Collections.<StackTraceElement>singleton(parent.frame);
-    }
+        final StackTraceElement parentFrame = parent.getFrame();
+        return parentFrame==null ? Collections.<StackTraceElement>emptySet() : Collections.<StackTraceElement>singleton(parentFrame);    }
 
     private long getValue(StatisticAdder details, DisplayOptions options) {
         final DisplayOptions.WidthScale width = options.scale;
@@ -134,31 +150,51 @@ public class StackFrameNode {
 
     /////
 
+
+    /* convert this tree of all nodes into list of boxes for display */
     public List<Box> createBoxes(DisplayOptions options) {
-        final List<Box> out = new ArrayList<Box>();
+        final List<Box> out = new ArrayList<>();
         final int depth = getDepth(options);
-        Map<StackFrameNode,Long> priorRowModels = Collections.singletonMap(this, 0L);
+
+        final Box rootBox = new Box(1, 0f, 1f, this, null);
+        Map<StackFrameNode,Box> priorRowModels = Collections.singletonMap(this, rootBox);
+
+        // display option: do not show box if value <= minPercent
         final float valueLimit = options.minPercent * value / 100f;
+
         for(int row = 0;row<depth;row++) {
-            final Map<StackFrameNode,Long> thisRowModels = new LinkedHashMap<>();
-            for(Map.Entry<StackFrameNode,Long> parentEntry : priorRowModels.entrySet()) {
-                final long parentPosition = parentEntry.getValue();
+            final Map<StackFrameNode,Box> thisRowModels = new LinkedHashMap<>();
+
+            for(Map.Entry<StackFrameNode,Box> parentEntry : priorRowModels.entrySet()) {
+                final Box parentBox = parentEntry.getValue();
+                final float parentPosition = parentBox.getPosition();
                 final StackFrameNode parent = parentEntry.getKey();
+
                 final List<StackTraceElement> keys = getDivisions(parent, options.order);
-                // first division left-aligned to parent position
-                long position = parentPosition;
+
+                // first division is left-aligned with parent position
+                float position = parentPosition;
+
+                // each division width is a portion of parent width
+                long childValuesSum = 0;
+                for(StackTraceElement key : keys) {
+                    final StackFrameNode divModel = parent.divisions.get(key);
+                    childValuesSum += divModel.value;
+                }
+                final float scaleValue = childValuesSum/parentBox.getWidth();
+
                 for(StackTraceElement key : keys) {
                     final StackFrameNode divModel = parent.divisions.get(key);
                     if(divModel.value>valueLimit)  {
-                        out.add(new Box(row, position, divModel, parent));
-                        thisRowModels.put(divModel, position);
-                        position += divModel.value;
-                    }
-                    if(divModel.value==0) {
-                        int x = 2+2;
+                        final float relativeValue = (divModel.value) / scaleValue;
+                        final Box box = new Box(row, position, relativeValue, divModel, parent);
+                        out.add(box);
+                        thisRowModels.put(divModel, box);
+                        position += relativeValue;
                     }
                 }
             }
+
             priorRowModels = thisRowModels;
         }
         return out;

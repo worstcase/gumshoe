@@ -16,11 +16,11 @@ In this section we will define the various properties that can be used
 Configuration Properties
 ------------------------
 
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
-    ...filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
-    ...filter.include        Include only these packages or classes (comma-separated)
-    ...filter.exclude        Exclude these packages or classes 
+    ...filter.simplify       Retain only portions of the stack frames.  Allowed values are
+                               NO_LINE_NUMBERS, NO_METHOD, NO_INNER_CLASSES, NO_CLASSES, NONE
+                             Default is "NONE" (do not simplify frames)
     ...filter.recursion.threshold  The recursion filter is only applied to stacks with
                              more than this number of frames (after other filters).
                              There is no default value, recursion is not applied unless set.
@@ -28,11 +28,11 @@ Stacks should generally be [filtered](filters.md) reduce overhead and simplify l
                              The value must be an integer length indicating the length
                              of the longest sequence of repeated frames the filter will find.
                              The default is "1", but is unused unless the threshold is set.
+    ...filter.exclude-jdk    Exclude frames from java built-in packages and gumshoe 
+    ...filter.include        Include only these packages or classes (comma-separated)
+    ...filter.exclude        Exclude these packages or classes 
     ...filter.top            Number of frames at top of stack to retain
     ...filter.bottom         Number of frames at bottom of stack to retain
-    ...filter.simplify       Retain only portions of the stack frames.  Allowed values are
-                               NO_LINE_NUMBERS, NO_METHOD, NO_INNER_CLASSES, NO_CLASSES, NONE
-                             Default is "NONE" (do not simplify frames)
     ...filter.allow-empty-stack    If filters excluded all frames from a stack,
                                                   the full unfiltered stack can be restored (if false),
                                                   or the empty stack will be used and collect stats

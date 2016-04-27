@@ -5,38 +5,52 @@ Gumshoe Load Investigator
 Overview
 --------
 
-This tool profiles I/O operations and presents statistics over time per calling stack as a flame graph or root tree.
+Monitor application performance statistics associated with individual calling stacks,
+interactively filter and view as a flame graph or root graph.
 
 Gumshoe was first created initially for internal use in the Dell Cloud Manager application but
 source code has since been released for public use under [these terms](LICENSE.rst).  
 
-Packages
+[Features](docs/features.md)
 --------
 
-* gumshoe-hooks
-
-    A very small set of classes that must be loaded as part of the JVM bootclasspath to capture raw I/O.
-
-* gumshoe-probe
-
-    A queue and filter system to queue, filter and summarize I/O events and pass results to listeners.
-
-* gumshoe-tools
-
-    A swing GUI to configure the probe and display and manipulate results. 
-
-Features
---------
-
-Capture and visualize live socket I/O statistics and identify what is causing it.
-View flame graph or root graph representation.
-Filter stack frames at capture and/or during visualization, modify on the fly. 
+* Analyze resource usage: measure TCP, UDP, filesystem or processor utilization
+* Pinpoint lines of code: all statistics are associated with a call stack and individual stack frames
+* Capture, filter and visualize as statistics are generated
+* Intuitive views: flame graph and root graph
+* Filter stack frames at capture and/or during visualization, modify on the fly. 
 
 Documentation
 -------------
 
 * Short intro and demo on youtube: [latest](https://www.youtube.com/watch?v=GGJFZfwXJ44) or the original [boring version](https://www.youtube.com/watch?v=1M9GX4ENMeI).
-
 * [Quick start guide](QUICK-START.md) walks through using with a sample application.
+* Full [user guide](docs/index.md)
 
-* [User guide](docs/index.md)
+Don't Just Measure and Report:  Understand
+------------------------------------------
+
+Looking at stack traces scaled by metrics gives a fast, intuitive way to understand application resource usage.  Consider
+network I/O in a hypothetical application...
+
+Flame graph example:
+
+![image](docs/flame-graph.png)
+
+Looking at callers into an application, Invoker.invoke is responsible for >90% of the read operations
+in this application.  It always calls RestRequestHandler.handle which in turn calls three different REST
+operations.  One -- showItemDetails -- is responsible for >80% of read operations as it makes different calls
+into the DAO layer.
+
+Root graph example:
+
+![image](docs/root-graph.png)
+
+Grouping now by the last frame where the application calls out to a resource,
+the couchdb Database.getDocument is responsible for over half of the read operations,
+while the JDBC Statement.execute about 25%, the vast majority of those from getItemDetails.
+
+These two examples are completely contrived, but not overly simplified.  The original call stacks in
+your application are generally huge, with hundreds of frames,
+but gumshoe uses [stack filters](docs/filters.md) to find
+just the relevant portions and focus the view on just those parts.

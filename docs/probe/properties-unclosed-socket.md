@@ -18,7 +18,7 @@ Initialization can use system properties by calling Probe.initialize() or with a
                                        reporting is enabled.  Override this behavior to install the probe
                                        now but enable/disable the reporting at another time.
 
-Stacks should generally be [filtered](filters.md) reduce overhead and simplify later analysis:
+Stacks should generally be [filtered](../filters.md) reduce overhead and simplify later analysis:
                                 
     gumshoe.socket-unclosed.filter...    See common filter properties [here](filter-properties.md) 
 

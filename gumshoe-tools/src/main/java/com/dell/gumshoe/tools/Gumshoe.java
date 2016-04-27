@@ -1,6 +1,11 @@
 package com.dell.gumshoe.tools;
 
+import static com.dell.gumshoe.tools.Swing.flow;
+
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.stack.Stack;
+import com.dell.gumshoe.stats.StatisticAdder;
+import com.dell.gumshoe.tools.StatisticsSourcePanel.Listener;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.BorderFactory;
@@ -17,7 +22,7 @@ import javax.swing.border.BevelBorder;
 import java.awt.BorderLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import static com.dell.gumshoe.tools.Swing.*;
+import java.util.Map;
 
 /** gumshoe main window and launcher
  *
@@ -52,15 +57,8 @@ public class Gumshoe extends JPanel {
         final ProbeManager probe = useProbe ? new ProbeManager() : null;
         if(useProbe) { probe.initialize(); }
 
-        final JFrame frame = new JFrame();
-        if( ! hasMain) {
-            // if this is the only program, click X to exit (otherwise just hide gumshoe)
-            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        }
-
-        frame.getContentPane().add(new Gumshoe(probe));
-        frame.pack();
-        frame.setVisible(true);
+        final Gumshoe gui = new Gumshoe(probe, hasMain);
+        gui.setVisible(true);
     }
 
     private static void launchMain(String[] args) throws Throwable {
@@ -82,9 +80,31 @@ public class Gumshoe extends JPanel {
         }
     }
 
-    private Gumshoe(ProbeManager probe) {
+    /////
+
+    private final JFrame frame = new JFrame();
+
+    public Gumshoe() {
+        this(null, false);
+    }
+
+    private Gumshoe(ProbeManager probe, boolean hasMain) {
         final StackGraphPanel graph = new StackGraphPanel();
-        final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(graph, probe);
+
+        final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(probe);
+
+        statsRelay.addListener(new Listener() {
+            @Override
+            public void statisticsLoaded(String time, String type, Map<Stack,StatisticAdder> stats) {
+                if(type!=null) {
+                    graph.getOptionEditor().chooseStatType(type);
+                    frame.setTitle("Gumshoe: displaying " + type + " from " + time);
+                    graph.updateModel(stats);
+                } else {
+                    frame.setTitle("Gumshoe");
+                }
+            }
+        });
 
         final JPanel detailPanel = new JPanel();
         detailPanel.setLayout(new BorderLayout());
@@ -111,5 +131,18 @@ public class Gumshoe extends JPanel {
         setLayout(new BorderLayout());
         add(graphPanel, BorderLayout.CENTER);
         add(settings, BorderLayout.SOUTH);
+
+        if( ! hasMain) {
+            // if this is the only program, click X to exit (otherwise just hide gumshoe)
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        }
+
+        frame.getContentPane().add(this);
+        frame.pack();
+        frame.setTitle("Gumshoe");
+    }
+
+    public void setVisible(boolean visible) {
+        frame.setVisible(true);
     }
 }

@@ -122,8 +122,8 @@ public class SocketCloseMonitor implements SocketImplFactory, StackStatisticSour
     /** JVM hook: capture info about socket as it is created */
     @Override
     public SocketImpl createSocketImpl() {
-        final int socketId = SOCKET_IDS.incrementAndGet();
         if(enabled) {
+            final int socketId = SOCKET_IDS.incrementAndGet();
             if(socketId%clearClosedPerCount==0) {
                 notifyClearClosed();
             }

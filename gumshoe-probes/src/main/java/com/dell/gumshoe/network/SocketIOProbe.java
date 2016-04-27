@@ -23,11 +23,15 @@ public class SocketIOProbe extends IOProbe {
 
     @Override
     protected IOMonitor createMonitor(Properties p) throws ParseException {
+        final int handlerPriority = (int)getNumber(p, getPropertyName("handler.priority"), Thread.MIN_PRIORITY);
+        final int handlerCount = (int)getNumber(p, getPropertyName("handler.count"), 1);
+        final int queueSize = (int)getNumber(p, getPropertyName("handler.queue-size"), 500);
         final boolean includeNIO = isTrue(p, getPropertyName("use-nio-hooks"), false);
         final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty(getPropertyName("include")));
         final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty(getPropertyName("exclude"), "127.0.0.1/32:*"));
         final MultiAddressMatcher socketFilter = new MultiAddressMatcher(acceptList, rejectList);
-        return new SocketIOMonitor(socketFilter, includeNIO);
+        final boolean statsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
+        return new SocketIOMonitor(socketFilter, includeNIO, queueSize, handlerPriority, handlerCount, statsEnabled);
     }
 
     private static AddressMatcher[] parseSocketMatchers(String csv) throws ParseException {

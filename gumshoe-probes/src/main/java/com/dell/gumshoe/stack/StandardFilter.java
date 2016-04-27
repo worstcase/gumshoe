@@ -17,8 +17,6 @@ public class StandardFilter {
         private Integer recursionDepth;
         private int recursionThreshold;
 
-        private String simplifyLevel;
-
         private Builder() { }
 
         public Builder withFilter(StackFilter filter) {
@@ -71,6 +69,10 @@ public class StandardFilter {
             return this;
         }
 
+        public void withSimpleFrames(MinutiaFilter.Level level) {
+            this.frameMinutia = level.toString();
+        }
+
         public void withSimpleFrames(String simplifyLevel) {
             this.frameMinutia = simplifyLevel;
         }
@@ -108,7 +110,7 @@ public class StandardFilter {
                 filters.add(endFilter);
             }
 
-            if(frameMinutia!=null && ! "NONE".equals(simplifyLevel)) {
+            if(frameMinutia!=null && ! "NONE".equals(frameMinutia)) {
                 filters.add(new MinutiaFilter(frameMinutia));
             }
 

@@ -1,6 +1,8 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.*;
+import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.tools.Swing.groupButtons;
+import static com.dell.gumshoe.tools.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
@@ -8,7 +10,6 @@ import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
 import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -20,7 +21,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -95,7 +95,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
         final JPanel optionPanel = rows(received, acceptPanel, handleIncoming);
 
-        JScrollPane sampleScroll = new JScrollPane(sampleList, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane sampleScroll = new JScrollPane(sampleList);
 
         setLayout(new BorderLayout());
         add(optionPanel, BorderLayout.NORTH);
@@ -150,7 +150,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
     private void relayStats(Sample sample) {
         parent.setStatus("Displaying sample: " + sample.time + " " + sample.label);
-        parent.setSample(sample.data);
+        parent.setSample(sample.time, sample.data);
     }
 
     private static class Sample {

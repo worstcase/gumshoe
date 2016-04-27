@@ -46,23 +46,25 @@ public class ProcessorProbe extends Probe implements CpuUsageMBean {
         final PrintStream out = getOutput(p, "gumshoe.cpu-usage.output", System.out);
 
         final long sampleFrequency = getNumber(p, "gumshoe.cpu-usage.sample", 5000);
+        final long jitter = getNumber(p, "gumshoe.cpu-usage.jitter", 1000);
         final int threadPriority = (int) getNumber(p, "gumshoe.cpu-usage.priority", Thread.MIN_PRIORITY);
 
         final ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         final boolean contentionSupported = mbean.isThreadContentionMonitoringSupported();
         final boolean enableContentionMonitoring = isTrue(p, "gumshoe.cpu-usage.use-wait-times", contentionSupported);
 
-        initialize(sampleFrequency, threadPriority,
+        initialize(sampleFrequency, jitter, threadPriority,
                 shutdownReportEnabled, periodicFrequency, enableContentionMonitoring, jmxEnabled?mbeanName:null, stackFilter, out);
     }
 
-    public void initialize(long sampleFrequency, int threadPriority, boolean shutdownReportEnabled, Long periodicFrequency,
+    public void initialize(long sampleFrequency, long jitter, int threadPriority, boolean shutdownReportEnabled, Long periodicFrequency,
             boolean enableContentionMonitoring, String mbeanName, StackFilter stackFilter, final PrintStream out) throws Exception {
         if(monitor!=null) throw new IllegalStateException("probe is already installed");
 
         monitor = new ThreadMonitor();
         monitor.setStackFilter(stackFilter);
         monitor.setDumpInterval(sampleFrequency);
+        monitor.setJitter(jitter);
         monitor.setThreadPriority(threadPriority);
         monitor.setContentionMonitoringEnabled(enableContentionMonitoring);
 
@@ -85,6 +87,14 @@ public class ProcessorProbe extends Probe implements CpuUsageMBean {
     }
 
     ///// jmx
+
+    public long getJitter() {
+        return monitor.getJitter();
+    }
+
+    public void setJitter(long jitter) {
+        monitor.setJitter(jitter);
+    }
 
     @Override
     public long getDumpInterval() {

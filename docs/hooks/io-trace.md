@@ -1,4 +1,4 @@
-Gumshoe Hook
+IoTrace Hook
 ============
 
 Summary
@@ -12,7 +12,8 @@ To collect socket or file I/O statistics, the target JVM must include the option
 Details
 -------
 
-At its core, gumshoe collects I/O data using a callback mechanism built into the JRE.
+At its core, gumshoe collects socket and file I/O data using a callback 
+mechanism built into the JRE.
 Socket and file operations make a call to an empty class IoTrace before and after
 each read or write operation.  The gumshoe hook replaces this empty class with one
 that can report the details of those operations and the call stack where it occurred.
@@ -26,7 +27,11 @@ Other kinds of statistics can still be collected.
 Having the hook in place will allow applications to start and stop monitoring
 as needed, and it will introduce almost no overhead when not monitoring.
 Specifically, instead of the default empty method in IoTrace, the replacement
-[IoTrace](../gumshoe-hooks/src/main/java/sun/misc/IoTrace.java) 
+[IoTrace](../../gumshoe-hooks/src/main/java/sun/misc/IoTrace.java) 
 methods make one call into a 
 [null object](https://en.wikipedia.org/wiki/Null_Object_pattern) IoTraceAdapter
-with an empty method.  
+
+The IoTraceAdapter used provides additional methods to collect datagram I/O
+using similar methods.  The datagram hooks report directly to this adapter
+and not sun.misc.IoTrace, however, so the original class signature of
+IoTrace is unchanged.

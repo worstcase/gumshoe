@@ -69,16 +69,6 @@ There are four levels of simplification that can be performed:
     NO_METHOD           drop line number and method name
     NO_INNER_CLASSES    drop line number, method and inner classes
     NO_CLASSES          keep only the package name
-    NONE                do not simplify frame
-
-Recursion
----------
-
-Recursive code can lead to especially long stack traces that repeat the same frame or sequence of frames
-over and over.  The recursion filter will remove repeated sequences up to a configurable length.
-There may be a lot of overhead comparing frames for each stack generated, and the overhead is directly
-related to the length chosen.  Use the recursion filter sparingly and with as low a length value as
-reasonable.
 
 Empty Stacks
 ------------

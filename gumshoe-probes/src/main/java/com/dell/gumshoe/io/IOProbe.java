@@ -57,13 +57,17 @@ public abstract class IOProbe extends Probe implements IOMBean {
         final StackFilter stackFilter = createStackFilter(getPropertyName("filter."), p);
         final PrintStream out = getOutput(p, getPropertyName("output"), System.out);
 
+        final boolean queueStatsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
+
         final IOMonitor monitor = createMonitor(p);
-        initialize(monitor, shutdownReportEnabled, periodicFrequency, jmxEnabled?mbeanName:null, stackFilter, out);
+        initialize(monitor, shutdownReportEnabled, periodicFrequency, jmxEnabled?mbeanName:null, stackFilter, out, queueStatsEnabled);
     }
 
     public void initialize(IOMonitor m, boolean shutdownReportEnabled, Long periodicFrequency, String mbeanName,
-            StackFilter stackFilter, final PrintStream out) throws Exception {
+            StackFilter stackFilter, final PrintStream out, boolean queueStatsEnabled) throws Exception {
         if(this.monitor!=null) throw new IllegalStateException("probe is already installed");
+
+        m.setQueueStatisticsEnabled(queueStatsEnabled);
         monitor = m;
 
         accumulator = createAccumulator(stackFilter);
@@ -136,4 +140,39 @@ public abstract class IOProbe extends Probe implements IOMBean {
     public boolean isShutdownReportEnabled() {
         return isShutdownHookEnabled(getReporter().getShutdownHook());
     }
+
+    public void setHandlerThreadCount(int count) {
+        monitor.setThreadCount(count);
+    }
+    public int getHandlerThreadCount() {
+        return monitor.getThreadCount();
+    }
+
+    public void setHandlerPriority(int priority) {
+        monitor.setThreadPriority(priority);
+    }
+    public int getHandlerPriority() {
+        return monitor.getThreadPriority();
+    }
+
+    public int getEventQueueSize() {
+        return monitor.getEventQueueSize();
+    }
+
+    public String getQueueStats() {
+        return monitor.getQueueStats();
+    }
+
+    public void resetQueueCounters() {
+        monitor.resetQueueCounters();
+    }
+
+    public void setQueueStatisticsEnabled(boolean enabled) {
+        monitor.setQueueStatisticsEnabled(enabled);
+    }
+
+    public boolean isQueueStatisticsEnabled() {
+        return monitor.isQueueStatisticsEnabled();
+    }
+
 }
