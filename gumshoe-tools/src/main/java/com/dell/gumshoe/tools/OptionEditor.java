@@ -37,6 +37,8 @@ public class OptionEditor extends JPanel {
     private final JComboBox statSelector = new JComboBox(DataTypeHelper.getTypes().toArray());
     private final CardLayout statCard = new CardLayout();
     private final JPanel statOptions = new JPanel();
+    private String lastLoadedType;
+    private boolean updateWhenLoaded = true;
 
     public OptionEditor() {
         groupButtons(byCalled, byCaller);
@@ -61,6 +63,11 @@ public class OptionEditor extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 final String label = (String)statSelector.getSelectedItem();
                 statCard.show(statOptions, label);
+                // if user manually selects current displayed type,
+                // keep them in sync if new type is loaded
+                // otherwise leave it on user's selected type
+                // so viewing stats live won't change dropdown while user choosing a stat
+                updateWhenLoaded = label.equals(lastLoadedType);
             }
         });
         final JPanel statChooserPanel = stackWest(new JLabel("For sample type "), statSelector, new JLabel(":"));
@@ -104,5 +111,12 @@ public class OptionEditor extends JPanel {
 
         }
         return new DisplayOptions(isInverted, order, width, minPct);
+    }
+
+    public void chooseStatType(String type) {
+        lastLoadedType = type;
+        if(updateWhenLoaded) {
+            statSelector.setSelectedItem(type);
+        }
     }
 }

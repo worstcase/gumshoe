@@ -1,5 +1,6 @@
 package com.dell.gumshoe.tools.stats;
 
+import static com.dell.gumshoe.tools.Swing.flow;
 import static com.dell.gumshoe.tools.Swing.grid;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.rows;
@@ -27,24 +28,24 @@ import java.util.Set;
 
 public class CPUUsageHelper extends DataTypeHelper {
     private final JRadioButton threadCountStat = new JRadioButton("all threads");
-    private final JRadioButton runningThreadCountStat = new JRadioButton("running");
+    private final JRadioButton runningThreadCountStat = new JRadioButton("runnable");
     private final JRadioButton waitingThreadCountStat = new JRadioButton("waiting");
     private final JRadioButton blockedThreadCountStat = new JRadioButton("blocked");
     private final JRadioButton timedWaitThreadCountStat = new JRadioButton("sleeping");
     private final JRadioButton cpuStat = new JRadioButton("CPU", true);
-    private final JRadioButton cpuWeightedStat = new JRadioButton("CPU");
-    private final JRadioButton userStat = new JRadioButton("user time");
-    private final JRadioButton userWeightedStat = new JRadioButton("user");
+    private final JRadioButton cpuWeightedStat = new JRadioButton("CPU **");
+    private final JRadioButton userStat = new JRadioButton("user");
+    private final JRadioButton userWeightedStat = new JRadioButton("user **");
     private final JRadioButton blockTimeStat = new JRadioButton("blocked");
     private final JRadioButton blockCountStat = new JRadioButton("blocked");
-    private final JRadioButton blockCountByThreadsStat = new JRadioButton("blocked");
-    private final JRadioButton blockTimeByThreadsStat = new JRadioButton("blocked");
-    private final JRadioButton blockTimeByCountStat = new JRadioButton("blocked");
+    private final JRadioButton blockCountByThreadsStat = new JRadioButton("blocked **");
+    private final JRadioButton blockTimeByThreadsStat = new JRadioButton("blocked **");
+    private final JRadioButton blockTimeByCountStat = new JRadioButton("blocked **");
     private final JRadioButton waitTimeStat = new JRadioButton("waiting");
     private final JRadioButton waitCountStat = new JRadioButton("waiting");
-    private final JRadioButton waitCountByThreadsStat = new JRadioButton("wait");
-    private final JRadioButton waitTimeByThreadsStat = new JRadioButton("wait");
-    private final JRadioButton waitTimeByCountStat = new JRadioButton("wait");
+    private final JRadioButton waitCountByThreadsStat = new JRadioButton("waiting **");
+    private final JRadioButton waitTimeByThreadsStat = new JRadioButton("waiting **");
+    private final JRadioButton waitTimeByCountStat = new JRadioButton("waiting **");
     private final JCheckBox acceptCPUStats = new JCheckBox("CPU usage", true);
 
     @Override
@@ -64,7 +65,7 @@ public class CPUUsageHelper extends DataTypeHelper {
                 + "</html>",
 
               boxNode.getFrame(),
-              boxDetail.getThreadCount(), getPercent(boxDetail.getThreadCount(), parentDetail.getThreadCount()),
+              boxDetail.getThreadCount(), pct(boxDetail.getThreadCount(), parentDetail.getThreadCount()),
               boxDetail.getThreadCount(State.RUNNABLE), boxDetail.getThreadCount(State.WAITING),
               boxDetail.getThreadCount(State.TIMED_WAITING), boxDetail.getThreadCount(State.BLOCKED),
               boxDetail.getCpuTime()/1000000f, boxDetail.getUserTime()/1000000f,
@@ -72,39 +73,29 @@ public class CPUUsageHelper extends DataTypeHelper {
     }
 
     @Override
-    public String getDetailText(StackFrameNode boxNode, StackFrameNode parentNode) {
-        final CPUStats boxDetail = (CPUStats)boxNode.getDetail();
-        final CPUStats parentDetail = (CPUStats)parentNode.getDetail();
-        final Set<StackTraceElement> callingFrames = boxNode.getCallingFrames();
-        final Set<StackTraceElement> calledFrames = boxNode.getCalledFrames();
-        return String.format("Frame: %s\n\n"
+    public String getStatDetails(StatisticAdder nodeValue, StatisticAdder parentValue) {
+        final CPUStats boxDetail = (CPUStats)nodeValue;
+        final CPUStats parentDetail = (CPUStats)parentValue;
 
-                + "%d threads%s: %d RUNNABLE%s, %d WAITING%s, %d TIMED_WAITING%s, %d BLOCKED%s\n\n"
+        return String.format(
+                "%d threads%s: %d RUNNABLE%s, %d WAITING%s, %d TIMED_WAITING%s, %d BLOCKED%s\n\n"
 
                 + "%.1f ms cpu time%s: %.1f ms user%s,"
                 + " %d ms%s blocked (%d times%s),"
-                + " %d ms%s waiting (%d times%s)\n\n"
+                + " %d ms%s waiting (%d times%s)\n\n",
 
-                + "Calls %d methods: %s\n\n"
-                + "Called by %d methods: %s",
+              boxDetail.getThreadCount(), pct(boxDetail.getThreadCount(), parentDetail.getThreadCount()),
+              boxDetail.getThreadCount(State.RUNNABLE), pct(boxDetail.getThreadCount(State.RUNNABLE), parentDetail.getThreadCount(State.RUNNABLE)),
+              boxDetail.getThreadCount(State.WAITING), pct(boxDetail.getThreadCount(State.WAITING), parentDetail.getThreadCount(State.WAITING)),
+              boxDetail.getThreadCount(State.TIMED_WAITING), pct(boxDetail.getThreadCount(State.TIMED_WAITING), parentDetail.getThreadCount(State.TIMED_WAITING)),
+              boxDetail.getThreadCount(State.BLOCKED), pct(boxDetail.getThreadCount(State.BLOCKED), parentDetail.getThreadCount(State.BLOCKED)),
 
-              boxNode.getFrame(),
-
-              boxDetail.getThreadCount(), getPercent(boxDetail.getThreadCount(), parentDetail.getThreadCount()),
-              boxDetail.getThreadCount(State.RUNNABLE), getPercent(boxDetail.getThreadCount(State.RUNNABLE), parentDetail.getThreadCount(State.RUNNABLE)),
-              boxDetail.getThreadCount(State.WAITING), getPercent(boxDetail.getThreadCount(State.WAITING), parentDetail.getThreadCount(State.WAITING)),
-              boxDetail.getThreadCount(State.TIMED_WAITING), getPercent(boxDetail.getThreadCount(State.TIMED_WAITING), parentDetail.getThreadCount(State.TIMED_WAITING)),
-              boxDetail.getThreadCount(State.BLOCKED), getPercent(boxDetail.getThreadCount(State.BLOCKED), parentDetail.getThreadCount(State.BLOCKED)),
-
-              boxDetail.getCpuTime()/1000000f, getPercent(boxDetail.getCpuTime(), parentDetail.getCpuTime()),
-              boxDetail.getUserTime()/1000000f, getPercent(boxDetail.getUserTime(), parentDetail.getUserTime()),
-              boxDetail.getBlockedTime(), getPercent(boxDetail.getBlockedTime(), parentDetail.getBlockedTime()),
-              boxDetail.getBlockedCount(), getPercent(boxDetail.getBlockedCount(), parentDetail.getBlockedCount()),
-              boxDetail.getWaitedTime(), getPercent(boxDetail.getWaitedTime(), parentDetail.getWaitedTime()),
-              boxDetail.getWaitedCount(), getPercent(boxDetail.getWaitedCount(), parentDetail.getWaitedCount()),
-
-              calledFrames.size(), getFrames(calledFrames),
-              callingFrames.size(), getFrames(callingFrames) );
+              boxDetail.getCpuTime()/1000000f, pct(boxDetail.getCpuTime(), parentDetail.getCpuTime()),
+              boxDetail.getUserTime()/1000000f, pct(boxDetail.getUserTime(), parentDetail.getUserTime()),
+              boxDetail.getBlockedTime(), pct(boxDetail.getBlockedTime(), parentDetail.getBlockedTime()),
+              boxDetail.getBlockedCount(), pct(boxDetail.getBlockedCount(), parentDetail.getBlockedCount()),
+              boxDetail.getWaitedTime(), pct(boxDetail.getWaitedTime(), parentDetail.getWaitedTime()),
+              boxDetail.getWaitedCount(), pct(boxDetail.getWaitedCount(), parentDetail.getWaitedCount()));
     }
 
     @Override
@@ -132,11 +123,11 @@ public class CPUUsageHelper extends DataTypeHelper {
         final JComponent grid = grid(5,
                 new JLabel(), new JLabel(), new JLabel(), new JLabel(), new JLabel(),
                 threadCountStat, runningThreadCountStat, waitingThreadCountStat, blockedThreadCountStat, timedWaitThreadCountStat,
-                cpuStat, userStat, blockTimeStat, waitTimeStat, new JLabel(),
-                blockCountStat, waitCountStat, new JLabel(), new JLabel(), new JLabel(),
-                cpuWeightedStat, userWeightedStat, blockTimeByThreadsStat,  waitTimeByThreadsStat, new JLabel(),
-                waitCountByThreadsStat, blockCountByThreadsStat, new JLabel(), new JLabel(), new JLabel(),
-                waitTimeByCountStat,  blockTimeByCountStat );
+                cpuStat, userStat, waitTimeStat, blockTimeStat, new JLabel(),
+                new JLabel(), new JLabel(), waitCountStat, blockCountStat, new JLabel(),
+                cpuWeightedStat, userWeightedStat, waitTimeByThreadsStat, blockTimeByThreadsStat,  new JLabel(),
+                new JLabel(), new JLabel(), waitCountByThreadsStat, blockCountByThreadsStat, new JLabel(),
+                new JLabel(), new JLabel(), waitTimeByCountStat,  blockTimeByCountStat );
         final JComponent labels = rows(
                 new JLabel("Choose statistic value:"),
                 new JLabel("Thread counts:"),
@@ -146,12 +137,12 @@ public class CPUUsageHelper extends DataTypeHelper {
                 new JLabel("Avg count per thread:"),
                 new JLabel("Avg event duration:") );
 
-        final JPanel out = new JPanel();
-        out.setLayout(new BorderLayout());
-        out.add(labels, BorderLayout.WEST);
-        out.add(grid, BorderLayout.CENTER);
+        final JPanel statChoices = new JPanel();
+        statChoices.setLayout(new BorderLayout());
+        statChoices.add(labels, BorderLayout.WEST);
+        statChoices.add(grid, BorderLayout.CENTER);
 
-        final JPanel squishNorth = stackNorth(out);
+        final JPanel squishNorth = stackNorth(statChoices, getDisclaimer());
         return squishNorth;
     }
 

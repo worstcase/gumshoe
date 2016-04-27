@@ -7,31 +7,37 @@ import java.awt.Graphics;
 
 /** cached model for individual display rectangles each showing details of a stack frame */
 class Box {
+    public static final long RESOLUTION = 10000;
+
     private final int row;
-    private final long position;
-    final StackFrameNode boxNode;
+    private float position, width;
+    private final StackFrameNode boxNode;
     private final StackFrameNode parentNode;
     private String label;
 
-    public Box(int row, long position, StackFrameNode boxNode, StackFrameNode parentNode) {
+    public Box(int row, float position, float width, StackFrameNode boxNode, StackFrameNode parentNode) {
         this.row = row;
         this.position = position;
+        this.width = width;
         this.boxNode = boxNode;
         this.parentNode = parentNode;
     }
 
-    public void draw(Graphics g, int displayHeight, int displayWidth, int rows, long total, DisplayOptions o, StackTraceElement selected) {
+    public StackTraceElement getFrame() { return boxNode.getFrame(); }
+    public float getPosition() { return position; }
+    public float getWidth() { return width; }
+
+    public void draw(Graphics g, int displayHeight, int displayWidth, int rows, DisplayOptions o, StackTraceElement selected) {
         final float rowHeight = displayHeight / (float)rows;
-        final float unitWidth = displayWidth / (float)total;
-        final int boxX = (int) (position * unitWidth);
-        final int boxWidth = (int) (boxNode.getValue() * unitWidth);
+        final int boxX = (int) (position * displayWidth);
+        final int boxWidth = (int)(width * displayWidth);
         final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
         final int boxHeight = (int)rowHeight;
-        final boolean isSelected = this.boxNode.getFrame()==selected;
+        final boolean isSelected = getFrame()==selected;
 
         g.setClip(boxX, boxY, boxWidth+1, boxHeight+1);
 
-        final Color baseColor = getColor(total, o);
+        final Color baseColor = getColor(o);
         final Color color = isSelected ? baseColor.darker() : baseColor;
 
         g.setColor(color);
@@ -43,6 +49,13 @@ class Box {
     }
 
     public boolean contains(int displayHeight, int displayWidth, int rows, long total, DisplayOptions o, int x, int y) {
+        // same box coordinates as draw(), but short circuit if possible
+        final int boxX = (int) (position * displayWidth);
+        if(x<boxX) { return false; }
+
+        final int boxWidth = (int)(width * displayWidth);
+        if(x>=boxX+boxWidth) { return false; }
+
         final float rowHeight = displayHeight / (float)rows;
         final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
         if(y<boxY) { return false; } // can avoid remaining calculations
@@ -50,31 +63,31 @@ class Box {
         final int boxHeight = (int)rowHeight;
         if(y>=boxY+boxHeight) { return false; }
 
-        final float unitWidth = displayWidth / (float)total;
-        final int boxX = (int) (position * unitWidth);
-        if(x<boxX) { return false; }
-
-        final int boxWidth = (int) (boxNode.getValue() * unitWidth);
-        return x<boxX+boxWidth;
+        return true;
     }
 
-    private Color getColor(long total, DisplayOptions o) {
-        int index = (int) (total/(boxNode.getValue()+1))-1; //  >50%--> 0,  >33%-->1, >25%-->2, > (1/N)-->(N-2)
-        if(index<0) index=0;
-        if(index>=StackGraphPanel.BOX_COLORS.length) index=StackGraphPanel.BOX_COLORS.length-1;
+    private Color getColor(DisplayOptions o) {
+        //  (50%,100%]--> 0,  (33%,50%]-->1, (25%,33%]-->2,... (1/N,1/(N-1)]-->(N-2)
+        int index = (int) (1f/width)-1;
+        index = Math.min(Math.max(0, index), StackGraphPanel.BOX_COLORS.length-1);
         return StackGraphPanel.BOX_COLORS[index];
     }
 
     public String getLabelText() {
         if(label==null) {
             final String[] parts = boxNode.getFrame().getClassName().split("\\.");
-            final String className = parts[parts.length-1];
+            final StringBuilder labelText = new StringBuilder(parts[parts.length-1]);
+
+            // the rest may be missing due to simplification filter
+            final String methodName = boxNode.getFrame().getMethodName();
+            if(methodName.length()>0) {
+                labelText.append(".").append(methodName);
+            }
             final int lineNumber = boxNode.getFrame().getLineNumber();
             if(lineNumber>0) {
-                label = String.format("%s.%s:%d", className, boxNode.getFrame().getMethodName(), lineNumber);
-            } else {
-                label = String.format("%s.%s", className, boxNode.getFrame().getMethodName());
+                labelText.append(":").append(lineNumber);
             }
+            label = labelText.toString();
         }
         return label;
     }
@@ -93,6 +106,6 @@ class Box {
 
     @Override
     public String toString() {
-        return row + " " + position + " " + boxNode.getFrame();
+        return String.format("%3d %.2f %.2f %s", row, position, width, boxNode.getFrame().toString());
     }
 }

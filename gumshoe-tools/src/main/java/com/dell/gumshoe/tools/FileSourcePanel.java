@@ -114,15 +114,16 @@ public class FileSourcePanel extends JPanel {
                 final Map<Stack,StatisticAdder> sample = get();
                 if(sample==null) {
                     parent.setStatus("No more samples found in file");
-                    parent.setSample(null);
+                    parent.setSample(null, null);
                 } else {
                     final Date time = file.getSampleTime();
-                    parent.setStatus("File sample time: " + hms.format(time));
-                    parent.setSample(sample);
+                    final String sampleTime = hms.format(time);
+                    parent.setStatus("File sample time: " + sampleTime);
+                    parent.setSample(sampleTime, sample);
                 }
             } catch(Exception ex) {
                 parent.setStatus("Parse error reading file");
-                parent.setSample(null);
+                parent.setSample(null, null);
             } finally {
                 openButton.setEnabled(true);
             }

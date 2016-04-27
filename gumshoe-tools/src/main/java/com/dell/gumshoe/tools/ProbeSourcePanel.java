@@ -95,7 +95,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
         final JPanel optionPanel = rows(received, acceptPanel, handleIncoming);
 
-        JScrollPane sampleScroll = new JScrollPane(sampleList, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane sampleScroll = new JScrollPane(sampleList);
 
         setLayout(new BorderLayout());
         add(optionPanel, BorderLayout.NORTH);
@@ -150,7 +150,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
     private void relayStats(Sample sample) {
         parent.setStatus("Displaying sample: " + sample.time + " " + sample.label);
-        parent.setSample(sample.data);
+        parent.setSample(sample.time, sample.data);
     }
 
     private static class Sample {

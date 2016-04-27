@@ -1,6 +1,6 @@
 package com.dell.gumshoe.tools.stats;
 
-import static com.dell.gumshoe.tools.Swing.columns;
+import static com.dell.gumshoe.tools.Swing.flow;
 import static com.dell.gumshoe.tools.Swing.groupButtons;
 import static com.dell.gumshoe.tools.Swing.stackNorth;
 
@@ -23,7 +23,7 @@ import java.util.Set;
 
 public class UnclosedSocketHelper extends DataTypeHelper {
     private final JRadioButton countStat = new JRadioButton("count", true);
-    private final JRadioButton ageStat = new JRadioButton("age");
+    private final JRadioButton ageStat = new JRadioButton("age **");
     private final JCheckBox acceptSocketUnclosed = new JCheckBox("unclosed sockets");
 
     @Override
@@ -42,26 +42,21 @@ public class UnclosedSocketHelper extends DataTypeHelper {
                                 + "</html>",
 
                               boxNode.getFrame(),
-                              boxDetail.getCount(), getPercent(boxDetail.getCount(), parentDetail.getCount()),
+                              boxDetail.getCount(), pct(boxDetail.getCount(), parentDetail.getCount()),
                               boxDetail.getMaxAge() );
     }
 
     @Override
-    public String getDetailText(StackFrameNode boxNode, StackFrameNode parentNode) {
-        final UnclosedStats boxDetail = (UnclosedStats)boxNode.getDetail();
-        final UnclosedStats parentDetail = (UnclosedStats)parentNode.getDetail();
-        final Set<StackTraceElement> callingFrames = boxNode.getCallingFrames();
-        final Set<StackTraceElement> calledFrames = boxNode.getCalledFrames();
-        return String.format("Frame: %s\n\n"
-                                + "Count:\n%d open sockets%s\n\n"
-                                + "Age:\nUp to %d ms\n\n"
-                                + "Calls %d methods: %s\n\n"
-                                + "Called by %d methods: %s",
-                                boxNode.getFrame(),
-                                boxDetail.getCount(), getPercent(boxDetail.getCount(), parentDetail.getCount()),
-                                boxDetail.getMaxAge(),
-                                calledFrames.size(), getFrames(calledFrames),
-                                callingFrames.size(), getFrames(callingFrames) );
+    public String getStatDetails(StatisticAdder nodeValue, StatisticAdder parentValue) {
+        final UnclosedStats boxDetail = (UnclosedStats)nodeValue;
+        final UnclosedStats parentDetail = (UnclosedStats)parentValue;
+        return String.format(
+                "Count:\n"
+                + "%d open sockets%s\n\n"
+                + "Age:\n"
+                + "Up to %d ms\n\n",
+                boxDetail.getCount(), pct(boxDetail.getCount(), parentDetail.getCount()),
+                boxDetail.getMaxAge() );
     }
 
     @Override
@@ -81,7 +76,7 @@ public class UnclosedSocketHelper extends DataTypeHelper {
     @Override
     public JComponent getOptionEditor() {
         groupButtons(countStat, ageStat);
-        return stackNorth(columns(new JLabel("Value: "), countStat, ageStat));
+        return stackNorth(flow(new JLabel("Value: "), countStat, ageStat), getDisclaimer());
     }
 
     @Override

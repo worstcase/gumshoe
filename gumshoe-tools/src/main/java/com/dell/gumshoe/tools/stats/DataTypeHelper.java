@@ -1,5 +1,7 @@
 package com.dell.gumshoe.tools.stats;
 
+import static com.dell.gumshoe.tools.Swing.flow;
+
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
@@ -7,6 +9,8 @@ import com.dell.gumshoe.stats.ValueReporter.Listener;
 import com.dell.gumshoe.tools.graph.StackFrameNode;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -15,7 +19,7 @@ import java.util.Set;
 
 public abstract class DataTypeHelper {
     public abstract String getToolTipText(StackFrameNode boxNode, StackFrameNode parentNode);
-    public abstract String getDetailText(StackFrameNode boxNode, StackFrameNode parentNode);
+    public abstract String getStatDetails(StatisticAdder boxNode, StatisticAdder parentNode);
     public abstract StatisticAdder parse(String value) throws Exception;
     public abstract String getSummary(Map<Stack, StatisticAdder> data);
     public abstract JComponent getOptionEditor();
@@ -24,14 +28,21 @@ public abstract class DataTypeHelper {
     public abstract void addListener(ProbeManager probe, Listener listener);
     public abstract long getStatValue(StatisticAdder composite);
 
-
-    protected String getPercent(Number num, Number num2, Number div, Number div2) {
-        return getPercent(num.longValue()+num2.longValue(), div.longValue()+div2.longValue());
+    protected JPanel getDisclaimer() {
+        return flow(new JLabel("** = these stats are not additive; widths from different stacks are not comparable"));
     }
 
-    protected String getPercent(Number num, Number div) {
+    protected String pct(Number num, Number num2, Number div, Number div2) {
+        return pct(num.longValue()+num2.longValue(), div.longValue()+div2.longValue());
+    }
+
+    protected String pct(Number num, Number div) {
         if(div.longValue()==0) { return ""; }
         return " " + (100*num.longValue()/div.longValue()) + "%";
+    }
+
+    protected long div(Number num, Number den) {
+        return den.longValue()==0 ? num.longValue() : Math.round(num.floatValue()/den.floatValue());
     }
 
     protected String getFrames(Set<StackTraceElement> frames) {
@@ -40,6 +51,23 @@ public abstract class DataTypeHelper {
             out.append("\n ").append(frame);
         }
         return out.toString();
+    }
+
+    public String getDetailText(StackFrameNode boxNode, StackFrameNode parentNode) {
+        final StringBuilder msg = new StringBuilder();
+        msg.append(String.format("Frame: %s\n\nContext:\n", boxNode.getFrame()));
+        boxNode.appendContext(msg);
+        msg.append("\n");
+
+        msg.append(getStatDetails(boxNode.getDetail(), parentNode.getDetail()));
+
+        final Set<StackTraceElement> callingFrames = boxNode.getCallingFrames();
+        final Set<StackTraceElement> calledFrames = boxNode.getCalledFrames();
+        msg.append(String.format("Calls %d methods: %s\n\nCalled by %d methods: %s",
+                calledFrames.size(), getFrames(calledFrames),
+                callingFrames.size(), getFrames(callingFrames) ));
+
+        return msg.toString();
     }
 
     /////

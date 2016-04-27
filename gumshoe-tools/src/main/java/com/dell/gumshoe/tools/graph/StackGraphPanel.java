@@ -93,7 +93,7 @@ public class StackGraphPanel extends JPanel {
         repaint();
     }
 
-    public JComponent getOptionEditor() {
+    public OptionEditor getOptionEditor() {
         if(optionEditor==null) {
             optionEditor = new OptionEditor();
             optionEditor.addActionListener(new ActionListener() {
@@ -109,6 +109,7 @@ public class StackGraphPanel extends JPanel {
     public JComponent getDetailField() {
         if(detailField==null) {
             detailField = new JTextArea();
+            detailField.setRows(20);
         }
         return detailField;
     }
@@ -140,7 +141,7 @@ public class StackGraphPanel extends JPanel {
 //        }
     }
 
-    private void update() {
+    private synchronized void update() {
         if(model==null) {
             model = new StackFrameNode(values, options, filter);
             modelRows = model.getDepth(options);
@@ -184,7 +185,7 @@ public class StackGraphPanel extends JPanel {
                 g.drawString("No stack frames remain after filter", 10, 10);
             }
             for(Box box : boxes) {
-                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, selectedFrame);
+                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, options, selectedFrame);
             }
             paintRuler(g, dim.height, dim.width);
         } catch(Exception e) {
@@ -201,9 +202,9 @@ public class StackGraphPanel extends JPanel {
         final Dimension dim = getSize();
         final Graphics2D g = image.createGraphics();
         for(Box box : boxes) {
-            final StackTraceElement frame = box.boxNode.getFrame();
+            final StackTraceElement frame = box.getFrame();
             if(frame.equals(oldSelected) || frame.equals(newSelected)) {
-                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, newSelected);
+                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, options, newSelected);
             }
         }
     }
@@ -249,7 +250,7 @@ public class StackGraphPanel extends JPanel {
 
     private void updateDetails() {
         for(Box box : boxes) {
-            if(box.boxNode.getFrame()==selectedFrame) {
+            if(box.getFrame()==selectedFrame) {
                 updateDetails(box);
                 return;
             }
@@ -266,7 +267,7 @@ public class StackGraphPanel extends JPanel {
 
     private void updateDetails(Box box) {
         final StackTraceElement oldSelection = selectedFrame;
-        selectedFrame = box.boxNode.getFrame();
+        selectedFrame = box.getFrame();
         updateImageSelection(oldSelection, selectedFrame);
         detailField.setText(box.getDetailText());
     }

@@ -36,6 +36,6 @@ public class DatagramIOHelper extends IOHelper {
 
     @Override
     protected String getTargetName() {
-        return "Addresses";
+        return "addresses";
     }
 }

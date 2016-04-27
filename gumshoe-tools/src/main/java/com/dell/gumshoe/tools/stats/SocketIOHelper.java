@@ -37,6 +37,6 @@ public class SocketIOHelper extends IOHelper {
 
     @Override
     protected String getTargetName() {
-        return "Addresses";
+        return "addresses";
     }
 }

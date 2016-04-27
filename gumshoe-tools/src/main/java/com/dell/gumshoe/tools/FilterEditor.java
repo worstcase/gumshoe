@@ -17,6 +17,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.CaretEvent;
@@ -34,13 +35,13 @@ public class FilterEditor extends JPanel {
 
     private final JTextField topCount = new JTextField();
     private final JTextField bottomCount = new JTextField();
-    private final JLabel topLabel1 = new JLabel("Top");
+    private final JLabel topLabel1 = new JLabel("top");
     private final JLabel topLabel2 = new JLabel("frames");
     private final JLabel bothLabel = new JLabel(" and ");
     private final JLabel bottomLabel1 = new JLabel("bottom");
     private final JLabel bottomLabel2 = new JLabel("frames");
 
-    private final JCheckBox dropJVM = new JCheckBox("drop jdk and gumshoe frames", true);
+    private final JCheckBox dropJVM = new JCheckBox("Drop jdk and gumshoe frames", true);
 
     // com.package.Class$Inner(Class:123)
     private final JRadioButton noSimplification = new JRadioButton("No simplification: com.package.Class$Inner.method(Class:123)", true);
@@ -61,37 +62,6 @@ public class FilterEditor extends JPanel {
     private StackGraphPanel graph;
 
     public FilterEditor() {
-        groupButtons(revertZero, bucketZero);
-        final JPanel zeroPanel = titled("When stack filter matches no frames:", flow(revertZero, bucketZero));
-
-        topCount.setColumns(3);
-        bottomCount.setColumns(3);
-        final JPanel countPanel = titled("Retain only:",
-                flow(topLabel1, topCount, topLabel2, bothLabel, bottomLabel1, bottomCount, bottomLabel2));
-
-        // lighten/darken words to help make filter intent more clear
-//        topLabel1.setEnabled(false);
-        topLabel2.setEnabled(false);
-        bothLabel.setEnabled(false);
-//        bottomLabel1.setEnabled(false);
-        bottomLabel2.setEnabled(false);
-        topCount.addCaretListener(new CaretListener() {
-            @Override
-            public void caretUpdate(CaretEvent e) {
-                final boolean topPositive = isPositive(topCount);
-//                topLabel1.setEnabled(topPositive);
-                topLabel2.setEnabled(topPositive);
-                bothLabel.setEnabled(topPositive && isPositive(bottomCount));
-            } });
-        bottomCount.addCaretListener(new CaretListener() {
-            @Override
-            public void caretUpdate(CaretEvent e) {
-                final boolean bottomPositive = isPositive(bottomCount);
-//                bottomLabel1.setEnabled(bottomPositive);
-                bottomLabel2.setEnabled(bottomPositive);
-                bothLabel.setEnabled(bottomPositive && isPositive(topCount));
-            } });
-
 
         recursionDepth.setColumns(3);
         recursionDepth.setText("5");
@@ -102,15 +72,22 @@ public class FilterEditor extends JPanel {
                      new JLabel(" frames long when the stack has more than "), recursionThreshold,
                      new JLabel(" frames")));
 
-        final JPanel acceptPanel = titled("Include classes:", accept);
-        final JPanel rejectPanel = titled("Exclude classes:", reject);
+        accept.setRows(3);
+        reject.setRows(3);
+        final JPanel acceptReject = stackNorth(
+                new JLabel("Include only packages/classes:"), new JScrollPane(accept),
+                new JLabel("Exclude packages/classes:"), new JScrollPane(reject));
 
-        final JPanel jvmPanel = flow(dropJVM);
+        groupButtons(revertZero, bucketZero);
+        final JPanel zeroPanel = flow(new JLabel("When stack filter matches no frames:"), revertZero, bucketZero);
+
+        final JPanel chooseFrames = titled("Filter stack frames:",
+                stackNorth(acceptReject,  flow(dropJVM), createCountPanel(), zeroPanel) );
 
         groupButtons(noSimplification, dropLine, dropMethod, dropInner, dropClass);
-        final JPanel simplificationPanel =
-                rows(new JLabel("Simplify stack frames:"),
-                        noSimplification, dropLine, dropMethod, dropInner, dropClass);
+        final JPanel simplificationPanel = titled("Simplify stack frames:",
+                rows(noSimplification, dropLine, dropMethod, dropInner, dropClass));
+
 
         localButton.addActionListener(new ActionListener() {
             @Override
@@ -119,8 +96,42 @@ public class FilterEditor extends JPanel {
             }
         });
 
+        final JPanel contents =
+                stackNorth(chooseFrames, recursionPanel, simplificationPanel, flow(localButton));
+
         setLayout(new BorderLayout());
-        add(stackNorth(zeroPanel, countPanel, recursionPanel, acceptPanel, rejectPanel, jvmPanel, simplificationPanel, flow(localButton)), BorderLayout.NORTH);
+        add(contents, BorderLayout.NORTH);
+    }
+
+    private JPanel createCountPanel() {
+        topCount.setColumns(3);
+        bottomCount.setColumns(3);
+
+        // lighten/darken words to help make filter intent more clear
+        topLabel1.setEnabled(false);
+        topLabel2.setEnabled(false);
+        bothLabel.setEnabled(false);
+        bottomLabel1.setEnabled(false);
+        bottomLabel2.setEnabled(false);
+        topCount.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                final boolean topPositive = isPositive(topCount);
+                topLabel1.setEnabled(topPositive);
+                topLabel2.setEnabled(topPositive);
+                bothLabel.setEnabled(topPositive && isPositive(bottomCount));
+            } });
+        bottomCount.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                final boolean bottomPositive = isPositive(bottomCount);
+                bottomLabel1.setEnabled(bottomPositive);
+                bottomLabel2.setEnabled(bottomPositive);
+                bothLabel.setEnabled(bottomPositive && isPositive(topCount));
+            } });
+
+        return flow(new JLabel("Drop all frames except the"),
+                topLabel1, topCount, bothLabel, bottomLabel1, bottomCount);
     }
 
     public void setGraph(StackGraphPanel graph) {

@@ -36,6 +36,6 @@ public class FileIOHelper extends IOHelper {
 
     @Override
     protected String getTargetName() {
-        return "Files";
+        return "files";
     }
 }
