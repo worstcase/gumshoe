@@ -1,18 +1,18 @@
 package com.dell.gumshoe.tools;
 
-import static com.dell.gumshoe.tools.Swing.flow;
-
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.tools.StatisticsSourcePanel.Listener;
 import com.dell.gumshoe.tools.graph.StackGraphPanel;
-
+import static com.dell.gumshoe.tools.Swing.*;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -92,7 +92,6 @@ public class Gumshoe extends JPanel {
         final StackGraphPanel graph = new StackGraphPanel();
 
         final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(probe);
-
         statsRelay.addListener(new Listener() {
             @Override
             public void statisticsLoaded(String time, String type, Map<Stack,StatisticAdder> stats) {
@@ -112,25 +111,31 @@ public class Gumshoe extends JPanel {
         final JScrollPane scroll = new JScrollPane(detailField);
         detailPanel.add(scroll, BorderLayout.CENTER);
 
-        final JPanel statsPanel = flow(statsRelay);
-
         final FilterEditor filterEditor = new FilterEditor();
         filterEditor.setGraph(graph);
 
-        final JTabbedPane settings = new JTabbedPane();
+        final JTabbedPane settings = createTabbedPaneWithoutHScroll();
         settings.setBorder(BorderFactory.createEmptyBorder(10,5,5,5));
-        settings.addTab("Collect -->", statsPanel);
+        settings.addTab("Collect -->", statsRelay);
         settings.addTab("--> Filter -->", filterEditor);
         settings.addTab("--> Display -->", graph.getOptionEditor());
         settings.addTab("--> Examine", detailPanel);
+
+        final  JPanel settingPanel = new JPanel();
+        settingPanel.setLayout(new BorderLayout());
+        settingPanel.add(settings);
 
         final JPanel graphPanel = new JPanel();
         graphPanel.setLayout(new BorderLayout());
         graphPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
         graphPanel.add(graph);
+
+        final JSplitPane mainView = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        mainView.setTopComponent(graphPanel);
+        mainView.setBottomComponent(new JScrollPane(settings, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+
         setLayout(new BorderLayout());
-        add(graphPanel, BorderLayout.CENTER);
-        add(settings, BorderLayout.SOUTH);
+        add(mainView, BorderLayout.CENTER);
 
         if( ! hasMain) {
             // if this is the only program, click X to exit (otherwise just hide gumshoe)
