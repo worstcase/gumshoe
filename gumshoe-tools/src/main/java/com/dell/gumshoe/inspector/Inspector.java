@@ -1,11 +1,13 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.StatisticsSourcePanel.Listener;
+import com.dell.gumshoe.inspector.graph.StackGraphPanel;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
-import com.dell.gumshoe.tools.StatisticsSourcePanel.Listener;
-import com.dell.gumshoe.tools.graph.StackGraphPanel;
-import static com.dell.gumshoe.tools.Swing.*;
+
+import static com.dell.gumshoe.util.Swing.*;
+
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -31,7 +33,7 @@ import java.util.Map;
  *  first argument is the name of the target main class to run,
  *  remaining arguments are passed as the args to that main.
  */
-public class Gumshoe extends JPanel {
+public class Inspector extends JPanel {
     public static void main(String[] args) throws Throwable {
         final boolean hasMain = args.length>0;
         launchGumshoe(hasMain);
@@ -57,7 +59,7 @@ public class Gumshoe extends JPanel {
         final ProbeManager probe = useProbe ? new ProbeManager() : null;
         if(useProbe) { probe.initialize(); }
 
-        final Gumshoe gui = new Gumshoe(probe, hasMain);
+        final Inspector gui = new Inspector(probe, hasMain);
         gui.setVisible(true);
     }
 
@@ -84,11 +86,11 @@ public class Gumshoe extends JPanel {
 
     private final JFrame frame = new JFrame();
 
-    public Gumshoe() {
+    public Inspector() {
         this(null, false);
     }
 
-    private Gumshoe(ProbeManager probe, boolean hasMain) {
+    private Inspector(ProbeManager probe, boolean hasMain) {
         final StackGraphPanel graph = new StackGraphPanel();
 
         final StatisticsSourcePanel statsRelay = new StatisticsSourcePanel(probe);

@@ -1,4 +1,4 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.util;
 
 import javax.accessibility.AccessibleContext;
 import javax.swing.AbstractButton;

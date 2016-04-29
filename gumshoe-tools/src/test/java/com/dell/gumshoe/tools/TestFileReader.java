@@ -1,5 +1,6 @@
 package com.dell.gumshoe.tools;
 
+import com.dell.gumshoe.inspector.FileDataParser;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 

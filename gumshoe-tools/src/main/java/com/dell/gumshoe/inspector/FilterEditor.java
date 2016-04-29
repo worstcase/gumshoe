@@ -1,16 +1,16 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.rows;
-import static com.dell.gumshoe.tools.Swing.stackNorth;
-import static com.dell.gumshoe.tools.Swing.titled;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.rows;
+import static com.dell.gumshoe.util.Swing.stackNorth;
+import static com.dell.gumshoe.util.Swing.titled;
 
+import com.dell.gumshoe.inspector.graph.StackGraphPanel;
 import com.dell.gumshoe.stack.MinutiaFilter;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stack.StandardFilter;
 import com.dell.gumshoe.stack.StandardFilter.Builder;
-import com.dell.gumshoe.tools.graph.StackGraphPanel;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;

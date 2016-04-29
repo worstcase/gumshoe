@@ -1,18 +1,18 @@
-package com.dell.gumshoe.tools.stats;
+package com.dell.gumshoe.inspector.helper;
 
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.grid;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.rows;
-import static com.dell.gumshoe.tools.Swing.stackNorth;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.grid;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.rows;
+import static com.dell.gumshoe.util.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.graph.StackFrameNode;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
 import com.dell.gumshoe.thread.CPUStats;
-import com.dell.gumshoe.tools.graph.StackFrameNode;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;

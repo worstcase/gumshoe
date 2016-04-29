@@ -1,7 +1,7 @@
-package com.dell.gumshoe.tools;
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.stackNorth;
+package com.dell.gumshoe.inspector;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.stack.Stack;

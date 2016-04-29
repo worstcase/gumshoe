@@ -1,14 +1,14 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.rows;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;

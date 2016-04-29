@@ -1,12 +1,12 @@
-package com.dell.gumshoe.tools.stats;
+package com.dell.gumshoe.inspector.helper;
 
-import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.util.Swing.flow;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.graph.StackFrameNode;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
-import com.dell.gumshoe.tools.graph.StackFrameNode;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;

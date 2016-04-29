@@ -1,9 +1,9 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter;
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
