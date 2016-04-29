@@ -1,6 +1,6 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
-import static com.dell.gumshoe.tools.Swing.flow;
+import static com.dell.gumshoe.util.Swing.flow;
 
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;

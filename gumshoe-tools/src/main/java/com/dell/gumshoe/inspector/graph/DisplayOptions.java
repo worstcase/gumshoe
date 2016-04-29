@@ -1,4 +1,4 @@
-package com.dell.gumshoe.tools.graph;
+package com.dell.gumshoe.inspector.graph;
 
 
 /** configurable aspects of rendering frames and boxes */

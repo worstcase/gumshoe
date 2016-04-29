@@ -1,4 +1,4 @@
-package com.dell.gumshoe.tools.stats;
+package com.dell.gumshoe.inspector.helper;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.file.FileIODetailAdder;

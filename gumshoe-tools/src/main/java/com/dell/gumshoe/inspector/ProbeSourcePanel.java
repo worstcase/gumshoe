@@ -1,26 +1,29 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.rows;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter.Listener;
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -28,20 +31,18 @@ import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder> {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
 
-    private String lastReceivedType;
-    private Map<Stack,StatisticAdder> lastReceivedStats;
-    private String receiveTime;
     private final StatisticsSourcePanel parent;
 
     private final JRadioButton ignoreIncoming = new JRadioButton("ignore new samples");
     private final JRadioButton dropOldest = new JRadioButton("drop oldest sample", true);
     private final JCheckBox sendLive = new JCheckBox("Immediately show newest");
     private final JButton sendNow = new JButton("Display selected");
-    private final JLabel received = new JLabel("No data has been received");
     private int sampleCount = 3;
     private final DefaultListModel sampleModel = new DefaultListModel();
     private final JList sampleList = new JList(sampleModel);
@@ -59,6 +60,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
             }
         });
 
+        sampleList.setVisibleRowCount(sampleCount);
         sampleList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -93,13 +95,11 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
             }
         });
 
-        final JPanel optionPanel = rows(received, acceptPanel, handleIncoming);
-
-        JScrollPane sampleScroll = new JScrollPane(sampleList);
+        final JPanel optionPanel = rows(acceptPanel, handleIncoming);
 
         setLayout(new BorderLayout());
         add(optionPanel, BorderLayout.NORTH);
-        add(sampleScroll, BorderLayout.CENTER);
+        add(new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
         add(flow(sendNow), BorderLayout.SOUTH);
 
         if(probe!=null) {
@@ -135,13 +135,11 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     public synchronized void statsReported(String type, Map<Stack,StatisticAdder> stats) {
         if(canAccept(type, stats)) {
             final Date date = new Date();
-            receiveTime = hms.format(date);
             final Sample sample = new Sample(type, date, stats);
             if(sendLive.isSelected()) {
                 sampleModel.clear();
             }
             sampleModel.addElement(sample);
-            received.setText("Received data " + receiveTime);
             if(sendLive.isSelected()) {
                 relayStats(sample);
             }
@@ -171,4 +169,5 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
             return label;
         }
     }
+
 }

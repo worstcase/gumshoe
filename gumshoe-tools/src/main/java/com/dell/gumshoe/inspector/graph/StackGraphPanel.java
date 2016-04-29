@@ -1,10 +1,10 @@
-package com.dell.gumshoe.tools.graph;
+package com.dell.gumshoe.inspector.graph;
 
+import com.dell.gumshoe.inspector.OptionEditor;
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.StatisticAdder;
-import com.dell.gumshoe.tools.OptionEditor;
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;

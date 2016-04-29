@@ -1,15 +1,15 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.inspector;
 
-import static com.dell.gumshoe.tools.Swing.columns;
-import static com.dell.gumshoe.tools.Swing.flow;
-import static com.dell.gumshoe.tools.Swing.groupButtons;
-import static com.dell.gumshoe.tools.Swing.stackNorth;
-import static com.dell.gumshoe.tools.Swing.stackSouth;
-import static com.dell.gumshoe.tools.Swing.stackWest;
-import static com.dell.gumshoe.tools.Swing.titled;
+import static com.dell.gumshoe.util.Swing.columns;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.groupButtons;
+import static com.dell.gumshoe.util.Swing.stackNorth;
+import static com.dell.gumshoe.util.Swing.stackSouth;
+import static com.dell.gumshoe.util.Swing.stackWest;
+import static com.dell.gumshoe.util.Swing.titled;
 
-import com.dell.gumshoe.tools.graph.DisplayOptions;
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
+import com.dell.gumshoe.inspector.graph.DisplayOptions;
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

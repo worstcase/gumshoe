@@ -1,6 +1,6 @@
-package com.dell.gumshoe.tools.graph;
+package com.dell.gumshoe.inspector.graph;
 
-import com.dell.gumshoe.tools.stats.DataTypeHelper;
+import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 
 import java.awt.Color;
 import java.awt.Graphics;

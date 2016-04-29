@@ -1,16 +1,63 @@
-package com.dell.gumshoe.tools;
+package com.dell.gumshoe.util;
 
+import javax.accessibility.AccessibleContext;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.Scrollable;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
+import java.awt.AWTException;
+import java.awt.AWTKeyStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.ComponentOrientation;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.ImageCapabilities;
+import java.awt.MenuComponent;
+import java.awt.Point;
+import java.awt.PopupMenu;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.dnd.DropTarget;
+import java.awt.event.ComponentListener;
+import java.awt.event.FocusListener;
+import java.awt.event.HierarchyBoundsListener;
+import java.awt.event.HierarchyListener;
+import java.awt.event.InputMethodListener;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelListener;
+import java.awt.im.InputContext;
+import java.awt.im.InputMethodRequests;
+import java.awt.image.ColorModel;
+import java.awt.image.ImageObserver;
+import java.awt.image.ImageProducer;
+import java.awt.image.VolatileImage;
+import java.awt.peer.ComponentPeer;
+import java.beans.PropertyChangeListener;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.EventListener;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TimerTask;
 
 /** utility methods to simplify layout and construction of swing GUI */
 public class Swing {
@@ -104,6 +151,58 @@ public class Swing {
             out.setLayout(new BorderLayout());
             out.add(content, BorderLayout.CENTER);
             return out;
+        }
+    }
+
+    public static JTabbedPane createTabbedPaneWithoutHScroll() {
+        return new JTabbedWithoutHScroll();
+    }
+
+    // track down layout issues by showing following size through container hierarchy
+    public static void debugWidth(Component c) {
+        int lastWidth = c.getWidth();
+        while(c!=null) {
+            final String className = c.getClass().getName();
+            final String[] parts = className.split("\\.");
+            final String lastPart = parts[parts.length-1];
+            int thisWidth = c.getWidth();
+            final float percent = ((float)Math.abs(thisWidth-lastWidth))/lastWidth;
+            boolean delta = percent > .1;
+            if(delta) {
+                System.out.printf(">> %25s %5d\n", lastPart, c.getWidth());
+            } else {
+                System.out.printf("%28s %5d %.2f\n", lastPart, c.getWidth(), percent);
+            }
+            c = c.getParent();
+            lastWidth = thisWidth;
+        }
+        System.out.println("-----");
+    }
+
+    private static class JTabbedWithoutHScroll extends JTabbedPane implements Scrollable {
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 1;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 10;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
         }
     }
 }

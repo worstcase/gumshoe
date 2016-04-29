@@ -1,7 +1,7 @@
-package com.dell.gumshoe.tools.stats;
+package com.dell.gumshoe.inspector.helper;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.network.SocketIODetailAdder;
+import com.dell.gumshoe.network.DatagramIODetailAdder;
 import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter;
@@ -12,24 +12,23 @@ import javax.swing.JComponent;
 
 import java.text.ParseException;
 
-public class SocketIOHelper extends IOHelper {
-
-    private final JCheckBox acceptSocketIO = new JCheckBox("socket IO", true);
-
-    @Override
-    public JComponent getSelectionComponent() { return acceptSocketIO; }
+public class DatagramIOHelper extends IOHelper {
+    private final JCheckBox accept = new JCheckBox("datagram IO", true);
 
     @Override
-    public boolean isSelected() { return acceptSocketIO.isSelected(); }
+    public JComponent getSelectionComponent() { return accept; }
+
+    @Override
+    public boolean isSelected() { return accept.isSelected(); }
 
     @Override
     public StatisticAdder parse(String value) throws ParseException {
-        return SocketIODetailAdder.fromString(value);
+        return DatagramIODetailAdder.fromString(value);
     }
 
     @Override
     public void addListener(ProbeManager probe, Listener listener) {
-        final ValueReporter<IODetailAdder> reporter = probe.getSocketIOReporter();
+        final ValueReporter<IODetailAdder> reporter = probe.getDatagramIOReporter();
         if(reporter!=null) {
             reporter.addListener(listener);
         }
