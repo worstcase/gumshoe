@@ -29,6 +29,11 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
               <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
@@ -63,7 +68,7 @@
 		                    </descriptorRefs>
 		                    <archive>
 		                        <manifest>
-		                            <mainClass>com.dell.gumshoe.inspector.Inspector</mainClass>
+		                            <mainClass>com.dell.gumshoe.inspector.Main</mainClass>
 		                        </manifest>
 		                    </archive>
                             <finalName>inspector</finalName>

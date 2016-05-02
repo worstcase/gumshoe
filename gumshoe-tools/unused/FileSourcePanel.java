@@ -2,6 +2,7 @@ package com.dell.gumshoe.inspector;
 
 import static com.dell.gumshoe.util.Swing.flow;
 
+import com.dell.gumshoe.inspector.tools.SampleSelectionListener;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
@@ -17,20 +18,28 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class FileSourcePanel extends JPanel {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
 
+    private final List<SampleSelectionListener> listeners = new CopyOnWriteArrayList<>();
+
     private FileDataParser file;
-    private final StatisticsSourcePanel parent;
+    private StatisticsSourcePanel parent;
 
     private final JTextField fileNameField = new JTextField();
     private final JFileChooser fileChooser = new JFileChooser();
     private final JButton openButton = new JButton("Parse");
 
     public FileSourcePanel(final StatisticsSourcePanel parent) {
-        this.parent = parent;
+        this();
+        setParent(parent);
+    }
+
+    public FileSourcePanel() {
         fileChooser.setApproveButtonText("Parse");
         final JButton chooseButton = new JButton("File:");
         chooseButton.addActionListener(new ActionListener() {
@@ -53,26 +62,31 @@ public class FileSourcePanel extends JPanel {
 
         final JPanel fileNamePanel = flow(chooseButton, fileNameField, openButton);
 
-        final JButton back = new JButton("<< Previous");
-        back.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                readSample(false);
-            }
-        });
-        final JButton forward = new JButton("Next >>");
-        forward.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                readSample(true);
-            }
-        });
+//        final JButton back = new JButton("<< Previous");
+//        back.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                readSample(false);
+//            }
+//        });
+//        final JButton forward = new JButton("Next >>");
+//        forward.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                readSample(true);
+//            }
+//        });
 
-        final JPanel actionPanel = flow(back, forward);
+//        final JPanel actionPanel = flow(back, forward);
         setLayout(new BorderLayout());
-        add(fileNamePanel, BorderLayout.NORTH);
-        add(actionPanel, BorderLayout.CENTER);
+//        add(fileNamePanel, BorderLayout.NORTH);
+//        add(actionPanel, BorderLayout.CENTER);
     }
+
+    public void setParent(StatisticsSourcePanel parent) {
+        this.parent = parent;
+    }
+
 
     private void openFile() {
         if(file!=null) {
@@ -133,4 +147,9 @@ public class FileSourcePanel extends JPanel {
     private void readSample(boolean forward) {
         new FileOpener(forward).execute();
     }
+
+    public void addListener(SampleSelectionListener listener) {
+        listeners.add(listener);
+    }
+
 }

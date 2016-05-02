@@ -19,7 +19,6 @@ import javax.swing.JRadioButton;
 
 import java.text.ParseException;
 import java.util.Map;
-import java.util.Set;
 
 public class UnclosedSocketHelper extends DataTypeHelper {
     private final JRadioButton countStat = new JRadioButton("count", true);
