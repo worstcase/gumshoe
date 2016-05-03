@@ -16,7 +16,7 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 
 public enum Tool implements ActionListener {
-    CONFIGURE_PROBE("Probe", "probe.png", "Manage Probes") {
+    CONFIGURE_PROBE("Select samples from this VM", "probe.png", "Manage Probes") {
         public void setComponents(GUIComponents components) {
             super.setComponents(components);
             if(getPopup()==null) {
@@ -26,7 +26,7 @@ public enum Tool implements ActionListener {
         protected JDialog getPopup() { return targets.getProbePopup(); }
     },
 
-    OPEN_FILE("Open", "open.png", "Open Data File") {
+    OPEN_FILE("Read data file", "open.png", "Open Data File") {
         public void actionPerformed(ActionEvent e) {
             final JFileChooser chooser = targets.getFileChooser();
             if(chooser==null || chooser.isShowing()) { return; }
@@ -34,38 +34,33 @@ public enum Tool implements ActionListener {
         }
     },
 
-    LOAD_PREVIOUS_SAMPLE("Previous", "prev.png") {
+    LOAD_PREVIOUS_SAMPLE("Previous sample", "prev.png") {
         public void actionPerformed(ActionEvent e) {
             targets.prevSample();
         }
     },
 
-    LOAD_NEXT_SAMPLE("Next", "next.png") {
+    LOAD_NEXT_SAMPLE("Next sample", "next.png") {
         public void actionPerformed(ActionEvent e) {
             targets.nextSample();
         }
     },
 
-    CONFIGURE_FILTERS("Filters", "filters.png", "Configure Stack Filter") {
+    CONFIGURE_FILTERS("Stack filters", "filters.png", "Stack Filter Configuration") {
         protected JDialog getPopup() { return targets.getFilterPopup(); }
     },
-    CHOOSE_STATISTIC("Statistic", "stats.png", "Select Statistic") {
+    CHOOSE_STATISTIC("Choose statistic", "stats.png", "Statistic to Display") {
         protected JDialog getPopup() { return targets.getStatisticPopup(); }
     },
-    CONFIGURE_GRAPH("Graph", "graph.png", "Graph Display Options") {
+    CONFIGURE_GRAPH("Configure graph", "graph.png", "Graph Display Options") {
         protected JDialog getPopup() { return targets.getGraphPopup(); }
     },
-//    ZOOM_MAX("Max", "largest.png") {
-//        public void actionPerformed(ActionEvent e) {
-//            targets.zoomMax();
-//        }
-//    },
     ZOOM_IN("Bigger", "larger.png") {
         public void actionPerformed(ActionEvent e) {
             targets.zoomIn();
         }
     },
-    ZOOM_FIT("Zoom to fit", "fit.png") {
+    ZOOM_FIT("Zoom to fit", "resize.png") {
         public void actionPerformed(ActionEvent e) {
             targets.zoomFit();
         }
@@ -76,16 +71,16 @@ public enum Tool implements ActionListener {
         }
     },
 
-    TOGGLE_DETAIL_PANEL("Examine", "detail.png", "Stack Frame Details") {
+    TOGGLE_DETAIL_PANEL("Examine selected frame", "detail.png", "Stack Frame Details") {
         protected JDialog getPopup() { return targets.getDetailPopup(); }
     },
-    ABOUT_INSPECTOR("About", "about.png", "About Gumshoe Inspector") {
+    ABOUT_INSPECTOR("About gumshoe", "about.png", "About Gumshoe Inspector") {
         protected JDialog getPopup() { return targets.getAboutPopup(); }
     };
 
     /////
 
-    protected final ToolActionHelper targets = new ToolActionHelper();
+    protected final ToolActionHelper targets;
     protected final JButton button;
 
     private Tool(String label, String iconFileName) {
@@ -99,9 +94,10 @@ public enum Tool implements ActionListener {
         } else {
             final ImageIcon icon = new ImageIcon(url, label);
             button = new JButton(icon);
+            button.setToolTipText(label);
         }
         button.addActionListener(this);
-
+        targets = new ToolActionHelper(title);
     }
 
     public void setComponents(GUIComponents components) {

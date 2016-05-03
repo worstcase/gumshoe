@@ -11,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.Scrollable;
+import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
 
 import java.awt.Color;
@@ -18,11 +19,13 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +61,9 @@ public class StackGraphPanel extends JPanel implements Scrollable {
     private OptionEditor optionEditor = new OptionEditor();
     private StackFilter filter;
     private JTextArea detailField;
-    private StackTraceElement selectedFrame;
+    private Box selectedBox;
 
-    private BufferedImage image;
+    private BufferedImage image, imageObj;
     private float zoom = 0;
     private Dimension baseSize, zoomedSize;
     private float lastBoxHeight;
@@ -139,20 +142,6 @@ public class StackGraphPanel extends JPanel implements Scrollable {
 
     ///// AWT event handling
 
-    private class Updater implements Runnable {
-        @Override
-        public void run() {
-            update();
-            repaint();
-        }
-    }
-
-    private void updateAsync() {
-        final Thread t = new Thread(new Updater());
-        t.setDaemon(true);
-        t.run();
-    }
-
     private void debugModel() {
 //        System.out.println(model);
     }
@@ -177,7 +166,18 @@ public class StackGraphPanel extends JPanel implements Scrollable {
             updateDetails();
             debugBoxes();
         }
-        image = createImage();
+        if(image==null) {
+            image = createImage();
+        }
+    }
+
+    private class ImageUpdater extends SwingWorker<Object,Object> {
+        @Override
+        public Object doInBackground() throws Exception {
+            update();
+            repaint();
+            return null;
+        }
     }
 
     @Override
@@ -191,9 +191,10 @@ public class StackGraphPanel extends JPanel implements Scrollable {
             g.drawString("No data", 10, 10);
         } else if(image==null || image.getHeight()!=dim.height || image.getWidth()!=dim.width) {
             g.drawString("Rendering...", 10, 10);
-            updateAsync();
+            new ImageUpdater().execute();
         } else {
             g.drawImage(image, 0, 0, null);
+
         }
     }
 
@@ -212,13 +213,15 @@ public class StackGraphPanel extends JPanel implements Scrollable {
                 g.drawString("No stack frames remain after filter", 10, 10);
             }
             final int displayHeight = dim.height-RULER_HEIGHT;
+            final float rowHeight = displayHeight / (float)modelRows;
+            final int rowsMinusOne = modelRows-1;
+            final Shape clipBefore = g.getClip();
             for(Box box : boxes) {
-                box.draw(g, displayHeight, dim.width, modelRows, options, selectedFrame);
+                box.draw(g, rowHeight, dim.width, rowsMinusOne, options, selectedBox);
             }
             lastBoxHeight = ((float)modelRows)/displayHeight;
             paintRuler(g, dim.height, dim.width);
-        } catch(Exception e) {
-            e.printStackTrace();
+            g.setClip(clipBefore);
         } finally {
             g.dispose();
         }
@@ -226,15 +229,43 @@ public class StackGraphPanel extends JPanel implements Scrollable {
 
     }
 
-    private void updateImageSelection(StackTraceElement oldSelected, StackTraceElement newSelected) {
+    private class ImageSelectionUpdater extends SwingWorker<Object,Object> {
+        private final Box oldSelected, newSelected;
+
+        public ImageSelectionUpdater(Box oldSelected, Box newSelected) {
+            this.oldSelected = oldSelected;
+            this.newSelected = newSelected;
+        }
+        @Override
+        public Object doInBackground() throws Exception {
+            updateSelectedPortion(oldSelected, newSelected);
+            detailField.setText(newSelected.getDetailText());
+            return null;
+        }
+    }
+
+    private void updateImageSelection(Box oldSelected, Box newSelected) {
+        if(boxes==null || image==null) return;
+        new ImageSelectionUpdater(oldSelected, newSelected).execute();
+    }
+
+    private void updateSelectedPortion(Box oldSelected, Box newSelected) {
         if(boxes==null || image==null) return;
         final Dimension dim = getSize();
         final Graphics2D g = image.createGraphics();
-        for(Box box : boxes) {
-            final StackTraceElement frame = box.getFrame();
-            if(frame.equals(oldSelected) || frame.equals(newSelected)) {
-                box.draw(g, dim.height-RULER_HEIGHT, dim.width, modelRows, options, newSelected);
+        try {
+            final int displayHeight = dim.height-RULER_HEIGHT;
+            final float rowHeight = displayHeight / (float)modelRows;
+            if(oldSelected!=null) {
+                oldSelected.draw(g, rowHeight, dim.width, modelRows-1, options, newSelected);
+                repaint(oldSelected.getBounds(rowHeight, dim.width, modelRows-1, options));
             }
+            newSelected.draw(g, rowHeight, dim.width, modelRows-1, options, newSelected);
+            repaint(newSelected.getBounds(rowHeight, dim.width, modelRows-1, options));
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            g.dispose();
         }
     }
 
@@ -262,11 +293,11 @@ public class StackGraphPanel extends JPanel implements Scrollable {
         }
 
         final Dimension dim = getSize();
+        final float rowHeight = (dim.height-RULER_HEIGHT) / (float)modelRows;
         for(Box box : boxes) {
-            if(box.contains(dim.height-RULER_HEIGHT, dim.width, modelRows, modelValueTotal, options, e.getX(), e.getY())) {
+            if(box.contains(rowHeight, dim.width, modelRows, modelValueTotal, options, e.getX(), e.getY())) {
                 return box;
             }
-
         }
         return null;
     }
@@ -279,7 +310,7 @@ public class StackGraphPanel extends JPanel implements Scrollable {
 
     private void updateDetails() {
         for(Box box : boxes) {
-            if(box.getFrame()==selectedFrame) {
+            if(box==selectedBox) {
                 updateDetails(box);
                 return;
             }
@@ -290,15 +321,14 @@ public class StackGraphPanel extends JPanel implements Scrollable {
         final Box box = getBoxFor(event);
         if(box!=null) {
             updateDetails(box);
-            repaint();
+//            repaint();
         }
     }
 
     private void updateDetails(Box box) {
-        final StackTraceElement oldSelection = selectedFrame;
-        selectedFrame = box.getFrame();
-        updateImageSelection(oldSelection, selectedFrame);
-        detailField.setText(box.getDetailText());
+        final Box oldSelection = selectedBox;
+        selectedBox = box;
+        updateImageSelection(oldSelection, selectedBox);
     }
 
     public Dimension getPreferredSize() {
@@ -319,12 +349,12 @@ public class StackGraphPanel extends JPanel implements Scrollable {
 
     @Override
     public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return 1;
+        return 10;
     }
 
     @Override
     public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return 10;
+        return 100;
     }
 
     @Override

@@ -39,6 +39,7 @@ public class FileDataParser {
     private Long lastPosition;
     private final String filename;
     private final Map<Long,String> typeByPosition = new HashMap<>();
+    private boolean parsedWholeFile = false;
 
     public FileDataParser(String text) throws Exception {
         raf = new RandomAccessFile(text, "r");
@@ -85,6 +86,7 @@ public class FileDataParser {
         long positionBefore = raf.getFilePointer();
         Map<Stack, StatisticAdder> sample = read();
         if(sample==null) {
+            parsedWholeFile = true;
             lastPosition = null;
             raf.seek(0); // wrap around
         } else {
@@ -205,5 +207,13 @@ public class FileDataParser {
 
     public String getFilename() {
         return filename;
+    }
+
+    public boolean hasPrevious() {
+        return savedPositions.getPositionBefore(lastPosition)!=null;
+    }
+
+    public boolean hasNext() {
+        return (lastPosition!=null && savedPositions.getPositionAtOrAfter(lastPosition+1)!=null) || ! parsedWholeFile;
     }
 }

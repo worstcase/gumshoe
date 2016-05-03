@@ -3,6 +3,7 @@ package com.dell.gumshoe.inspector;
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.inspector.Tool.GUIComponents;
 import com.dell.gumshoe.inspector.graph.StackGraphPanel;
+import com.dell.gumshoe.inspector.tools.AboutPanel;
 import com.dell.gumshoe.inspector.tools.FilterEditor;
 import com.dell.gumshoe.inspector.tools.ProbeSourcePanel;
 import com.dell.gumshoe.inspector.tools.SampleFileChooser;
@@ -34,6 +35,7 @@ public class GUI extends JPanel implements GUIComponents, SampleSelectionListene
     private final FilterEditor filterEditor;
     private final StackGraphPanel graph;
     private final JPanel detailPanel;
+    private final JPanel aboutPanel = new AboutPanel();
 
     private SampleSource currentSource;
 
@@ -92,8 +94,7 @@ public class GUI extends JPanel implements GUIComponents, SampleSelectionListene
 
     @Override
     public JComponent getAboutPanel() {
-        // TODO Auto-generated method stub
-        return null;
+        return aboutPanel;
     }
 
     @Override

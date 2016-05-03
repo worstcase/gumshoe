@@ -7,6 +7,8 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -18,6 +20,9 @@ import java.lang.reflect.Method;
  *  remaining arguments are passed as the args to that main.
  */
 public class Main {
+    private static final int DEFAULT_WIDTH_PERCENT = 70;
+    private static final int DEFAULT_HEIGHT_PERCENT = 90;
+
     public static void main(String[] args) throws Throwable {
         final boolean hasTargetApp = args.length>0;
         if(hasTargetApp) {
@@ -51,6 +56,13 @@ public class Main {
 
         frame.getContentPane().add(new GUI(frame, probe, hasMain));
         frame.pack();
+
+        final Dimension fullScreenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final int height = fullScreenSize.height;
+        final int width = fullScreenSize.width;
+        final Dimension unmaximizedSize = new Dimension(DEFAULT_WIDTH_PERCENT*width/100, DEFAULT_HEIGHT_PERCENT*height/100);
+        frame.setSize(unmaximizedSize);
+
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }

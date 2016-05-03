@@ -36,14 +36,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>, SampleSource {
+public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>, SampleSource, HasCloseButton {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
 
+    private List<ActionListener> closeListeners = new CopyOnWriteArrayList<>();
     private final List<SampleSelectionListener> listeners = new CopyOnWriteArrayList<>();
     private final JRadioButton ignoreIncoming = new JRadioButton("drop new samples");
     private final JRadioButton dropOldest = new JRadioButton("drop oldest sample", true);
-    private final JCheckBox sendLive = new JCheckBox("Immediately show newest");
-    private final JButton sendNow = new JButton("Show graph");
+    private final JCheckBox sendLive = new JCheckBox("Immediately view newest");
+    private final JButton sendNow = new JButton("View sample");
+    private final JButton ok = new JButton("OK");
     private int sampleCount = 3;
     private final DefaultListModel sampleModel = new DefaultListModel();
     private final JList sampleList = new JList(sampleModel);
@@ -106,7 +108,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         setLayout(new BorderLayout());
         add(rows(acceptPanel, handleIncoming), BorderLayout.NORTH);
         add(new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
-        add(flow(sendNow, sendLive), BorderLayout.SOUTH);
+        add(flow(sendNow, sendNow, ok), BorderLayout.SOUTH);
 
         if(probe!=null) {
             for(String helperType : DataTypeHelper.getTypes()) {
@@ -159,6 +161,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         for(SampleSelectionListener listener : listeners) {
             listener.sampleWasSelected(this, sample.time, sample.type, sample.data);
         }
+        notifyCloseListeners();
     }
 
     public void addListener(SampleSelectionListener listener) {
@@ -233,6 +236,18 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     private void notifyContentsChanged() {
         for(SampleSelectionListener listener : listeners) {
             listener.contentsChanged(this);
+        }
+    }
+
+    @Override
+    public void addCloseListener(ActionListener listener) {
+        closeListeners.add(listener);
+        ok.addActionListener(listener);
+    }
+
+    private void notifyCloseListeners() {
+        for(ActionListener listener : closeListeners) {
+            listener.actionPerformed(new ActionEvent(this, 0, ""));
         }
     }
 }

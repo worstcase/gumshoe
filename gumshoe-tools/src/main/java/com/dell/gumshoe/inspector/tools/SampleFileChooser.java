@@ -6,6 +6,7 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -38,7 +39,7 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
     }
 
     private void notifyError(String message) {
-        System.out.println("need popup here: " + message);
+        JOptionPane.showMessageDialog(this, message, "File Open Failed!", JOptionPane.ERROR_MESSAGE);
     }
 
     private void closeParser() {
@@ -51,19 +52,35 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
     }
 
     private void openParser(File file) {
+        if( ! validFile(file)) { return; }
+
         try {
-            if( ! file.isFile()) {
-                notifyError("Not a file: " + file);
-            } else if( ! file.canRead()) {
-                notifyError("Unable to read file: " + file);
-            } else {
-                parser = new FileDataParser(file);
-                readSample(true);
-            }
+            parser = new FileDataParser(file);
         } catch(Exception ex) {
             ex.printStackTrace();
             notifyError("Error opening file: " + ex.getMessage());
         }
+
+        try {
+            readSample(true);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            notifyError("Error parsing contents: " + ex.getMessage());
+        }
+    }
+
+    private boolean validFile(File file) {
+        if( ! file.exists()) {
+            notifyError("Not found: " + file);
+            return false;
+        } else if( ! file.isFile()) {
+            notifyError("Not a file: " + file);
+            return false;
+        } else if( ! file.canRead()) {
+            notifyError("No read permission for: " + file);
+            return false;
+        }
+        return true;
     }
 
     private void readSample(boolean forward) {
@@ -116,12 +133,12 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
 
     @Override
     public boolean hasNext() {
-        return false;
+        return parser.hasNext();
     }
 
     @Override
     public boolean hasPrevious() {
-        return false;
+        return parser.hasPrevious();
     }
 
     private void notifyContentsChanged() {

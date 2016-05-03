@@ -1,0 +1,91 @@
+#! /bin/sh
+#
+
+## where is gumshoe installed? probably right here
+if [ -z "$GUMSHOE_HOME" ]
+then
+  bindir="`dirname $0`"
+  if [ . = "$bindir" ]
+  then
+    bindir="`pwd`"
+  fi
+  GUMSHOE_HOME="`dirname $bindir`"
+fi
+
+## make sure jar is built 
+jarfile="$GUMSHOE_HOME/gumshoe-tools/target/inspector.jar"
+if [ ! -f "$jarfile" ]
+then
+  echo 'ERROR: gumshoe inspector executable jar not found (project not built?)' 1>&2
+  echo 'First build with: mvn install' 1>&2
+  exit 1
+fi
+
+## default 5min reporting period for any probes enabled
+period=300000 # 5min
+
+## add args for probes
+opts="-Xmx1g"
+needhook=false
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    ## by default, probe is not enabled unless there is some other "main" to trace
+    ## using this option, investigator can monitor stats on itself (demo purposes?)
+    -force)
+      opts="$opts -Dgumshoe.probe.enabled=true "
+      ;;
+    -cpu)
+      opts="$opts -Dgumshoe.cpu-usage.period=$period "
+      opts="$opts -Dgumshoe.cpu-usage.sample=5000"
+      opts="$opts -Dgumshoe.cpu-usage.filter.none=true"
+      ;;
+    -file-io)
+      opts="$opts -Dgumshoe.file-io.period=$period"
+      opts="$opts -Dgumshoe.file-io.filter.none=true"
+      needhook=true
+      ;;
+    -socket-io)
+      opts="$opts -Dgumshoe.socket-io.period=$period"
+      opts="$opts -Dgumshoe.socket-io.filter.none=true"
+      needhook=true
+      ;;
+    -datagram-io)
+      opts="$opts -Dgumshoe.datagram-io.period=$period"
+      opts="$opts -Dgumshoe.datagram-io.filter.none=true"
+      ;;
+    -unclosed)
+      opts="$opts -Dgumshoe.socket-unclosed.period=$period"
+      opts="$opts -Dgumshoe.socket-unclosed.filter.none=true"
+      ;;
+    *)
+      break
+      ;;
+  esac
+
+  shift
+done
+
+if $needhook
+then
+  hookdir="$GUMSHOE_HOME/gumshoe-hooks/target"
+  hookcount="`ls $hookdir | grep -c '^gumshoe-hooks-*.jar'`
+  case $hookcount in
+    0)
+      echo ERROR: gumshoe hook jar not found in $hookdir 1>&2
+      exit 1
+    1)
+      ## file and socket I/O probes need the sun.misc.SocketIo hook
+      hookfile="`ls $hookdir | grep '^gumshoe-hooks-*.jar'`
+      opts="$opts -Xbootclasspath/p:$hookdir/$hookfile"
+      ;;     
+    *)
+      ## could get fancy here, but i don't expect people to leave stray jars around
+      echo 'ERROR: more than one gumshoe hook jar found $hookdir !' 1>&2
+      echo 'Rebuild with: mvn clean install' 1>&2
+      exit 1
+  esac
+fi
+
+## warning: can fail if orig cmdline contains quoted expressions like: java some.MainClass "first arg" second "third arg"
+java $opts -jar "$jarfile" $*
