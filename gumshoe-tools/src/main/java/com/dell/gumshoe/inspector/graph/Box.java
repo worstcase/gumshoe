@@ -3,7 +3,11 @@ package com.dell.gumshoe.inspector.graph;
 import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.util.List;
 
 /** cached model for individual display rectangles each showing details of a stack frame */
 class Box {
@@ -26,15 +30,23 @@ class Box {
     public StackTraceElement getFrame() { return boxNode.getFrame(); }
     public float getPosition() { return position; }
     public float getWidth() { return width; }
+    public StackFrameNode getNode() { return boxNode; }
+    public StackFrameNode getParentNode() { return parentNode; }
 
-    public void draw(Graphics g, int displayHeight, int displayWidth, int rows, DisplayOptions o, StackTraceElement selected) {
-        final float rowHeight = displayHeight / (float)rows;
+    public Rectangle getBounds(float rowHeight, int displayWidth, int rowsMinusOne, DisplayOptions o) {
         final int boxX = (int) (position * displayWidth);
         final int boxWidth = (int)(width * displayWidth);
-        final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
+        final int boxY = (int) (rowHeight * (o.byCalled?(rowsMinusOne-row):row));
         final int boxHeight = (int)rowHeight;
-        final boolean isSelected = getFrame()==selected;
+        return new Rectangle(boxX, boxY, boxWidth, boxHeight);
+    }
 
+    public void draw(Graphics g, float rowHeight, int displayWidth, int rowsMinusOne, DisplayOptions o, Box selected) {
+        final int boxX = (int) (position * displayWidth);
+        final int boxWidth = (int)(width * displayWidth);
+        final int boxY = (int) (rowHeight * (o.byCalled?(rowsMinusOne-row):row));
+        final int boxHeight = (int)rowHeight;
+        final boolean isSelected = this==selected;
         g.setClip(boxX, boxY, boxWidth+1, boxHeight+1);
 
         final Color baseColor = getColor(o);
@@ -48,7 +60,7 @@ class Box {
         g.setClip(null);
     }
 
-    public boolean contains(int displayHeight, int displayWidth, int rows, long total, DisplayOptions o, int x, int y) {
+    public boolean contains(float rowHeight, int displayWidth, int rows, long total, DisplayOptions o, int x, int y) {
         // same box coordinates as draw(), but short circuit if possible
         final int boxX = (int) (position * displayWidth);
         if(x<boxX) { return false; }
@@ -56,7 +68,6 @@ class Box {
         final int boxWidth = (int)(width * displayWidth);
         if(x>=boxX+boxWidth) { return false; }
 
-        final float rowHeight = displayHeight / (float)rows;
         final int boxY = (int) (rowHeight * (o.byCalled?(rows-row-1):row));
         if(y<boxY) { return false; } // can avoid remaining calculations
 

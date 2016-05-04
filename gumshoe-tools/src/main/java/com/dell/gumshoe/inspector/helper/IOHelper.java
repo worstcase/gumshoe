@@ -1,7 +1,6 @@
 package com.dell.gumshoe.inspector.helper;
 
 import static com.dell.gumshoe.util.Swing.columns;
-import static com.dell.gumshoe.util.Swing.flow;
 import static com.dell.gumshoe.util.Swing.groupButtons;
 import static com.dell.gumshoe.util.Swing.stackNorth;
 
@@ -17,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 import java.util.Map;
-import java.util.Set;
 
 public abstract class IOHelper extends DataTypeHelper {
     private final JRadioButton readStat = new JRadioButton("read", true);

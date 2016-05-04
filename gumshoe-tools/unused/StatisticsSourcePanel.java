@@ -4,6 +4,7 @@ import static com.dell.gumshoe.util.Swing.groupButtons;
 import static com.dell.gumshoe.util.Swing.stackNorth;
 
 import com.dell.gumshoe.ProbeManager;
+import com.dell.gumshoe.inspector.tools.ProbeSourcePanel;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
@@ -30,8 +31,14 @@ public class StatisticsSourcePanel extends JPanel {
     private final JLabel status = new JLabel("No data currently displayed");
 
     public StatisticsSourcePanel(ProbeManager probe) {
-        fileSource = new FileSourcePanel(this);
-        probeSource = new ProbeSourcePanel(this, probe);
+        this(new FileSourcePanel(), new ProbeSourcePanel(probe));
+    }
+
+    public StatisticsSourcePanel(FileSourcePanel fileSource, ProbeSourcePanel probeSource) {
+        this.fileSource = fileSource;
+        this.probeSource = probeSource;
+        fileSource.setParent(this);
+//        probeSource.setParent(this);
 
         final JRadioButton jvmButton = new JRadioButton("probe this JVM");
         jvmButton.addActionListener(new ActionListener() {
@@ -52,21 +59,21 @@ public class StatisticsSourcePanel extends JPanel {
         final JPanel sourcePanel = flow(new JLabel("Source:"), jvmButton, fileButton);
 
         cardPanel.setLayout(sourceCardLayout);
-        cardPanel.add(fileSource, "file");
-        cardPanel.add(probeSource, "jvm");
+//        cardPanel.add(fileSource, "file");
+//        cardPanel.add(probeSource, "jvm");
 
         setLayout(new BorderLayout());
         add(stackNorth(flow(status), sourcePanel, cardPanel), BorderLayout.NORTH);
 
         // if there is a main, that is the default source
-        if(probe!=null) {
+//        if(probe!=null) {
             jvmButton.setSelected(true);
             sourceCardLayout.show(cardPanel, "jvm");
-        } else {
-            jvmButton.setEnabled(false);
-            fileButton.setSelected(true);
-            sourceCardLayout.show(cardPanel, "file");
-        }
+//        } else {
+//            jvmButton.setEnabled(false);
+//            fileButton.setSelected(true);
+//            sourceCardLayout.show(cardPanel, "file");
+//        }
     }
 
     public void setStatus(String message) {

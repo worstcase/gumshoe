@@ -1,4 +1,4 @@
-package com.dell.gumshoe.inspector;
+package com.dell.gumshoe.inspector.tools;
 
 import static com.dell.gumshoe.util.Swing.flow;
 import static com.dell.gumshoe.util.Swing.groupButtons;
@@ -29,7 +29,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilterEditor extends JPanel {
+public class FilterEditor extends JPanel implements HasCloseButton {
     private final JRadioButton revertZero = new JRadioButton("keep all frames");
     private final JRadioButton bucketZero = new JRadioButton("group as \"other\"", true);
 
@@ -56,7 +56,7 @@ public class FilterEditor extends JPanel {
     private final JTextArea accept = new JTextArea();
     private final JTextArea reject = new JTextArea();
 
-    private final JButton localButton = new JButton("Apply");
+    private final JButton localButton = new JButton("OK");
     private final JButton generate = new JButton("Generate cmdline options");
 
     private StackGraphPanel graph;
@@ -201,5 +201,10 @@ public class FilterEditor extends JPanel {
             final StackFilter filter = getFilter();
             graph.setFilter(filter);
         }
+    }
+
+    @Override
+    public void addCloseListener(ActionListener listener) {
+        localButton.addActionListener(listener);
     }
 }

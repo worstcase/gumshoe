@@ -83,6 +83,21 @@ public class StackFrameNode {
     public StackTraceElement getFrame() { return frames==null ? null : frames[frameIndex]; }
     public long getValue() { return value; }
 
+    public StackTraceElement[] getContext() {
+        final StackTraceElement[] out = new StackTraceElement[frameIndex+1];
+        int i=0;
+        if(byCalled) {
+            for(int index=frameIndex;index>=0;index--) {
+                out[i++] = frames[index];
+            }
+        } else {
+            for(int index=0;index<=frameIndex;index++) {
+                out[i++] = frames[index];
+            }
+        }
+        return out;
+    }
+
     public void appendContext(StringBuilder msg) {
         if(byCalled) {
             for(int index=frameIndex;index>=0;index--) {
@@ -101,6 +116,10 @@ public class StackFrameNode {
 
     public Set<StackTraceElement> getCallingFrames() {
         return byCalled ? getParentFrame() : divisions.keySet();
+    }
+
+    public boolean isByCalled() {
+        return byCalled;
     }
 
     private Set<StackTraceElement> getParentFrame() {
@@ -220,5 +239,9 @@ public class StackFrameNode {
                    .append("\n");
             entry.getValue().addNode(builder, indent + " ");
         }
+    }
+
+    public String getStats(StackFrameNode parent) {
+        return DataTypeHelper.getStatInfo(detail, parent==null ? null : parent.detail);
     }
 }

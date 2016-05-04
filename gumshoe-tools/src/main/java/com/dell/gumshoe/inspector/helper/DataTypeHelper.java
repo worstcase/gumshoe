@@ -45,7 +45,7 @@ public abstract class DataTypeHelper {
         return den.longValue()==0 ? num.longValue() : Math.round(num.floatValue()/den.floatValue());
     }
 
-    protected String getFrames(Set<StackTraceElement> frames) {
+    protected String getFrames(Collection<StackTraceElement> frames) {
         final StringBuilder out = new StringBuilder();
         for(StackTraceElement frame : frames) {
             out.append("\n ").append(frame);
@@ -96,4 +96,8 @@ public abstract class DataTypeHelper {
     }
 
     public interface TypeDisplayOptions { }
+
+    public static String getStatInfo(StatisticAdder target, StatisticAdder parent) {
+        return forType(target.getType()).getStatDetails(target, parent);
+    }
 }

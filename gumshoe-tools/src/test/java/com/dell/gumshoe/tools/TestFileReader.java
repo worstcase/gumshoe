@@ -18,9 +18,9 @@ public class TestFileReader extends TestCase {
     FileDataParser target;
 
     @Override
-    public void setUp() throws FileNotFoundException {
+    public void setUp() throws Exception {
         final String fileName = getClass().getClassLoader().getResource("sample-data.txt").getFile();
-        target = new FileDataParser(new RandomAccessFile(fileName, "r"));
+        target = new FileDataParser(fileName);
     }
 
     @Override

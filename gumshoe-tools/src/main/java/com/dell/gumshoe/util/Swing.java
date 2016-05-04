@@ -1,6 +1,5 @@
 package com.dell.gumshoe.util;
 
-import javax.accessibility.AccessibleContext;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -11,53 +10,12 @@ import javax.swing.Scrollable;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import java.awt.AWTException;
-import java.awt.AWTKeyStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.ComponentOrientation;
-import java.awt.Container;
-import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Event;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GraphicsConfiguration;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
-import java.awt.Image;
-import java.awt.ImageCapabilities;
-import java.awt.MenuComponent;
-import java.awt.Point;
-import java.awt.PopupMenu;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.dnd.DropTarget;
-import java.awt.event.ComponentListener;
-import java.awt.event.FocusListener;
-import java.awt.event.HierarchyBoundsListener;
-import java.awt.event.HierarchyListener;
-import java.awt.event.InputMethodListener;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelListener;
-import java.awt.im.InputContext;
-import java.awt.im.InputMethodRequests;
-import java.awt.image.ColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
-import java.awt.image.VolatileImage;
-import java.awt.peer.ComponentPeer;
-import java.beans.PropertyChangeListener;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.util.EventListener;
-import java.util.Locale;
-import java.util.Set;
-import java.util.TimerTask;
 
 /** utility methods to simplify layout and construction of swing GUI */
 public class Swing {
@@ -115,20 +73,19 @@ public class Swing {
 
     /** add these components to a new panel, stacking along the given side */
     public static JPanel stack(String edge, JComponent... components) {
-        JPanel out = null;
-        JPanel inner = null;
+        return stackIn(new JPanel(new BorderLayout()), edge, components);
+    }
+
+    /** add these components to a new panel, stacking along the given side */
+    public static JPanel stackIn(JPanel container, String edge, JComponent... components) {
+        JPanel inner = container;
         for(JComponent component : components) {
-            if(out==null) {
-                out = inner = new JPanel();
-            } else {
-                final JPanel newInner = new JPanel();
-                inner.add(newInner, BorderLayout.CENTER);
-                inner = newInner;
-            }
-            inner.setLayout(new BorderLayout());
-            inner.add(component, edge);
+            final JPanel newInner = new JPanel(new BorderLayout());
+            newInner.add(component, edge);
+            inner.add(newInner, BorderLayout.CENTER);
+            inner = newInner;
         }
-        return out;
+        return container;
     }
 
     public static JPanel flow(JComponent... components) {

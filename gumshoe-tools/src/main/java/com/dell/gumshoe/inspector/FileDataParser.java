@@ -5,6 +5,7 @@ import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 import com.dell.gumshoe.stats.ValueReporter;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -34,17 +35,23 @@ import java.util.TreeMap;
  */
 public class FileDataParser {
     private final BidirectionalMap savedPositions = new BidirectionalMap();
-    private final RandomAccessFile file;
+    private final RandomAccessFile raf;
     private Long lastPosition;
-    private final ValueReporter reporter = new ValueReporter("socket-io");
-    public FileDataParser(RandomAccessFile file) { this.file = file; }
+    private final String filename;
+    private final Map<Long,String> typeByPosition = new HashMap<>();
+    private boolean parsedWholeFile = false;
 
     public FileDataParser(String text) throws Exception {
-        this(new RandomAccessFile(text, "r"));
+        raf = new RandomAccessFile(text, "r");
+        filename = text;
+    }
+    public FileDataParser(File file) throws Exception {
+        raf = new RandomAccessFile(file, "r");
+        filename = file.getName();
     }
 
     public void close() throws IOException {
-        file.close();
+        raf.close();
         savedPositions.clear();
         lastPosition = null;
     }
@@ -68,7 +75,7 @@ public class FileDataParser {
             lastPosition = null;
             return null;
         }
-        file.seek(position);
+        raf.seek(position);
         return getNextSample();
     }
 
@@ -76,11 +83,12 @@ public class FileDataParser {
 
     /** return next sample found after current position in file */
     public Map<Stack, StatisticAdder> getNextSample() throws Exception {
-        long positionBefore = file.getFilePointer();
+        long positionBefore = raf.getFilePointer();
         Map<Stack, StatisticAdder> sample = read();
         if(sample==null) {
+            parsedWholeFile = true;
             lastPosition = null;
-            file.seek(0); // wrap around
+            raf.seek(0); // wrap around
         } else {
             lastPosition = savedPositions.getPositionAtOrAfter(positionBefore);
         }
@@ -91,7 +99,7 @@ public class FileDataParser {
     public Map<Stack, StatisticAdder> getPreviousSample() throws Exception {
         lastPosition = savedPositions.getPositionBefore(lastPosition);
         if(lastPosition==null) { return null; }
-        file.seek(lastPosition);
+        raf.seek(lastPosition);
         return read();
     }
 
@@ -100,29 +108,32 @@ public class FileDataParser {
         return savedPositions.getTime(lastPosition);
     }
 
+    public String getSampleType() {
+        return typeByPosition.get(lastPosition);
+    }
     private Map<Stack,StatisticAdder> read() throws Exception {
         String line = null;
 
         // read until find a start tag
-        long startPosition = file.getFilePointer();
+        long startPosition = raf.getFilePointer();
         Date startTime = null;
         String type = null;
         DataTypeHelper helper = null;
-        while((line=file.readLine())!=null) {
+        while((line=raf.readLine())!=null) {
             startTime = ValueReporter.parseStartTagTime(line);
             if(startTime!=null) {
                 type = ValueReporter.parseStartTagType(line);
                 helper = DataTypeHelper.forType(type);
                 break;
             }
-            startPosition = file.getFilePointer();
+            startPosition = raf.getFilePointer();
         }
         if(startTime==null) { return null; }
 
         final Map<Stack,StatisticAdder> out = new HashMap<>();
         StatisticAdder stats = null;
         final List<StackTraceElement> stackFrames = new ArrayList<>();
-        while((line=file.readLine())!=null) {
+        while((line=raf.readLine())!=null) {
             if(line.startsWith(Stack.FRAME_PREFIX)) {
                 if(stats==null) {
                     throw new IllegalStateException("stack line read but no stats");
@@ -134,6 +145,7 @@ public class FileDataParser {
                     out.put(stack, stats);
                 }
                 savedPositions.put(startTime, startPosition);
+                typeByPosition.put(startPosition, type);
                 return out;
             } else {
                 // parse first, make sure is expected format
@@ -191,5 +203,17 @@ public class FileDataParser {
             }
             return timeByPosition.higherKey(position);
         }
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public boolean hasPrevious() {
+        return savedPositions.getPositionBefore(lastPosition)!=null;
+    }
+
+    public boolean hasNext() {
+        return (lastPosition!=null && savedPositions.getPositionAtOrAfter(lastPosition+1)!=null) || ! parsedWholeFile;
     }
 }
