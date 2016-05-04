@@ -1,6 +1,8 @@
 package com.dell.gumshoe.inspector;
 
+import com.dell.gumshoe.inspector.tools.DetailPanel;
 import com.dell.gumshoe.inspector.tools.HasCloseButton;
+import com.dell.gumshoe.inspector.tools.SampleFileChooser;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -127,6 +129,8 @@ public enum Tool implements ActionListener {
         }
     }
 
+    private static int DIALOG_COUNT = 0;
+
     public static class ToolActionHelper {
         private final String windowTitle;
         private GUIComponents gui;
@@ -149,8 +153,10 @@ public enum Tool implements ActionListener {
             return popup;
         }
 
-        public JFileChooser getFileChooser() {
-            return gui.getFileControl();
+        public SampleFileChooser getFileChooser() {
+            final SampleFileChooser out = gui.getFileControl();
+            setPosition(out);
+            return out;
         }
 
         public JDialog getFilterPopup() {
@@ -201,9 +207,25 @@ public enum Tool implements ActionListener {
                     }
                 });
             }
+
+            setPosition(probePopup);
             return probePopup;
         }
 
+        public void setPosition(SampleFileChooser window) {
+            final int index = DIALOG_COUNT++;
+            int x = 100+(index%4)*75;
+            final int y = 100+ index*50;
+            window.setLocation(x, y);
+        }
+
+
+        public void setPosition(Window window) {
+            final int index = DIALOG_COUNT++;
+            int x = 100+(index%4)*75;
+            final int y = 100+ index*25;
+            window.setLocation(x, y);
+        }
         /////
 
         public void zoomFit() { gui.zoomFit(); }
@@ -217,11 +239,11 @@ public enum Tool implements ActionListener {
     public static interface GUIComponents {
         public JFrame getFrame();
         public JComponent getProbeControl();
-        public JFileChooser getFileControl();
+        public SampleFileChooser getFileControl();
         public JComponent getFilterControl();
         public JComponent getStatisticControl();
         public JComponent getGraphControl();
-        public JComponent getDetailPanel();
+        public DetailPanel getDetailPanel();
         public JComponent getAboutPanel();
         public void zoomMax();
         public void zoomFit();

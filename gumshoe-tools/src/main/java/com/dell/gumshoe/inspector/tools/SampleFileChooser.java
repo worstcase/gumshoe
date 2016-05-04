@@ -5,14 +5,13 @@ import com.dell.gumshoe.inspector.SampleSource;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.Component;
+import java.awt.HeadlessException;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,10 +24,25 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
 
     private final List<SampleSelectionListener> listeners = new CopyOnWriteArrayList<>();
 
+    private JDialog dialog;
     private FileDataParser parser;
-
+    private int locationX, locationY;
     public SampleFileChooser() {
         setApproveButtonText("Parse");
+    }
+
+    protected JDialog createDialog(Component parent) throws HeadlessException {
+        dialog = super.createDialog(parent);
+        dialog.setLocation(locationX, locationY);
+        return dialog;
+    }
+
+    public void setLocation(int x, int y) {
+        if(dialog!=null) {
+            dialog.setLocation(x, y);
+        }
+        locationX = x;
+        locationY = y;
     }
 
     public void approveSelection() {

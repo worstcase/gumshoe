@@ -2,8 +2,10 @@ package com.dell.gumshoe.inspector;
 
 import com.dell.gumshoe.ProbeManager;
 import com.dell.gumshoe.inspector.Tool.GUIComponents;
+import com.dell.gumshoe.inspector.graph.Ruler;
 import com.dell.gumshoe.inspector.graph.StackGraphPanel;
 import com.dell.gumshoe.inspector.tools.AboutPanel;
+import com.dell.gumshoe.inspector.tools.DetailPanel;
 import com.dell.gumshoe.inspector.tools.FilterEditor;
 import com.dell.gumshoe.inspector.tools.ProbeSourcePanel;
 import com.dell.gumshoe.inspector.tools.SampleFileChooser;
@@ -11,16 +13,12 @@ import com.dell.gumshoe.inspector.tools.SampleSelectionListener;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
-import javax.swing.border.BevelBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import java.awt.BorderLayout;
 import java.util.Map;
@@ -34,7 +32,7 @@ public class GUI extends JPanel implements GUIComponents, SampleSelectionListene
     private final ProbeSourcePanel probeSource;
     private final FilterEditor filterEditor;
     private final StackGraphPanel graph;
-    private final JPanel detailPanel;
+    private final DetailPanel detailPanel;
     private final JPanel aboutPanel = new AboutPanel();
 
     private SampleSource currentSource;
@@ -63,11 +61,14 @@ public class GUI extends JPanel implements GUIComponents, SampleSelectionListene
         Tool.LOAD_NEXT_SAMPLE.getButton().setEnabled(false);
         Tool.LOAD_PREVIOUS_SAMPLE.getButton().setEnabled(false);
 
-        detailPanel = new JPanel();
-        detailPanel.setLayout(new BorderLayout());
-        final JComponent detailField = graph.getDetailField();
-        final JScrollPane scroll = new JScrollPane(detailField);
-        detailPanel.add(scroll, BorderLayout.CENTER);
+        detailPanel = new DetailPanel();
+        graph.addSelectionListener(detailPanel);
+
+//        detailPanel = new JPanel();
+//        detailPanel.setLayout(new BorderLayout());
+//        final JComponent detailField = graph.getDetailField();
+//        final JScrollPane scroll = new JScrollPane(detailField);
+//        detailPanel.add(scroll, BorderLayout.CENTER);
 
         filterEditor = new FilterEditor();
         filterEditor.setGraph(graph);
@@ -77,20 +78,25 @@ public class GUI extends JPanel implements GUIComponents, SampleSelectionListene
 //        graphPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 //        graphPanel.add(graph);
 
+        final JScrollPane graphScroll = new JScrollPane(graph);
+        graphScroll.setColumnHeaderView(new Ruler(graphScroll));
+//        final RulerViewport viewport = new RulerViewport();
+//        viewport.setView(graph);
+//        graphScroll.setViewport(viewport);
         setLayout(new BorderLayout());
         add(toolbar, BorderLayout.NORTH);
-        add(new JScrollPane(graph), BorderLayout.CENTER);
+        add(graphScroll, BorderLayout.CENTER);
     }
 
     /////
 
     public JFrame getFrame() { return frame; }
     public JComponent getProbeControl() { return probeSource; }
-    public JFileChooser getFileControl() { return fileSource; }
+    public SampleFileChooser getFileControl() { return fileSource; }
     public JComponent getFilterControl() { return filterEditor; }
     public JComponent getStatisticControl() { return graph.getStatisticChooser(); }
     public JComponent getGraphControl() { return graph.getOptionEditor(); }
-    public JComponent getDetailPanel() { return detailPanel; }
+    public DetailPanel getDetailPanel() { return detailPanel; }
 
     @Override
     public JComponent getAboutPanel() {

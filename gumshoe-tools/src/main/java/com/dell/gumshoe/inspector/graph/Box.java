@@ -30,6 +30,8 @@ class Box {
     public StackTraceElement getFrame() { return boxNode.getFrame(); }
     public float getPosition() { return position; }
     public float getWidth() { return width; }
+    public StackFrameNode getNode() { return boxNode; }
+    public StackFrameNode getParentNode() { return parentNode; }
 
     public Rectangle getBounds(float rowHeight, int displayWidth, int rowsMinusOne, DisplayOptions o) {
         final int boxX = (int) (position * displayWidth);

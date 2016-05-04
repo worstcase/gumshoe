@@ -69,14 +69,15 @@ done
 if $needhook
 then
   hookdir="$GUMSHOE_HOME/gumshoe-hooks/target"
-  hookcount="`ls $hookdir | grep -c '^gumshoe-hooks-*.jar'`
+  hookcount="`ls $hookdir | grep -c '^gumshoe-hooks-*.jar'`"
   case $hookcount in
     0)
       echo ERROR: gumshoe hook jar not found in $hookdir 1>&2
       exit 1
+      ;;     
     1)
       ## file and socket I/O probes need the sun.misc.SocketIo hook
-      hookfile="`ls $hookdir | grep '^gumshoe-hooks-*.jar'`
+      hookfile="`ls $hookdir | grep '^gumshoe-hooks-*.jar'`"
       opts="$opts -Xbootclasspath/p:$hookdir/$hookfile"
       ;;     
     *)
@@ -84,6 +85,7 @@ then
       echo 'ERROR: more than one gumshoe hook jar found $hookdir !' 1>&2
       echo 'Rebuild with: mvn clean install' 1>&2
       exit 1
+      ;;     
   esac
 fi
 
