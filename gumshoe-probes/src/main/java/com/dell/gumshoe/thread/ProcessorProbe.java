@@ -4,13 +4,13 @@ import com.dell.gumshoe.Probe;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.util.Configuration;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
-import java.util.Properties;
 
 public class ProcessorProbe extends Probe implements CpuUsageMBean {
     public static final String LABEL = "cpu-usage";
@@ -28,30 +28,30 @@ public class ProcessorProbe extends Probe implements CpuUsageMBean {
     /////
 
     @Override
-    public void initialize(Properties p) throws Exception {
-        final boolean shutdownReportEnabled = isTrue(p, "gumshoe.cpu-usage.onshutdown", false);
-        final Long periodicFrequency = getNumber(p, "gumshoe.cpu-usage.period");
+    public void initialize(Configuration cfg) throws Exception {
+        final boolean shutdownReportEnabled = cfg.isTrue("onshutdown", false);
+        final Long periodicFrequency = cfg.getNumber("period");
         final boolean periodicReportEnabled = periodicFrequency!=null;
         final boolean reportEnabled = shutdownReportEnabled || periodicReportEnabled;
 
         // jmx enabled if explicit name, explicit property, or some reporting enabled
-        final String mbeanName = getMBeanName(p, "gumshoe.cpu-usage.mbean.name", getClass());
-        final boolean jmxEnabled = p.containsKey("gumshoe.cpu-usage.mbean.name")
-                || isTrue(p, "gumshoe.cpu-usage.mbean", reportEnabled);
+        final boolean jmxEnabled =
+                getMBeanName(cfg, null)!=null || cfg.isTrue("mbean", reportEnabled);
+        final String mbeanName = jmxEnabled ? getMBeanName(cfg, getClass()) : null;
 
-        final boolean enabled = isTrue(p, "gumshoe.cpu-usage.enabled", reportEnabled || jmxEnabled);
+        final boolean enabled = cfg.isTrue("enabled", reportEnabled || jmxEnabled);
         if( ! enabled) { return; }
 
-        StackFilter stackFilter = createStackFilter("gumshoe.cpu-usage.filter.", p);
-        final PrintStream out = getOutput(p, "gumshoe.cpu-usage.output", System.out);
+        StackFilter stackFilter = createStackFilter(cfg);
+        final PrintStream out = getOutput(cfg);
 
-        final long sampleFrequency = getNumber(p, "gumshoe.cpu-usage.sample", 5000);
-        final long jitter = getNumber(p, "gumshoe.cpu-usage.jitter", 1000);
-        final int threadPriority = (int) getNumber(p, "gumshoe.cpu-usage.priority", Thread.MIN_PRIORITY);
+        final long sampleFrequency = cfg.getNumber("sample", 5000);
+        final long jitter = cfg.getNumber("jitter", 1000);
+        final int threadPriority = (int) cfg.getNumber("priority", Thread.MIN_PRIORITY);
 
         final ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         final boolean contentionSupported = mbean.isThreadContentionMonitoringSupported();
-        final boolean enableContentionMonitoring = isTrue(p, "gumshoe.cpu-usage.use-wait-times", contentionSupported);
+        final boolean enableContentionMonitoring = cfg.isTrue("use-wait-times", contentionSupported);
 
         initialize(sampleFrequency, jitter, threadPriority,
                 shutdownReportEnabled, periodicFrequency, enableContentionMonitoring, jmxEnabled?mbeanName:null, stackFilter, out);

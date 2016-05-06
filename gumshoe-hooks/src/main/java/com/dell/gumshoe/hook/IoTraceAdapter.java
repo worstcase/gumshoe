@@ -1,11 +1,11 @@
-package com.dell.gumshoe;
+package com.dell.gumshoe.hook;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-/** adapter class to simplify implementation of IoTraceDelegate */
-public class IoTraceAdapter implements IoTraceDelegate {
+/** adapter class to simplify implementation of IoTraceListener */
+public class IoTraceAdapter implements IoTraceListener {
     public Object socketReadBegin() { return null; }
     public void socketReadEnd(Object context, InetAddress address, int port, int timeout, long bytesRead) { }
     public Object socketWriteBegin() { return null; }

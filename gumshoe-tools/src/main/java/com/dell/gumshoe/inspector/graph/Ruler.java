@@ -2,16 +2,10 @@ package com.dell.gumshoe.inspector.graph;
 
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Rectangle;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 
 public class Ruler extends JLabel {
     // pixel sizes

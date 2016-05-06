@@ -3,11 +3,8 @@ package com.dell.gumshoe.inspector.graph;
 import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.util.List;
 
 /** cached model for individual display rectangles each showing details of a stack frame */
 class Box {

@@ -4,8 +4,6 @@ import com.dell.gumshoe.inspector.SampleSource;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
-import javax.swing.event.ChangeEvent;
-
 import java.util.Map;
 
 public interface SampleSelectionListener {

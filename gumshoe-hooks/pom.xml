@@ -4,7 +4,7 @@
 
 	<artifactId>gumshoe-hooks</artifactId>
 
-    <description>bootclasspath JVM hooks for gumshoe diagnostic tools</description>
+    <description>gumshoe JVM hook for collecting statistics</description>
 
     <build>
         <plugins>
@@ -17,6 +17,32 @@
                       <target>1.7</target>
                   </configuration>
               </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifestEntries>
+                                    <Premain-Class>com.dell.gumshoe.hook.Agent</Premain-Class>
+                                    <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                                    <Boot-Class-Path>gumshoe-agent.jar</Boot-Class-Path>
+                                </manifestEntries>
+                            </archive>
+                            <finalName>gumshoe-agent</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

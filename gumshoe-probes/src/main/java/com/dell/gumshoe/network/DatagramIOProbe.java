@@ -4,9 +4,9 @@ import com.dell.gumshoe.io.IOAccumulator;
 import com.dell.gumshoe.io.IOMonitor;
 import com.dell.gumshoe.io.IOProbe;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.util.Configuration;
 
 import java.text.ParseException;
-import java.util.Properties;
 
 public class DatagramIOProbe extends IOProbe {
     public static final String LABEL = "datagram-io";
@@ -21,19 +21,19 @@ public class DatagramIOProbe extends IOProbe {
     }
 
     @Override
-    protected IOMonitor createMonitor(Properties p) throws Exception {
-        final int handlerPriority = (int)getNumber(p, getPropertyName("handler.priority"), Thread.MIN_PRIORITY);
-        final int handlerCount = (int)getNumber(p, getPropertyName("handler.count"), 1);
-        final int queueSize = (int)getNumber(p, getPropertyName("handler.queue-size"), 500);
-        final boolean includeNIO = isTrue(p, getPropertyName("use-nio-hooks"), false);
-        final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty(getPropertyName("include")));
-        final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty(getPropertyName("exclude"), "127.0.0.1/32:*"));
-        final AddressMatcher socketFilter = new MultiAddressMatcher(acceptList, rejectList);
+    protected IOMonitor createMonitor(Configuration cfg) throws Exception {
+        final int handlerPriority = (int)cfg.getNumber("handler.priority", Thread.MIN_PRIORITY);
+        final int handlerCount = (int)cfg.getNumber("handler.count", 1);
+        final int queueSize = (int)cfg.getNumber("handler.queue-size", 500);
+        final boolean includeNIO = cfg.isTrue("use-nio-hooks", false);
+        final AddressMatcher[] acceptList = parseSocketMatchers(cfg.getProperty("include"));
+        final AddressMatcher[] rejectList = parseSocketMatchers(cfg.getProperty("exclude", "127.0.0.1/32:*"));
+        final MultiAddressMatcher socketFilter = new MultiAddressMatcher(acceptList, rejectList);
+        final boolean statsEnabled = cfg.isTrue("handler.stats-enabled", false);
 
         // TODO: detect OS; print warning if not set and OS is windows
-        final String usingOnly = p.getProperty(getPropertyName("using-only"), "unicast");
+        final String usingOnly = cfg.getProperty("using-only", "unicast");
         final boolean useMulticast = "multicast".equals(usingOnly);
-        final boolean statsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
 
         return new DatagramIOMonitor(socketFilter, includeNIO, useMulticast, queueSize, handlerPriority, handlerCount, statsEnabled);
     }

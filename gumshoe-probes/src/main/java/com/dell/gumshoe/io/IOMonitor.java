@@ -1,9 +1,10 @@
 package com.dell.gumshoe.io;
 
-import com.dell.gumshoe.IoTraceAdapter;
-import com.dell.gumshoe.IoTraceUtil;
+import static com.dell.gumshoe.util.Output.error;
 
-import java.util.ArrayList;
+import com.dell.gumshoe.hook.IoTraceAdapter;
+import com.dell.gumshoe.hook.IoTraceHandler;
+
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -66,11 +67,11 @@ public class IOMonitor extends IoTraceAdapter {
     public void initializeProbe() throws Exception {
         queue = new LinkedBlockingQueue<>(eventQueueSize);
         startConsumers();
-        IoTraceUtil.addTrace(this);
+        IoTraceHandler.addTrace(this);
     }
 
     public void destroyProbe() throws Exception {
-        IoTraceUtil.removeTrace(this);
+        IoTraceHandler.removeTrace(this);
         setThreadCount(0);
         queue = null;
     }
@@ -94,6 +95,8 @@ public class IOMonitor extends IoTraceAdapter {
     /////
 
     protected void queueEvent(IOEvent operation) {
+        if( ! enabled) { return; }
+
         final int size = queueStatsEnabled ? queue.size() : 0;
 
         final boolean success = queue.offer(operation);
@@ -115,7 +118,7 @@ public class IOMonitor extends IoTraceAdapter {
             final long now = System.currentTimeMillis();
             if(now - lastFailReport > queueOverflowReportInterval) {
                 lastFailReport = now;
-                System.out.println(String.format("GUMSHOE: IO event queue for %s is full", getClass().getSimpleName()));
+                error(String.format("GUMSHOE: IO event queue for %s is full", getClass().getSimpleName()));
             }
         }
     }

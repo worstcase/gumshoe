@@ -1,8 +1,6 @@
 package com.dell.gumshoe.network;
 
-import com.dell.gumshoe.IoTraceAdapter;
-import com.dell.gumshoe.IoTraceDelegate;
-import com.dell.gumshoe.IoTraceUtil;
+import com.dell.gumshoe.hook.IoTraceHandler;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -62,7 +60,6 @@ public class IoTraceSelectorProvider extends sun.nio.ch.SelectorProviderImpl {
         return usePlainDatagramChannel;
     }
 
-    private IoTraceDelegate traceDelegate;
     private final SelectorProvider delegate;
     private final Method closeChannelMethod;
     private final Method closeSelectorMethod;
@@ -121,18 +118,6 @@ public class IoTraceSelectorProvider extends sun.nio.ch.SelectorProviderImpl {
     public String toString() { return delegate.toString(); }
 
     ///// wrap value from delegate to call IoTrace
-
-    private IoTraceDelegate getIoTrace() {
-        if(traceDelegate==null) {
-            try {
-                traceDelegate = IoTraceUtil.getTrace();
-            } catch (Exception e) {
-                System.out.println("WARNING: could not initialize IoTrace delegate, disabling datagram monitor");
-                traceDelegate = new IoTraceAdapter();
-            }
-        }
-        return traceDelegate;
-    }
 
     private AbstractSelector wrap(AbstractSelector orig) {
         return orig instanceof Wrapper ? orig : new SelectorWrapper(orig);
@@ -301,56 +286,56 @@ public class IoTraceSelectorProvider extends sun.nio.ch.SelectorProviderImpl {
         ///// invoke IoTrace
         public SocketAddress receive(ByteBuffer dst) throws IOException {
             final int positionBefore = dst==null ? 0 : dst.position();
-            final Object context = getIoTrace().datagramReadBegin();
+            final Object context = IoTraceHandler.datagramReadBegin();
             final SocketAddress address = delegate.receive(dst);
             if(address!=null) {
                 final int bytes = dst.position() - positionBefore;
-                getIoTrace().datagramReadEnd(context, address, bytes);
+                IoTraceHandler.datagramReadEnd(context, address, bytes);
             }
             return address;
         }
 
         public int send(ByteBuffer src, SocketAddress address) throws IOException {
-            final Object context = getIoTrace().datagramWriteBegin();
+            final Object context = IoTraceHandler.datagramWriteBegin();
             final int bytes = delegate.send(src, address);
             if(bytes>0) {
-                getIoTrace().datagramWriteEnd(context, address, bytes);
+                IoTraceHandler.datagramWriteEnd(context, address, bytes);
             }
             return bytes;
         }
 
         public int read(ByteBuffer dst) throws IOException {
-            final Object context = getIoTrace().datagramReadBegin();
+            final Object context = IoTraceHandler.datagramReadBegin();
             final int bytes = delegate.read(dst);
             if(bytes>0) {
-                getIoTrace().datagramReadEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.datagramReadEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
-            final Object context = getIoTrace().datagramReadBegin();
+            final Object context = IoTraceHandler.datagramReadBegin();
             final long bytes = delegate.read(dsts, offset, length);
             if(bytes>0) {
-                getIoTrace().datagramReadEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.datagramReadEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public int write(ByteBuffer src) throws IOException {
-            final Object context = getIoTrace().datagramWriteBegin();
+            final Object context = IoTraceHandler.datagramWriteBegin();
             final int bytes = delegate.write(src);
             if(bytes>0) {
-                getIoTrace().datagramWriteEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.datagramWriteEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-            final Object context = getIoTrace().datagramWriteBegin();
+            final Object context = IoTraceHandler.datagramWriteBegin();
             final long bytes = delegate.write(srcs, offset, length);
             if(bytes>0) {
-                getIoTrace().datagramWriteEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.datagramWriteEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
@@ -469,37 +454,37 @@ public class IoTraceSelectorProvider extends sun.nio.ch.SelectorProviderImpl {
         }
 
         public int read(ByteBuffer dst) throws IOException {
-            final Object context = hasReadTrace() ? null : getIoTrace().socketReadBegin();
+            final Object context = hasReadTrace() ? null : IoTraceHandler.socketReadBegin();
             final int bytes = delegate.read(dst);
             if(bytes>0) {
-                getIoTrace().socketReadEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.socketReadEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
-            final Object context = hasReadTrace() ? null : getIoTrace().socketReadBegin();
+            final Object context = hasReadTrace() ? null : IoTraceHandler.socketReadBegin();
             final long bytes = delegate.read(dsts, offset, length);
             if(bytes>0) {
-                getIoTrace().socketReadEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.socketReadEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public int write(ByteBuffer src) throws IOException {
-            final Object context = hasWriteTrace() ? null : getIoTrace().socketWriteBegin();
+            final Object context = hasWriteTrace() ? null : IoTraceHandler.socketWriteBegin();
             final int bytes = delegate.write(src);
             if(bytes>0) {
-                getIoTrace().socketWriteEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.socketWriteEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
 
         public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-            final Object context = hasWriteTrace() ? null : getIoTrace().socketWriteBegin();
+            final Object context = hasWriteTrace() ? null : IoTraceHandler.socketWriteBegin();
             final long bytes = delegate.write(srcs, offset, length);
             if(bytes>0) {
-                getIoTrace().socketWriteEnd(context, getRemoteAddress(), bytes);
+                IoTraceHandler.socketWriteEnd(context, getRemoteAddress(), bytes);
             }
             return bytes;
         }
