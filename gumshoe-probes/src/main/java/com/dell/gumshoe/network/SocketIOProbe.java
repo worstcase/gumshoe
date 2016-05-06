@@ -1,13 +1,12 @@
 package com.dell.gumshoe.network;
 
-import com.dell.gumshoe.file.FileIOAccumulator;
 import com.dell.gumshoe.io.IOAccumulator;
-import com.dell.gumshoe.io.IOProbe;
 import com.dell.gumshoe.io.IOMonitor;
+import com.dell.gumshoe.io.IOProbe;
 import com.dell.gumshoe.stack.StackFilter;
+import com.dell.gumshoe.util.Configuration;
 
 import java.text.ParseException;
-import java.util.Properties;
 
 public class SocketIOProbe extends IOProbe {
     public static final String LABEL = "socket-io";
@@ -22,15 +21,15 @@ public class SocketIOProbe extends IOProbe {
     }
 
     @Override
-    protected IOMonitor createMonitor(Properties p) throws ParseException {
-        final int handlerPriority = (int)getNumber(p, getPropertyName("handler.priority"), Thread.MIN_PRIORITY);
-        final int handlerCount = (int)getNumber(p, getPropertyName("handler.count"), 1);
-        final int queueSize = (int)getNumber(p, getPropertyName("handler.queue-size"), 500);
-        final boolean includeNIO = isTrue(p, getPropertyName("use-nio-hooks"), false);
-        final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty(getPropertyName("include")));
-        final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty(getPropertyName("exclude"), "127.0.0.1/32:*"));
+    protected IOMonitor createMonitor(Configuration p) throws ParseException {
+        final int handlerPriority = (int)p.getNumber("handler.priority", Thread.MIN_PRIORITY);
+        final int handlerCount = (int)p.getNumber("handler.count", 1);
+        final int queueSize = (int)p.getNumber("handler.queue-size", 500);
+        final boolean includeNIO = p.isTrue("use-nio-hooks", false);
+        final AddressMatcher[] acceptList = parseSocketMatchers(p.getProperty("include"));
+        final AddressMatcher[] rejectList = parseSocketMatchers(p.getProperty("exclude", "127.0.0.1/32:*"));
         final MultiAddressMatcher socketFilter = new MultiAddressMatcher(acceptList, rejectList);
-        final boolean statsEnabled = isTrue(p, getPropertyName("handler.stats-enabled"), false);
+        final boolean statsEnabled = p.isTrue("handler.stats-enabled", false);
         return new SocketIOMonitor(socketFilter, includeNIO, queueSize, handlerPriority, handlerCount, statsEnabled);
     }
 

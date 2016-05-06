@@ -1,7 +1,6 @@
 package sun.misc;
 
-import com.dell.gumshoe.IoTraceAdapter;
-import com.dell.gumshoe.IoTraceDelegate;
+import com.dell.gumshoe.hook.IoTraceHandler;
 
 import java.net.InetAddress;
 
@@ -11,16 +10,14 @@ import java.net.InetAddress;
  *  then do any real work outside of hacking sun.misc package
  */
 public final class IoTrace {
-    private static IoTraceDelegate NULL_OBJECT = new IoTraceAdapter();
-    private static IoTraceDelegate delegate = NULL_OBJECT;
-
+    private IoTrace() { }
     /**
      * Called before data is read from a socket.
      *
      * @return a context object
      */
     public static Object socketReadBegin() {
-        return delegate.socketReadBegin();
+        return IoTraceHandler.socketReadBegin();
     }
 
     /**
@@ -40,7 +37,7 @@ public final class IoTrace {
      *            error reading from the socket
      */
     public static void socketReadEnd(Object context, InetAddress address, int port, int timeout, long bytesRead) {
-        delegate.socketReadEnd(context, address, port, timeout, bytesRead);
+        IoTraceHandler.socketReadEnd(context, address, port, timeout, bytesRead);
     }
 
     /**
@@ -49,7 +46,7 @@ public final class IoTrace {
      * @return a context object
      */
     public static Object socketWriteBegin() {
-        return delegate.socketWriteBegin();
+        return IoTraceHandler.socketWriteBegin();
     }
 
     /**
@@ -67,7 +64,7 @@ public final class IoTrace {
      *            error writing to the socket
      */
     public static void socketWriteEnd(Object context, InetAddress address, int port, long bytesWritten) {
-        delegate.socketWriteEnd(context, address, port, bytesWritten);
+        IoTraceHandler.socketWriteEnd(context, address, port, bytesWritten);
     }
 
     /**
@@ -78,7 +75,7 @@ public final class IoTrace {
      * @return a context object
      */
     public static Object fileReadBegin(String path) {
-        return delegate.fileReadBegin(path);
+        return IoTraceHandler.fileReadBegin(path);
     }
 
     /**
@@ -91,7 +88,7 @@ public final class IoTrace {
      *            error writing to the file
      */
     public static void fileReadEnd(Object context, long bytesRead) {
-        delegate.fileReadEnd(context, bytesRead);
+        IoTraceHandler.fileReadEnd(context, bytesRead);
     }
 
     /**
@@ -102,7 +99,7 @@ public final class IoTrace {
      * @return a context object
      */
     public static Object fileWriteBegin(String path) {
-        return delegate.fileWriteBegin(path);
+        return IoTraceHandler.fileWriteBegin(path);
     }
 
     /**
@@ -115,6 +112,6 @@ public final class IoTrace {
      *            error writing to the file
      */
     public static void fileWriteEnd(Object context, long bytesWritten) {
-        delegate.fileWriteEnd(context, bytesWritten);
+        IoTraceHandler.fileWriteEnd(context, bytesWritten);
     }
 }

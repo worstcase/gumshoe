@@ -1,6 +1,8 @@
 package com.dell.gumshoe.inspector.tools;
 
-import static com.dell.gumshoe.util.Swing.*;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.stackIn;
+import static com.dell.gumshoe.util.Swing.stackNorth;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

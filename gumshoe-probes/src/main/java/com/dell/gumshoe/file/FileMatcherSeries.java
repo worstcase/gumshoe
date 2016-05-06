@@ -1,7 +1,5 @@
 package com.dell.gumshoe.file;
 
-import java.util.List;
-import java.util.ArrayList;
 
 /** select file combining lists of accept and reject matchers */
 public class FileMatcherSeries implements FileMatcher {
@@ -31,6 +29,7 @@ public class FileMatcherSeries implements FileMatcher {
             }
         }
 
+        if(acceptList.length==0) { return true; }
         for(FileMatcher accept : acceptList) {
             if(accept.matches(path)) {
                 return true;

@@ -1,12 +1,13 @@
 package com.dell.gumshoe.network;
 
-import com.dell.gumshoe.IoTraceAdapter;
-import com.dell.gumshoe.IoTraceDelegate;
-import com.dell.gumshoe.IoTraceUtil;
+import static com.dell.gumshoe.util.Output.error;
+
+import com.dell.gumshoe.hook.IoTraceHandler;
+import com.dell.gumshoe.hook.IoTraceListener;
+import com.dell.gumshoe.hook.IoTraceListener.DatagramListener;
 import com.dell.gumshoe.io.IOMonitor;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.DatagramPacket;
@@ -20,8 +21,8 @@ import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFactory {
-    private IoTraceDelegate traceDelegate;
+public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFactory, DatagramListener {
+    private IoTraceListener traceDelegate;
     private final Map<String,Method> methodByName = new HashMap<>();
     private final boolean useNIOHooks;
     private final AddressMatcher filter;
@@ -56,28 +57,12 @@ public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFa
         if(useNIOHooks) {
             final String className = System.getProperty("java.nio.channels.spi.SelectorProvider");
             if( ! IoTraceSelectorProvider.class.getName().equals(className)) {
-                System.out.println(
-                        "WARNING: NIO tracing will be incomplete\n"
-                                + "         System property must be set: java.nio.channels.spi.SelectorProvider\n"
-                                + "         See gumshoe documentation for details");
+                error("System property is not set: java.nio.channels.spi.SelectorProvider, NIO tracing will be incomplete");
             } else {
                 IoTraceSelectorProvider.setDatagramTraceEnabled(true);
             }
         }
         super.initializeProbe();
-    }
-
-    /** lazy-load as first packet IO happens to make sure IoTrace delegate has been initialized */
-    private IoTraceDelegate getIoTrace() {
-        if(traceDelegate==null) {
-            try {
-                traceDelegate = IoTraceUtil.getTrace();
-            } catch (Exception e) {
-                System.out.println("WARNING: could not initialize IoTrace delegate, disabling datagram monitor");
-                traceDelegate = new IoTraceAdapter();
-            }
-        }
-        return traceDelegate;
     }
 
     /////
@@ -86,13 +71,6 @@ public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFa
     public Object datagramReadBegin() {
         return new DatagramReceiveEvent();
     }
-
-
-    @Override
-    public void datagramReadEnd(Object context, SocketAddress address, long bytesRead) {
-        handleEvent(context, address, bytesRead);
-    }
-
 
     @Override
     public Object datagramWriteBegin() {
@@ -242,16 +220,16 @@ public class DatagramIOMonitor extends IOMonitor implements DatagramSocketImplFa
         ///// reflection and call IoTrace
         @Override
         protected void send(DatagramPacket p) throws IOException {
-            final Object context = getIoTrace().datagramWriteBegin();
+            final Object context = IoTraceHandler.datagramWriteBegin();
             invoke("send", p);
-            getIoTrace().datagramWriteEnd(context, p.getSocketAddress(), p.getData().length);
+            IoTraceHandler.datagramWriteEnd(context, p.getSocketAddress(), p.getData().length);
         }
 
         @Override
         protected void receive(DatagramPacket p) throws IOException {
-            final Object context = getIoTrace().datagramReadBegin();
+            final Object context = IoTraceHandler.datagramReadBegin();
             invoke("receive", p);
-            getIoTrace().datagramReadEnd(context, p.getSocketAddress(), p.getData().length);
+            IoTraceHandler.datagramReadEnd(context, p.getSocketAddress(), p.getData().length);
         }
     }
 }

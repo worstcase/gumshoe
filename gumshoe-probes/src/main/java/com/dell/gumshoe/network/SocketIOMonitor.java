@@ -1,12 +1,15 @@
 package com.dell.gumshoe.network;
 
+import static com.dell.gumshoe.util.Output.error;
+
+import com.dell.gumshoe.hook.IoTraceListener.SocketListener;
 import com.dell.gumshoe.io.IOMonitor;
 
 import java.net.InetAddress;
 
 /** monitor socket IO and report each as an event to registered listeners
  */
-public class SocketIOMonitor extends IOMonitor {
+public class SocketIOMonitor extends IOMonitor implements SocketListener {
     private final AddressMatcher socketFilter;
     private boolean useNIOHooks;
     public SocketIOMonitor() {
@@ -27,10 +30,7 @@ public class SocketIOMonitor extends IOMonitor {
         if(useNIOHooks) {
             final String className = System.getProperty("java.nio.channels.spi.SelectorProvider");
             if( ! IoTraceSelectorProvider.class.getName().equals(className)) {
-                System.out.println(
-                          "WARNING: NIO tracing will be incomplete\n"
-                        + "         System property must be set: java.nio.channels.spi.SelectorProvider\n"
-                        + "         See gumshoe documentation for details");
+                error("System property must be set: java.nio.channels.spi.SelectorProvider.  NIO tracing will be incomplete");
             } else {
                 IoTraceSelectorProvider.setSocketTraceEnabled(true);
             }

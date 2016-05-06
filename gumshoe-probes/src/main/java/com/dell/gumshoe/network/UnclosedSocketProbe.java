@@ -4,11 +4,11 @@ import com.dell.gumshoe.Probe;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.util.Configuration;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.Properties;
 
 public class UnclosedSocketProbe extends Probe implements SocketCloseMonitorMBean {
     public static final String LABEL = "open-sockets";
@@ -26,27 +26,26 @@ public class UnclosedSocketProbe extends Probe implements SocketCloseMonitorMBea
     /////
 
     @Override
-    public void initialize(Properties p) throws Exception {
-        final boolean shutdownReportEnabled = isTrue(p, "gumshoe.socket-unclosed.onshutdown", false);
-        final Long periodicFrequency = getNumber(p, "gumshoe.socket-unclosed.period");
+    public void initialize(Configuration cfg) throws Exception {
+        final boolean shutdownReportEnabled = cfg.isTrue("onshutdown", false);
+        final Long periodicFrequency = cfg.getNumber("period");
         final boolean periodicReportEnabled = periodicFrequency!=null;
-        final boolean reportingEnabled = periodicReportEnabled || shutdownReportEnabled;
+        final boolean reportEnabled = shutdownReportEnabled || periodicReportEnabled;
 
         // jmx enabled if explicit name, explicit property, or some reporting enabled
-        final String mbeanName = getMBeanName(p, "gumshoe.socket-unclosed.mbean.name", getClass());
-        final boolean jmxEnabled = p.containsKey("gumshoe.socket-unclosed.mbean.name")
-                || isTrue(p, "gumshoe.socket-unclosed.mbean", reportingEnabled);
+        final boolean jmxEnabled =
+                getMBeanName(cfg, null)!=null || cfg.isTrue("mbean", reportEnabled);
+        final String mbeanName = jmxEnabled ? getMBeanName(cfg, getClass()) : null;
 
-        // by default, enabled monitor only if reporting it or enabled mbean (but can override w/property)
-        final boolean enabled = isTrue(p, "gumshoe.socket-unclosed.enabled", reportingEnabled || jmxEnabled);
+        final boolean enabled = cfg.isTrue("enabled", reportEnabled || jmxEnabled);
         if( ! enabled) { return; }
 
-        final long minAge = getNumber(p, "gumshoe.socket-unclosed.age", 30000);
-        final int clearCount = (int) getNumber(p, "gumshoe.socket-unclosed.check-interval", 100);
+        final long minAge = cfg.getNumber("age", 30000);
+        final int clearCount = (int) cfg.getNumber("check-interval", 100);
 
-        final StackFilter stackFilter = createStackFilter("gumshoe.socket-unclosed.filter.", p);
+        final StackFilter stackFilter = createStackFilter(cfg);
 
-        final PrintStream out = getOutput(p, "gumshoe.socket-unclosed.output", System.out);
+        final PrintStream out = getOutput(cfg);
         initialize(shutdownReportEnabled, periodicFrequency, minAge, clearCount, stackFilter, jmxEnabled?mbeanName:null, out);
     }
 

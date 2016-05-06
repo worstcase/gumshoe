@@ -1,10 +1,11 @@
 package com.dell.gumshoe.file;
 
+import com.dell.gumshoe.hook.IoTraceListener.FileListener;
 import com.dell.gumshoe.io.IOMonitor;
 
 /** monitor socket IO and report each as an event to registered listeners
  */
-public class FileIOMonitor extends IOMonitor {
+public class FileIOMonitor extends IOMonitor implements FileListener {
     private final FileMatcher fileFilter;
 
     public FileIOMonitor() {

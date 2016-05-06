@@ -1,11 +1,10 @@
 package com.dell.gumshoe;
 
-import com.dell.gumshoe.stack.FilterSequence;
-import com.dell.gumshoe.stack.MinutiaFilter;
-import com.dell.gumshoe.stack.StandardFilter.Builder;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stack.StandardFilter;
+import com.dell.gumshoe.stack.StandardFilter.Builder;
 import com.dell.gumshoe.stats.ValueReporter;
+import com.dell.gumshoe.util.Configuration;
 import com.dell.gumshoe.util.DefineLaterPrintStream;
 
 import javax.management.ObjectName;
@@ -39,7 +38,7 @@ public abstract class Probe {
 
     ///// life cycle
 
-    public abstract void initialize(Properties p) throws Exception;
+    public abstract void initialize(Configuration cfg) throws Exception;
     public void destroy() throws Exception { }
     public abstract ValueReporter getReporter();
 
@@ -68,6 +67,12 @@ public abstract class Probe {
         return out;
     }
 
+    protected static String getMBeanName(Configuration p, Class clazz) {
+        final String packageName = clazz==null ? null : clazz.getPackage().getName();
+        final String className = clazz==null ? null : clazz.getSimpleName();
+        return p.getProperty("mbean.name", packageName + ":type=" + className);
+    }
+
     protected static String getMBeanName(Properties p, String key, Class clazz) {
         String mbeanName = p.getProperty(key);
         if(mbeanName==null) {
@@ -85,10 +90,13 @@ public abstract class Probe {
     }
 
     protected PrintStream getOutput(Properties p, String key, PrintStream defaultOut) throws Exception {
-        final String propValue = p.getProperty(key);
-        if(propValue==null) { return defaultOut; }
+        return System.out;
+    }
+
+    protected PrintStream getOutput(Configuration p) throws Exception {
+        final String propValue = p.getProperty("output");
+        if(propValue==null || "stdout".equals(propValue) || "-".equals(propValue)) { return System.out; }
         if("none".equals(propValue)) { return ProbeManager.NULL_PRINT_STREAM; }
-        if("stdout".equals(propValue) || "-".equals(propValue)) { return System.out; }
         if(propValue.startsWith("file:")) {
             return new PrintStream(new URI(propValue).getPath());
         }
@@ -97,7 +105,7 @@ public abstract class Probe {
             final PrintStream explicitValue = services.getNamedOutput(name);
             return explicitValue!=null ? explicitValue : new DefineLaterPrintStream(name, services.getNamedOutput());
         }
-        throw new IllegalArgumentException("unrecognized output " + key + " = " + propValue);
+        throw new IllegalArgumentException("unrecognized output: " + propValue);
     }
 
     /** create stack filter for socket I/O
@@ -122,31 +130,33 @@ public abstract class Probe {
      *                          if set to false, the raw stack is used if filters would have removed all frame
      *                          otherwise (the default) the empty stack becomes kind of a catch-all "other" category
      */
-    protected static StackFilter createStackFilter(String prefix, Properties p) {
-        if(isTrue(p, prefix + "none", false)) { return StackFilter.NONE; }
+    protected static StackFilter createStackFilter(Configuration p) {
+        final Configuration cfg = new Configuration(p, "filter");
+
+        if(cfg.isTrue("none", false)) { return StackFilter.NONE; }
 
         final Builder builder = StandardFilter.builder();
-        if( ! isTrue(p, prefix + "allow-empty-stack", true)) { builder.withOriginalIfBlank(); }
-        if(isTrue(p, prefix + "exclude-jdk", true)) { builder.withExcludePlatform(); }
-        for(String matching : getList(p, prefix + "include")) {
+        if( ! cfg.isTrue("allow-empty-stack", true)) { builder.withOriginalIfBlank(); }
+        if(cfg.isTrue("exclude-jdk", true)) { builder.withExcludePlatform(); }
+        for(String matching : cfg.getList("include")) {
             builder.withOnlyClasses(matching);
         }
-        for(String matching : getList(p, prefix + "exclude")) {
+        for(String matching : cfg.getList("exclude")) {
             builder.withExcludeClasses(matching);
         }
-        final int topCount = (int)getNumber(p, prefix + "top", 0);
-        final int bottomCount = (int)getNumber(p, prefix + "bottom", 0);
+        final int topCount = (int)cfg.getNumber("top", 0);
+        final int bottomCount = (int)cfg.getNumber("bottom", 0);
         if(topCount>0 || bottomCount>0) {
             builder.withEndsOnly(topCount, bottomCount);
         }
 
-        final Long recursionThreshold = getNumber(p, prefix + "recursion.threshold");
+        final Long recursionThreshold = cfg.getNumber("recursion.threshold");
         if(recursionThreshold!=null) {
-            final int recursionLevel = (int)getNumber(p, prefix + "recursion.depth", 1);
+            final int recursionLevel = (int)cfg.getNumber("recursion.depth", 1);
             builder.withRecursionFilter(recursionLevel, recursionThreshold.intValue());
         }
 
-        final String simplifyLevel = p.getProperty(prefix + "simplify");
+        final String simplifyLevel = cfg.getProperty("simplify");
         if(simplifyLevel!=null) {
             builder.withSimpleFrames(simplifyLevel);
         }

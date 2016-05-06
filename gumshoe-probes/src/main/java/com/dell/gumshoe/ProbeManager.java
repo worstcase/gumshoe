@@ -2,10 +2,7 @@ package com.dell.gumshoe;
 
 import com.dell.gumshoe.Probe.ProbeServices;
 import com.dell.gumshoe.file.FileIOProbe;
-import com.dell.gumshoe.io.IOAccumulator;
 import com.dell.gumshoe.network.DatagramIOProbe;
-import com.dell.gumshoe.network.SocketIOAccumulator;
-import com.dell.gumshoe.network.SocketIODetailAdder;
 import com.dell.gumshoe.network.SocketIOProbe;
 import com.dell.gumshoe.network.UnclosedSocketProbe;
 import com.dell.gumshoe.network.UnclosedStats;
@@ -13,11 +10,8 @@ import com.dell.gumshoe.stats.IODetailAdder;
 import com.dell.gumshoe.stats.ValueReporter;
 import com.dell.gumshoe.thread.CPUStats;
 import com.dell.gumshoe.thread.ProcessorProbe;
+import com.dell.gumshoe.util.Configuration;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -75,45 +69,14 @@ public class ProbeManager {
     ///// main use case: initialize()
 
     public void initialize() throws Exception {
-        final String fileName = System.getProperty("gumshoe.config", "gumshoe.properties");
-
-        // first try in classpath
-        final InputStream configResource = getClass().getClassLoader().getResourceAsStream(fileName);
-        if(configResource!=null) {
-            try {
-                initialize(configResource, System.getProperties());
-                return;
-            } finally {
-                configResource.close();
-            }
-        }
-
-        // then try as file pathname
-        final File configFile = new File(fileName);
-        if(configFile.exists()) {
-            final InputStream fileStream = new FileInputStream(fileName);
-            try {
-                initialize(fileStream, System.getProperties());
-                return;
-            } finally {
-                fileStream.close();
-            }
-        }
-
-        // not found, use just properties
-        initialize(System.getProperties());
-    }
-
-    protected void initialize(InputStream rawIn, Properties overrides) throws Exception {
-        final Properties fileProperties = new Properties();
-        fileProperties.load(rawIn instanceof BufferedInputStream ? rawIn : new BufferedInputStream(rawIn));
-
-        final Properties combinedProperties = new Properties(fileProperties);
-        combinedProperties.putAll(overrides);
-        initialize(combinedProperties);
+        initialize(new Configuration());
     }
 
     public void initialize(Properties p) throws Exception {
+        initialize(new Configuration(p));
+    }
+
+    private void initialize(Configuration p) throws Exception {
         sharedServices = new ProbeServices();
         sharedServices.installShutdownHook();
 
@@ -123,11 +86,11 @@ public class ProbeManager {
         unclosedSocketProbe = new UnclosedSocketProbe(sharedServices);
         cpuProbe = new ProcessorProbe(sharedServices);
 
-        socketIOProbe.initialize(p);
-        datagramIOProbe.initialize(p);
-        fileIOProbe.initialize(p);
-        unclosedSocketProbe.initialize(p);
-        cpuProbe.initialize(p);
+        socketIOProbe.initialize(p.withPrefix("socket-io"));
+        datagramIOProbe.initialize(p.withPrefix("datagram-io"));
+        fileIOProbe.initialize(p.withPrefix("file-io"));
+        unclosedSocketProbe.initialize(p.withPrefix("socket-unclosed"));
+        cpuProbe.initialize(p.withPrefix("cpu-usage"));
     }
 
     /////

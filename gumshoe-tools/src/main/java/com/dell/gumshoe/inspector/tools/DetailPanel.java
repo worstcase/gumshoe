@@ -1,6 +1,7 @@
 package com.dell.gumshoe.inspector.tools;
 
-import static com.dell.gumshoe.util.Swing.*;
+import static com.dell.gumshoe.util.Swing.flow;
+import static com.dell.gumshoe.util.Swing.stackNorth;
 
 import com.dell.gumshoe.inspector.graph.StackFrameNode;
 import com.dell.gumshoe.inspector.graph.StackGraphPanel;

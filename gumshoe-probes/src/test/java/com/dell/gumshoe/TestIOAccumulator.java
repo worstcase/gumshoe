@@ -8,7 +8,6 @@ import com.dell.gumshoe.network.SocketIOAccumulator;
 import com.dell.gumshoe.network.SocketIODetailAdder;
 import com.dell.gumshoe.network.SocketIOMonitor;
 import com.dell.gumshoe.network.SubnetAddress;
-import com.dell.gumshoe.stack.FilterSequence;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stack.StackFilter;
 import com.dell.gumshoe.stack.StandardFilter;

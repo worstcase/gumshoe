@@ -1,10 +1,10 @@
-package com.dell.gumshoe;
+package com.dell.gumshoe.hook;
 
 import java.net.InetAddress;
 import java.net.SocketAddress;
 
 /** public interface for delegate to plug into sun.misc.IoTrace */
-public interface IoTraceDelegate {
+public interface IoTraceListener {
         public Object socketReadBegin();
         public void socketReadEnd(Object context, InetAddress address, int port, int timeout, long bytesRead);
         public Object socketWriteBegin();
@@ -22,4 +22,9 @@ public interface IoTraceDelegate {
         public void fileReadEnd(Object context, long bytesRead);
         public Object fileWriteBegin(String path);
         public void fileWriteEnd(Object context, long bytesWritten);
+
+        // marking interfaces
+        public interface SocketListener extends IoTraceListener { }
+        public interface DatagramListener extends IoTraceListener { }
+        public interface FileListener extends IoTraceListener { }
 }

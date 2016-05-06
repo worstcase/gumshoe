@@ -190,11 +190,13 @@ public class FileDataParser {
         }
 
         public Long getPositionBefore(Long key) {
+            if(timeByPosition.isEmpty()) { return null; }
             if(key==null) { return timeByPosition.lastKey(); }
             return timeByPosition.lowerKey(key);
         }
 
         public Long getPositionAtOrAfter(Long position) {
+            if(timeByPosition.isEmpty()) { return null; }
             if(position==null) {
                 return timeByPosition.firstKey();
             }

@@ -1,8 +1,8 @@
 package com.dell.gumshoe;
 
 import com.dell.gumshoe.network.SocketCloseMonitor;
-import com.dell.gumshoe.network.SocketIOMonitor;
 import com.dell.gumshoe.network.SocketCloseMonitor.SocketImplDecorator;
+import com.dell.gumshoe.network.SocketIOMonitor;
 import com.dell.gumshoe.stack.StackFilter;
 
 import java.io.IOException;
