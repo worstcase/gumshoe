@@ -124,14 +124,14 @@ public class IOMonitor extends IoTraceAdapter {
     }
 
     // http://stackoverflow.com/questions/6072040
-    private void updateMax(int sample) {
+    private void updateMax(int size) {
         while(true) {
             final int currentMax = maxSize.get();
             // no need to update
-            if (currentMax >= sample) { return; }
+            if (currentMax >= size) { return; }
 
             // check if another thread updated first
-            final boolean setSuccessful = maxSize.compareAndSet(currentMax, sample);
+            final boolean setSuccessful = maxSize.compareAndSet(currentMax, size);
             if (setSuccessful) { break; }
 
             // another thread did, start over

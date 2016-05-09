@@ -44,10 +44,10 @@ public class TestParsing extends TestCase {
         StackTraceElement copy = Stack.parseFrame(stringValue);
         assertEquals(orig, copy);
 
-        StackTraceElement sample = Stack.parseFrame("    at com.enstratus.task.TaskBlocker.getTaskInfo(TaskBlocker.java:40)");
-        assertEquals("com.enstratus.task.TaskBlocker", sample.getClassName());
-        assertEquals("getTaskInfo", sample.getMethodName());
-        assertEquals(40, sample.getLineNumber());
+        StackTraceElement report = Stack.parseFrame("    at com.enstratus.task.TaskBlocker.getTaskInfo(TaskBlocker.java:40)");
+        assertEquals("com.enstratus.task.TaskBlocker", report.getClassName());
+        assertEquals("getTaskInfo", report.getMethodName());
+        assertEquals(40, report.getLineNumber());
     }
 
     public void testTagParse() throws ParseException {

@@ -51,8 +51,6 @@ to improve reporting.
     gumshoe.datagram-io.handler.queue-size=1000    
     gumshoe.file-io.handler.queue-size=1000    
      
- 
-  
   The queue will fill if events are produced (individual I/O operations) faster than they are consumed.
   Some possible reasons:
   
@@ -73,28 +71,5 @@ to improve reporting.
     Or it could be due to gumshoe stack filters.  Each stack filter configured has to
     modify the event call stack on the same event handling thread.  Complex filters
     (such as the recursion filter) or deep call stacks can result in more load than the
-    thread can handle.  Relax [filters](../filters.md) (at the expense of more memory use) or increase the
-    event handler thread priority.      
-    
-  If the event queue is full:
-  
-  - Ignore it (_really!, it isn't so bad..._)
-  
-    If the problem is intermittent, it may not affect all samples, 
-    and data reported in those affected is still likely a representative subset of all I/O.
-    Total I/O values will not be accurate but the relative I/O comparisons between threads
-    should still provide insight into what the target application is doing to generate the I/O load.
-    
-  - Increase queue size
-  
-    If the problem is intermittent, then a larger queue can let the handler thread
-    catch up after load spikes.  However, if load is consistently over the handler capacity,
-    this will just delay and not fix the problem.  (Requires restart)
-    
-  - Increase handler thread priority
-  
-    Socket and file I/O events perform all filtering and accumulation functions on the
-    handler thread.  The default is to run at Thread.MIN_PRIORITY, reflecting the decision to
-    risk dropping data rather than impact the target application.  This can be changed to a
-    higher value to reduce dropping events even if it means taking some CPU time away from
-    the target application.
+    thread can handle.  Relax [filters](../filters.md) (at the expense of more memory use) 
+    or increase the number of threads or the event handler thread priority.

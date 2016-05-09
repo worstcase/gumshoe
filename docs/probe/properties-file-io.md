@@ -8,8 +8,8 @@ Configuration Properties
 
 Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
 
-    gumshoe.file-io.period     Data samples will be reported at regular intervals (in milliseconds)
-    gumshoe.file-io.onshutdown If true, data samples will be reported when the JVM exits
+    gumshoe.file-io.period     Data reports will be reported at regular intervals (in milliseconds)
+    gumshoe.file-io.onshutdown If true, data reports will be reported when the JVM exits
     gumshoe.file-io.mbean      If true, enable JMX control of file usage probe
     gumshoe.file-io.mbean.name Override name of JMX control
                                (default is based on fully qualified class name) 
@@ -35,9 +35,9 @@ Stacks should generally be [filtered](../filters.md) reduce overhead and simplif
     gumshoe.file-io.filter...    See common filter properties [here](filter-properties.md) 
 
 
-Collected data samples are written to:
+Collected data reports are written to:
 
-    gumshoe.file-io.output=none   Do not write samples (ie, when your program is
-                                    adding its own explicit Listener to receive samples)
+    gumshoe.file-io.output=none   Do not write reports (ie, when your program is
+                                    adding its own explicit Listener to receive reports)
     gumshoe.file-io.output=stdout Write to System.out (the default)
     gumshoe.file-io.output=file:/some/path    Write to a text file.

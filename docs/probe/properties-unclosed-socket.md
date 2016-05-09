@@ -9,8 +9,8 @@ Configuration Properties
 
 Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
 
-    gumshoe.socket-unclosed.period     Data samples will be reported at regular intervals (in milliseconds)
-    gumshoe.socket-unclosed.onshutdown If true, data samples will be reported when the JVM exits
+    gumshoe.socket-unclosed.period     Reports will be generated at regular intervals (in milliseconds)
+    gumshoe.socket-unclosed.onshutdown If true, a report will be generated when the JVM exits
     gumshoe.socket-unclosed.mbean      If true, enable JMX control of socket usage probe
     gumshoe.socket-unclosed.mbean.name Override name of JMX control
                                        (default is based on fully qualified class name) 
@@ -22,9 +22,9 @@ Stacks should generally be [filtered](../filters.md) reduce overhead and simplif
                                 
     gumshoe.socket-unclosed.filter...    See common filter properties [here](filter-properties.md) 
 
-Collected data samples are written to:
+Collected data reports are written to:
 
-    gumshoe.socket-unclosed.output=none   Do not write samples (ie, when your program is
-                                          adding its own explicit Listener to receive samples)
+    gumshoe.socket-unclosed.output=none   Do not write reports (ie, when your program is
+                                          adding its own explicit Listener to receive reports)
     gumshoe.socket-unclosed.output=stdout Write to System.out (the default)
     gumshoe.socket-unclosed.output=file:/some/path    Write to a text file.

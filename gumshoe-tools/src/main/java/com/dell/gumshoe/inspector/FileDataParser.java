@@ -22,16 +22,16 @@ import java.util.TreeMap;
  *
  * 1) navigate forwards and backwards
  *      fp = new FileParser(file);
- *      Map sample = fp.getNextSample();
- *      Date time = fp.getSampleTime();
+ *      Map report = fp.getNextReport();
+ *      Date time = fp.getReportTime();
  *      fp.close();
  *
- * 2) parse whole file and choose sample:
+ * 2) parse whole file and choose report:
  *      fp = new FileParser(file);
  *      fp.parseFile();
- *      Collection<Date> times = fp.getSampleTimes();
+ *      Collection<Date> times = fp.getReportTimes();
  *      Date time = chooseOne( times );
- *      Map sample = fp.getSample(time);
+ *      Map report = fp.Report(time);
  */
 public class FileDataParser {
     private final BidirectionalMap savedPositions = new BidirectionalMap();
@@ -58,57 +58,57 @@ public class FileDataParser {
 
     /////
 
-    /** scan entire file to find gumshoe samples */
+    /** scan entire file to find gumshoe reports */
     public void parseFile() throws Exception {
         while(read()!=null) { }
     }
 
-    /** return all sample times found so far (may be incomplete if parseFile() has not been called) */
-    public Collection<Date> getSampleTimes() {
+    /** return all report times found so far (may be incomplete if parseFile() has not been called) */
+    public Collection<Date> getReportTimes() {
         return savedPositions.getTimes();
     }
 
-    /** return sample collected at given time (may not find if parseFile() has not been called) */
-    public Map<Stack, StatisticAdder> getSample(Date date) throws Exception {
+    /** return report collected at given time (may not find if parseFile() has not been called) */
+    public Map<Stack, StatisticAdder> getReport(Date date) throws Exception {
         final Long position = savedPositions.getPosition(date);
         if(position==null) {
             lastPosition = null;
             return null;
         }
         raf.seek(position);
-        return getNextSample();
+        return getNextReport();
     }
 
     /////
 
-    /** return next sample found after current position in file */
-    public Map<Stack, StatisticAdder> getNextSample() throws Exception {
+    /** return next report found after current position in file */
+    public Map<Stack, StatisticAdder> getNextReport() throws Exception {
         long positionBefore = raf.getFilePointer();
-        Map<Stack, StatisticAdder> sample = read();
-        if(sample==null) {
+        Map<Stack, StatisticAdder> report = read();
+        if(report==null) {
             parsedWholeFile = true;
             lastPosition = null;
             raf.seek(0); // wrap around
         } else {
             lastPosition = savedPositions.getPositionAtOrAfter(positionBefore);
         }
-        return sample;
+        return report;
     }
 
-    /** return sample prior to current position in file */
-    public Map<Stack, StatisticAdder> getPreviousSample() throws Exception {
+    /** return report prior to current position in file */
+    public Map<Stack, StatisticAdder> getPreviousReport() throws Exception {
         lastPosition = savedPositions.getPositionBefore(lastPosition);
         if(lastPosition==null) { return null; }
         raf.seek(lastPosition);
         return read();
     }
 
-    /** return time of last sample returned */
-    public Date getSampleTime() {
+    /** return time of last report returned */
+    public Date getReportTime() {
         return savedPositions.getTime(lastPosition);
     }
 
-    public String getSampleType() {
+    public String getReportType() {
         return typeByPosition.get(lastPosition);
     }
     private Map<Stack,StatisticAdder> read() throws Exception {

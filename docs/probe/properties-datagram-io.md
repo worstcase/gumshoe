@@ -8,8 +8,8 @@ Configuration Properties
 
 Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
 
-    gumshoe.datagram-io.period     Data samples will be reported at regular intervals (in milliseconds)
-    gumshoe.datagram-io.onshutdown If true, data samples will be reported when the JVM exits
+    gumshoe.datagram-io.period     Data reports will be generated at regular intervals (in milliseconds)
+    gumshoe.datagram-io.onshutdown If true, a report will be generated when the JVM exits
     gumshoe.datagram-io.mbean      If true, enable JMX control of datagram usage probe
     gumshoe.datagram-io.mbean.name Override name of JMX control
                                  (default is based on fully qualified class name) 
@@ -35,10 +35,10 @@ Stacks should generally be [filtered](../filters.md) reduce overhead and simplif
                                 
     gumshoe.datagram-io.filter...    See common filter properties [here](filter-properties.md) 
 
-Collected data samples are written to:
+Collected data reports are written to:
 
-    gumshoe.datagram-io.output=none   Do not write samples (ie, when your program is
-                                    adding its own explicit Listener to receive samples)
+    gumshoe.datagram-io.output=none   Do not write reports (ie, when your program is
+                                    adding its own explicit Listener to receive reports)
     gumshoe.datagram-io.output=stdout Write to System.out (the default)
     gumshoe.datagram-io.output=file:/some/path    Write to a text file.
     

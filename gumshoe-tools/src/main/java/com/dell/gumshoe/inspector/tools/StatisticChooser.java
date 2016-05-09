@@ -4,7 +4,7 @@ import static com.dell.gumshoe.util.Swing.flow;
 import static com.dell.gumshoe.util.Swing.stackIn;
 import static com.dell.gumshoe.util.Swing.stackWest;
 
-import com.dell.gumshoe.inspector.SampleSource;
+import com.dell.gumshoe.inspector.ReportSource;
 import com.dell.gumshoe.inspector.graph.StackGraphPanel;
 import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
@@ -22,7 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Map;
 
-public class StatisticChooser extends JPanel implements SampleSelectionListener, HasCloseButton {
+public class StatisticChooser extends JPanel implements ReportSelectionListener, HasCloseButton {
     private final JComboBox statSelector = new JComboBox(DataTypeHelper.getTypes().toArray());
     private final CardLayout statCard = new CardLayout();
     private final JPanel statOptions = new JPanel();
@@ -47,7 +47,7 @@ public class StatisticChooser extends JPanel implements SampleSelectionListener,
                 updateWhenLoaded = label.equals(lastLoadedType);
             }
         });
-        final JPanel statChooserPanel = stackWest(new JLabel("Select statistic for sample type "), statSelector, new JLabel(":"));
+        final JPanel statChooserPanel = stackWest(new JLabel("Select statistic for report type "), statSelector, new JLabel(":"));
         statOptions.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
 
         statOptions.setLayout(statCard);
@@ -59,7 +59,7 @@ public class StatisticChooser extends JPanel implements SampleSelectionListener,
     }
 
     @Override
-    public void sampleWasSelected(Object source, String time, String type, Map<Stack, StatisticAdder> data) {
+    public void reportWasSelected(Object source, String time, String type, Map<Stack, StatisticAdder> data) {
         lastLoadedType = type;
         if( ! isShowing()) { updateWhenLoaded = true; }
         if(updateWhenLoaded) {
@@ -74,7 +74,7 @@ public class StatisticChooser extends JPanel implements SampleSelectionListener,
     }
 
     @Override
-    public void contentsChanged(SampleSource source) {
+    public void contentsChanged(ReportSource source) {
         // no-op
     }
 }
