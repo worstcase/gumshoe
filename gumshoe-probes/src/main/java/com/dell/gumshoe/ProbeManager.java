@@ -1,5 +1,7 @@
 package com.dell.gumshoe;
 
+import static com.dell.gumshoe.util.Output.configure;
+
 import com.dell.gumshoe.Probe.ProbeServices;
 import com.dell.gumshoe.file.FileIOProbe;
 import com.dell.gumshoe.network.DatagramIOProbe;
@@ -35,23 +37,10 @@ public class ProbeManager {
     public static final String CPU_USAGE_LABEL = ProcessorProbe.LABEL;
     public static final String DATAGRAM_IO_LABEL = DatagramIOProbe.LABEL;
 
-    public static ProbeManager MAIN_INSTANCE;
+    private static ProbeManager INSTANCE = new ProbeManager();
+    public static ProbeManager getInstance() { return INSTANCE; }
 
-    public static void main(String... args) throws Throwable {
-        final String[] newArgs = new String[args.length-1];
-        System.arraycopy(args, 1, newArgs, 0, args.length-1);
-
-        MAIN_INSTANCE = new ProbeManager();
-        MAIN_INSTANCE.initialize();
-
-        final Class mainClass = Class.forName(args[0]);
-        final Method mainMethod = mainClass.getDeclaredMethod("main", args.getClass());
-        try {
-            mainMethod.invoke(mainClass, new Object[] { newArgs });
-        } catch (InvocationTargetException e) {
-            throw e.getCause();
-        }
-    }
+    private ProbeManager() { }
 
     /////
 
@@ -73,7 +62,10 @@ public class ProbeManager {
     }
 
     public void initialize(Properties p) throws Exception {
-        initialize(new Configuration(p));
+        final Configuration cfg = new Configuration(p);
+        initialize(cfg);
+
+        configure(cfg); // configure logging/output
     }
 
     private void initialize(Configuration p) throws Exception {
@@ -91,6 +83,10 @@ public class ProbeManager {
         fileIOProbe.initialize(p.withPrefix("file-io"));
         unclosedSocketProbe.initialize(p.withPrefix("socket-unclosed"));
         cpuProbe.initialize(p.withPrefix("cpu-usage"));
+    }
+
+    public boolean isUsingIoTrace() {
+        return socketIOProbe.isAttached() || fileIOProbe.isAttached();
     }
 
     /////

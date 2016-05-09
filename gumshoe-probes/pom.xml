@@ -16,16 +16,31 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.dell</groupId>
-            <artifactId>gumshoe-hooks</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-              <plugin>
+        <!-- classloader weirdness with agent to avoid explicitly looking for agent jar file,
+             make a copy of IoTrace bytecode with a different name and getResource() with this name -->
+			    <plugin>
+				    <groupId>com.coderplus.maven.plugins</groupId>
+				    <artifactId>copy-rename-maven-plugin</artifactId>
+				    <version>1.0.1</version>
+				    <executions>
+				        <execution>
+					        <id>rename-file</id>
+					        <phase>compile</phase>
+					        <goals>
+					            <goal>rename</goal>
+					        </goals>
+					        <configuration>
+					            <sourceFile>${project.build.outputDirectory}/sun/misc/IoTrace.class</sourceFile>
+					            <destinationFile>${project.build.outputDirectory}/sun.misc.IoTrace.class</destinationFile>
+					        </configuration>
+				        </execution>
+				    </executions>
+			    </plugin>
+                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-compiler-plugin</artifactId>
                   <version>3.3</version>
@@ -43,6 +58,39 @@
                         <include>**/*Test*.*</include>
                     </includes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifestEntries>
+                                    <Premain-Class>com.dell.gumshoe.Agent</Premain-Class>
+                                    <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                                    <Boot-Class-Path>gumshoe-agent.jar</Boot-Class-Path>
+                                </manifestEntries>
+                            </archive>
+                            <finalName>gumshoe-agent</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+				            <resources>
+					            <resource>
+					                <!-- this is relative to the pom.xml directory -->
+					                <directory>target/classes/sun/misc/IoTrace.class</directory>
+					                <targetPath>sun.misc.IoTrace.class</targetPath>
+					            </resource>
+				            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

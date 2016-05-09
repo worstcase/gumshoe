@@ -1,5 +1,7 @@
 package com.dell.gumshoe.util;
 
+import java.util.Properties;
+
 
 public class Output {
     private static boolean verbose;
@@ -8,6 +10,10 @@ public class Output {
     public static void configure(Configuration config) {
         setVerbose(config.isTrue("gumshoe.verbose", false));
     }
+    public static void configure(Properties p) {
+        setVerbose(Boolean.valueOf(p.getProperty("gumshoe.verbose", "false")));
+    }
+
     /////
 
     public static void print(String before, String... message) {

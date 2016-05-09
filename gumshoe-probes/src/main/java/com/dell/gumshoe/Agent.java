@@ -1,8 +1,9 @@
-package com.dell.gumshoe.hook;
+package com.dell.gumshoe;
 
 import sun.misc.IoTrace;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,10 +16,24 @@ import java.util.jar.JarInputStream;
 /** install our version of IoTrace to capture socket and file I/O activity
  */
 public class Agent {
-    private static final String CLASS_FILENAME = "sun/misc/IoTrace.class";
+    private static final String CLASS_FILENAME = "/sun.misc.IoTrace.class";
+    private static boolean WAS_INSTALLED = false;
 
     public static void premain(String args, Instrumentation inst) throws Exception {
-        final byte[] alternate = getAlternate();
+        final ProbeManager probeManager = ProbeManager.getInstance();
+        probeManager.initialize();
+        if(probeManager.isUsingIoTrace()) {
+            new Agent().installIoTraceHook(inst);
+        }
+        WAS_INSTALLED = true;
+    }
+
+    public static boolean isAgentInstalled() {
+        return WAS_INSTALLED;
+    }
+
+    private  void installIoTraceHook(Instrumentation inst) throws IOException {
+        final byte[] alternate = getAlternateBytecode();
         if(alternate==null) {
             System.out.println("GUMSHOE ERROR: failed to locate IoTrace hook");
             return;
@@ -35,7 +50,18 @@ public class Agent {
     }
 
     /** loop over classpath */
-    private static byte[] getAlternate() throws IOException {
+    private byte[] getAlternateBytecode() throws IOException {
+        final InputStream in = ProbeManager.class.getResourceAsStream(CLASS_FILENAME);
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        final byte[] block = new byte[8192];
+        int len;
+        while((len=in.read(block))>-1) {
+            buffer.write(block, 0, len);
+        }
+        return buffer.toByteArray();
+    }
+
+    private static byte[] getAlternateBytecodeOLD() throws IOException {
         final String[] classpath = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
         for(String entry : classpath) {
             final File file = new File(entry);

@@ -97,6 +97,10 @@ public abstract class IOProbe extends Probe implements IOMBean {
         return monitor.isEnabled();
     }
 
+    public boolean isAttached() {
+        return monitor!=null;
+    }
+
     @Override
     public String getReport() {
         final ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
