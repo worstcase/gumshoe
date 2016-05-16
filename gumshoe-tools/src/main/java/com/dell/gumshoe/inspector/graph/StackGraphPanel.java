@@ -215,7 +215,7 @@ public class StackGraphPanel extends JPanel implements Scrollable {
             g.setColor(Color.WHITE);
             g.fillRect(10, 10, 350, 50);
             g.setColor(Color.BLACK);
-            g.drawString("No data!  Load a sample from a probe or file.", 30, 40);
+            g.drawString("No data!  Load a report from a probe or file.", 30, 40);
         } else if(image==null || image.getHeight()!=dim.height || image.getWidth()!=dim.width) {
             g.setColor(getBackground());
             g.fillRect(0,0,dim.width,dim.height);

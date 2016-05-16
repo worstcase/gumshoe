@@ -10,7 +10,7 @@ frames to identify exactly what is relevant to your application and the current 
 As a side note, there are really two places where stack frames are filtered.  In the probe, a loose filter
 can drop the most obvious candidates to reduce the memory usage and file size while collecting data.
 Then in the viewer a more restrictive filter can better refine the view.  To start, maybe just exclude
-the JDK and gumshoe classes in the probe (the default).  After collecting and looking at samples from
+the JDK and gumshoe classes in the probe (the default).  After collecting and looking at reports from
 your application, you will better be able to identify other packages and classes to exclude from collection.
 
 I'll describe ONE APPROACH I've used to get good results from gumshoe.  I'm sure this isn't the only way

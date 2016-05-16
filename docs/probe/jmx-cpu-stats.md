@@ -20,8 +20,8 @@ This mbean will allow you to alter these attributes:
 In addition these operations can be performed:
 
     getReport()             Return a text report of the current contents of the collection buffer.
-                            This will likely represent a partial sample if periodic reporting is enabled
+                            This will likely represent a partial report if periodic reporting is enabled
                             for the time since the start of the last reporting interval.
     reset()                 Clear the contents of the collection buffer.
                             If periodic reporting is enabled, the next report sent to configured listeners
-                            will not contain a full sample as this data will have been removed.
+                            will not contain a full report as this data will have been removed.

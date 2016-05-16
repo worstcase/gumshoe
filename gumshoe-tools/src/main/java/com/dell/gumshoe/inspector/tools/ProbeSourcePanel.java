@@ -5,7 +5,7 @@ import static com.dell.gumshoe.util.Swing.groupButtons;
 import static com.dell.gumshoe.util.Swing.rows;
 
 import com.dell.gumshoe.ProbeManager;
-import com.dell.gumshoe.inspector.SampleSource;
+import com.dell.gumshoe.inspector.ReportSource;
 import com.dell.gumshoe.inspector.helper.DataTypeHelper;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
@@ -33,19 +33,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>, SampleSource, HasCloseButton {
+public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>, ReportSource, HasCloseButton {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
 
     private List<ActionListener> closeListeners = new CopyOnWriteArrayList<>();
-    private final List<SampleSelectionListener> listeners = new CopyOnWriteArrayList<>();
-    private final JRadioButton ignoreIncoming = new JRadioButton("drop new samples");
-    private final JRadioButton dropOldest = new JRadioButton("drop oldest sample", true);
+    private final List<ReportSelectionListener> listeners = new CopyOnWriteArrayList<>();
+    private final JRadioButton ignoreIncoming = new JRadioButton("drop new reports");
+    private final JRadioButton dropOldest = new JRadioButton("drop oldest report", true);
     private final JCheckBox sendLive = new JCheckBox("Immediately view newest");
-    private final JButton sendNow = new JButton("View sample");
+    private final JButton sendNow = new JButton("View report");
     private final JButton ok = new JButton("OK");
-    private int sampleCount = 3;
-    private final DefaultListModel sampleModel = new DefaultListModel();
-    private final JList sampleList = new JList(sampleModel);
+    private int reportCount = 3;
+    private final DefaultListModel reportModel = new DefaultListModel();
+    private final JList reportList = new JList(reportModel);
 
     public ProbeSourcePanel(ProbeManager probe) {
         super(new BorderLayout());
@@ -53,21 +53,21 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         sendNow.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final Sample selected = (Sample)sampleList.getSelectedValue();
+                final Report selected = (Report)reportList.getSelectedValue();
                 if(selected!=null) {
                     relayStats(selected);
                 }
             }
         });
 
-        sampleList.setVisibleRowCount(sampleCount);
-        sampleList.setPrototypeCellValue(new Sample("socket-io", new Date(), Collections.<Stack,StatisticAdder>emptyMap()));
-        sampleList.addMouseListener(new MouseAdapter() {
+        reportList.setVisibleRowCount(reportCount);
+        reportList.setPrototypeCellValue(new Report("socket-io", new Date(), Collections.<Stack,StatisticAdder>emptyMap()));
+        reportList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if( ! sendNow.isSelected() && e.getClickCount()==2) {
-                    int index = sampleList.locationToIndex(e.getPoint());
-                    final Sample selected = (Sample)sampleModel.getElementAt(index);
+                    int index = reportList.locationToIndex(e.getPoint());
+                    final Report selected = (Report)reportModel.getElementAt(index);
                     if(selected!=null) {
                         relayStats(selected);
                     }
@@ -77,7 +77,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
         // row: which types of data to receive
         final JPanel acceptPanel = new JPanel();
-        acceptPanel.add(new JLabel("Accept samples from probes:"));
+        acceptPanel.add(new JLabel("Accept reports from probes:"));
         for(String type : DataTypeHelper.getTypes()) {
             acceptPanel.add(DataTypeHelper.forType(type).getSelectionComponent());
         }
@@ -85,10 +85,10 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         // row: how to handle full buffer
         final JTextField retainCount = new JTextField();
         retainCount.setColumns(3);
-        retainCount.setText(Integer.toString(sampleCount));
+        retainCount.setText(Integer.toString(reportCount));
         groupButtons(ignoreIncoming, dropOldest);
         final JLabel fullLabel = new JLabel("Retain full:");
-        final JPanel handleIncoming = flow(new JLabel("Retain"), retainCount, new JLabel("samples, then: "), ignoreIncoming, dropOldest);
+        final JPanel handleIncoming = flow(new JLabel("Retain"), retainCount, new JLabel("reports, then: "), ignoreIncoming, dropOldest);
 
         sendLive.addActionListener(new ActionListener() {
             @Override
@@ -104,7 +104,7 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
 
         setLayout(new BorderLayout());
         add(rows(acceptPanel, handleIncoming), BorderLayout.NORTH);
-        add(new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
+        add(new JScrollPane(reportList, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
         add(flow(sendNow, sendNow, ok), BorderLayout.SOUTH);
 
         if(probe!=null) {
@@ -114,12 +114,12 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         }
     }
 
-    private boolean canAccept(String sampleType, Map<Stack,StatisticAdder> stats) {
+    private boolean canAccept(String reportType, Map<Stack,StatisticAdder> stats) {
         if(stats.isEmpty()) { return false; }
 
-        // see if the box is checked to accept this sample type
+        // see if the box is checked to accept this report type
         for(String helperType : DataTypeHelper.getTypes()) {
-            if(helperType.equals(sampleType)) {
+            if(helperType.equals(reportType)) {
                 if(DataTypeHelper.forType(helperType).isSelected()) {
                     break;
                 } else {
@@ -129,9 +129,9 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         }
 
         // see if buffer has room or we can remove one
-        if(sampleModel.size()>=sampleCount) {
+        if(reportModel.size()>=reportCount) {
             if(ignoreIncoming.isSelected() && ! sendLive.isSelected()) { return false; }
-            sampleModel.removeElementAt(0);
+            reportModel.removeElementAt(0);
         }
         return true;
     }
@@ -142,37 +142,37 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     public synchronized void statsReported(String type, Map<Stack,StatisticAdder> stats) {
         if(canAccept(type, stats)) {
             final Date date = new Date();
-            final Sample sample = new Sample(type, date, stats);
+            final Report report = new Report(type, date, stats);
             if(sendLive.isSelected()) {
-                sampleModel.clear();
+                reportModel.clear();
             }
-            sampleModel.addElement(sample);
+            reportModel.addElement(report);
             if(sendLive.isSelected()) {
-                relayStats(sample);
+                relayStats(report);
             }
             notifyContentsChanged();
        }
     }
 
-    private void relayStats(Sample sample) {
-        for(SampleSelectionListener listener : listeners) {
-            listener.sampleWasSelected(this, sample.time, sample.type, sample.data);
+    private void relayStats(Report report) {
+        for(ReportSelectionListener listener : listeners) {
+            listener.reportWasSelected(this, report.time, report.type, report.data);
         }
         notifyCloseListeners();
     }
 
-    public void addListener(SampleSelectionListener listener) {
+    public void addListener(ReportSelectionListener listener) {
         listeners.add(listener);
     }
 
-    private static class Sample {
+    private static class Report {
         String label;
         String time;
         String type;
         Map<Stack,StatisticAdder> data;
 
-        public Sample(String type, Date sampleTime, Map<Stack,StatisticAdder> data) {
-            this.time =  hms.format(sampleTime);
+        public Report(String type, Date reportTime, Map<Stack,StatisticAdder> data) {
+            this.time =  hms.format(reportTime);
             this.label = time + " " + type + ": " + DataTypeHelper.forType(type).getSummary(data);
             this.type = type;
             this.data = data;
@@ -184,39 +184,39 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
         }
     }
 
-    public void nextSample() {
-        final int size = sampleModel.getSize();
+    public void nextReport() {
+        final int size = reportModel.getSize();
         if(size==0) { return; }
 
-        final int currentIndex = sampleList.getSelectedIndex();
+        final int currentIndex = reportList.getSelectedIndex();
         if(currentIndex>=0) {
-            sampleList.setSelectedIndex(currentIndex+1);
-            relayStats((Sample) sampleList.getSelectedValue());
+            reportList.setSelectedIndex(currentIndex+1);
+            relayStats((Report) reportList.getSelectedValue());
         } else {
-            sampleList.setSelectedIndex(0);
-            relayStats((Sample) sampleList.getSelectedValue());
+            reportList.setSelectedIndex(0);
+            relayStats((Report) reportList.getSelectedValue());
         }
     }
 
-    public void previousSample() {
-        final int size = sampleModel.getSize();
+    public void previousReport() {
+        final int size = reportModel.getSize();
         if(size==0) { return; }
 
-        final int currentIndex = sampleList.getSelectedIndex();
+        final int currentIndex = reportList.getSelectedIndex();
         if(currentIndex>=0) {
-            sampleList.setSelectedIndex(currentIndex-1);
-            relayStats((Sample) sampleList.getSelectedValue());
+            reportList.setSelectedIndex(currentIndex-1);
+            relayStats((Report) reportList.getSelectedValue());
         } else {
-            sampleList.setSelectedIndex(size-1);
-            relayStats((Sample) sampleList.getSelectedValue());
+            reportList.setSelectedIndex(size-1);
+            relayStats((Report) reportList.getSelectedValue());
         }
     }
 
     @Override
     public boolean hasNext() {
         if(sendLive.isSelected()) { return false; }
-        final int size = sampleModel.getSize();
-        final int selectedIndex = sampleList.getSelectedIndex();
+        final int size = reportModel.getSize();
+        final int selectedIndex = reportList.getSelectedIndex();
         if(selectedIndex==-1) { return size>0; }
         return size > selectedIndex+1;
     }
@@ -224,14 +224,14 @@ public class ProbeSourcePanel extends JPanel implements Listener<StatisticAdder>
     @Override
     public boolean hasPrevious() {
         if(sendLive.isSelected()) { return false; }
-        final int size = sampleModel.getSize();
-        final int selectedIndex = sampleList.getSelectedIndex();
+        final int size = reportModel.getSize();
+        final int selectedIndex = reportList.getSelectedIndex();
         if(selectedIndex==-1) { return size>0; }
-        return sampleList.getSelectedIndex()>0;
+        return reportList.getSelectedIndex()>0;
     }
 
     private void notifyContentsChanged() {
-        for(SampleSelectionListener listener : listeners) {
+        for(ReportSelectionListener listener : listeners) {
             listener.contentsChanged(this);
         }
     }

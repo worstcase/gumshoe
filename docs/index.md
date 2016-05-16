@@ -24,7 +24,7 @@ Getting Started
 - Step by step
 
 
-Collecting Samples
+Generating Reports
 ------------------
 
 - [About the hooks](hooks.md)
@@ -32,12 +32,12 @@ Collecting Samples
 - [Using filters](filters.md)
 - [Running your program](run.md)
 
-Viewing Samples
+Viewing Reports
 ---------------
 
 - Running gumshoe GUI from your JVM
 - Running standalone GUI
-- Selecting a data sample
+- Selecting a data report
 - Navigating the graph
 - Graph display options
 - Configuring filters

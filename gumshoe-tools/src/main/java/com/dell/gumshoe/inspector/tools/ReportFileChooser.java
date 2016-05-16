@@ -1,7 +1,7 @@
 package com.dell.gumshoe.inspector.tools;
 
 import com.dell.gumshoe.inspector.FileDataParser;
-import com.dell.gumshoe.inspector.SampleSource;
+import com.dell.gumshoe.inspector.ReportSource;
 import com.dell.gumshoe.stack.Stack;
 import com.dell.gumshoe.stats.StatisticAdder;
 
@@ -19,15 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class SampleFileChooser extends JFileChooser implements SampleSource {
+public class ReportFileChooser extends JFileChooser implements ReportSource {
     private static final SimpleDateFormat hms = new SimpleDateFormat("HH:mm:ss");
 
-    private final List<SampleSelectionListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<ReportSelectionListener> listeners = new CopyOnWriteArrayList<>();
 
     private JDialog dialog;
     private FileDataParser parser;
     private int locationX, locationY;
-    public SampleFileChooser() {
+    public ReportFileChooser() {
         setApproveButtonText("Parse");
     }
 
@@ -76,7 +76,7 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
         }
 
         try {
-            readSample(true);
+            readReport(true);
         } catch(Exception ex) {
             ex.printStackTrace();
             notifyError("Error parsing contents: " + ex.getMessage());
@@ -97,17 +97,17 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
         return true;
     }
 
-    private void readSample(boolean forward) {
+    private void readReport(boolean forward) {
         new FileOpener(forward).execute();
     }
 
-    public void addListener(SampleSelectionListener listener) {
+    public void addListener(ReportSelectionListener listener) {
         listeners.add(listener);
     }
 
     private void relayStats(String file, String time, String type, Map<Stack,StatisticAdder> data) {
-        for(SampleSelectionListener listener : listeners) {
-            listener.sampleWasSelected(file, time, type, data);
+        for(ReportSelectionListener listener : listeners) {
+            listener.reportWasSelected(file, time, type, data);
         }
     }
 
@@ -118,16 +118,16 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
         }
         @Override
         public Map<Stack,StatisticAdder> doInBackground() throws Exception {
-            return forward ? parser.getNextSample() : parser.getPreviousSample();
+            return forward ? parser.getNextReport() : parser.getPreviousReport();
         }
         @Override
         public void done() {
             try {
-                final Map<Stack,StatisticAdder> sample = get();
-                if(sample!=null) {
-                    final Date time = parser.getSampleTime();
-                    final String sampleTime = hms.format(time);
-                    relayStats(parser.getFilename(), parser.getSampleType(), sampleTime, sample);
+                final Map<Stack,StatisticAdder> report = get();
+                if(report!=null) {
+                    final Date time = parser.getReportTime();
+                    final String reportTime = hms.format(time);
+                    relayStats(parser.getFilename(), parser.getReportType(), reportTime, report);
                 }
             } catch(Exception ex) {
                 notifyError("Parse error reading file");
@@ -137,12 +137,12 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
 
     /////
 
-    public void nextSample() {
-        readSample(true);
+    public void nextReport() {
+        readReport(true);
     }
 
-    public void previousSample() {
-        readSample(false);
+    public void previousReport() {
+        readReport(false);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class SampleFileChooser extends JFileChooser implements SampleSource {
     }
 
     private void notifyContentsChanged() {
-        for(SampleSelectionListener listener : listeners) {
+        for(ReportSelectionListener listener : listeners) {
             listener.contentsChanged(this);
         }
     }

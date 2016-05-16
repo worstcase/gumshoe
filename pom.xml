@@ -9,7 +9,6 @@
     <description>Gumshoe Load Investigator</description>
 
     <modules>
-        <module>gumshoe-hooks</module>
         <module>gumshoe-probes</module>
         <module>gumshoe-tools</module>
     </modules>

@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class Configuration {
@@ -18,24 +19,18 @@ public class Configuration {
     private final Properties combinedProperties;
 
     public Configuration() throws IOException {
-        prefixes = new String[] { "gumshoe." };
-        combinedProperties = new Properties(System.getProperties());
-        initProperties();
+        this(initProperties());
     }
 
     public Configuration(Properties p) {
         prefixes = new String[] { "gumshoe." };
-        combinedProperties = new Properties(System.getProperties());
+        combinedProperties = new Properties();
         combinedProperties.putAll(p);
-
     }
+
     public Configuration(Configuration delegate, String prefix) {
         this.prefixes = initPrefixes(prefix, delegate.prefixes);
         combinedProperties = delegate.combinedProperties;
-    }
-
-    public Configuration withPrefix(String prefix) {
-        return new Configuration(this, prefix);
     }
 
     private static String[] initPrefixes(String newPrefix, String[] delegatePrefixes) {
@@ -50,35 +45,51 @@ public class Configuration {
         }
     }
 
-    public Properties initProperties() throws IOException {
-        final String name = System.getProperty("gumshoe.config", "gumshoe.properties");
+    private static Properties initProperties() throws IOException {
 
         // don't show verbose output yet
         // properties determine if and where to print the messages
         // so collect them for now and handle in finally block
         final List<String> deferredMessages = new ArrayList<>();
-        try {
-            try {
-                final Properties resourceProperties = readPropertyClasspath(name, deferredMessages);
-                if(resourceProperties!=null) { combinedProperties.putAll(resourceProperties); }
 
-                final Properties fileProperties = readPropertyFile(name, deferredMessages);
-                if(fileProperties!=null) { combinedProperties.putAll(fileProperties); }
-                return combinedProperties;
-            } finally {
-                // configure output system with as many properties as we could find
-                configure(this);
-                for(String msg : deferredMessages) {
-                    debug(msg);
+        final Properties out = new Properties();
+        try {
+            final String name = System.getProperty("gumshoe.config", "gumshoe.properties");
+            // first add properties file from classpath
+            final Properties resourceProperties = readPropertyClasspath(name, deferredMessages);
+            if(resourceProperties!=null) { out.putAll(resourceProperties); }
+
+            // next add properties from filesystem
+            final Properties fileProperties = readPropertyFile(name, deferredMessages);
+            if(fileProperties!=null) { out.putAll(fileProperties); }
+
+            // finally add cmdline properties
+            for(Map.Entry entry : System.getProperties().entrySet()) {
+                final String key = (String) entry.getKey();
+                if(key.startsWith("gumshoe.")) {
+                    out.put(key, System.getProperty(key));
                 }
             }
+
+            configure(out);
+            for(String msg : deferredMessages) {
+                debug(msg);
+            }
+
+            return out;
         } catch(IOException|RuntimeException e) {
+            // might be incomplete, but configure output system with as many properties as we could find
+            configure(out);
+
+            for(String msg : deferredMessages) {
+                debug(msg);
+            }
             error(e, "failed to read properties");
             throw e;
         }
     }
 
-    private Properties readPropertyFile(String name, List<String> output) throws IOException {
+    private static Properties readPropertyFile(String name, List<String> output) throws IOException {
         final File file = new File(name);
         if( ! file.isFile() || ! file.canRead()) { return null; }
 
@@ -93,8 +104,8 @@ public class Configuration {
         }
     }
 
-    private Properties readPropertyClasspath(String name, List<String> output) throws IOException {
-        final InputStream in = getClass().getClassLoader().getResourceAsStream(name);
+    private static Properties readPropertyClasspath(String name, List<String> output) throws IOException {
+        final InputStream in = Configuration.class.getResourceAsStream(name);
         if(in==null) { return null; }
 
         output.add("GUMSHOE: reading configuration resource");
@@ -105,6 +116,10 @@ public class Configuration {
         } finally {
             in.close();
         }
+    }
+
+    public Configuration withPrefix(String prefix) {
+        return new Configuration(this, prefix);
     }
 
     /////

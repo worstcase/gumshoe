@@ -27,46 +27,46 @@ public class TestFileReader extends TestCase {
     }
 
     public void testNavigating() throws Exception {
-        Map<Stack, StatisticAdder> entry = target.getNextSample();
+        Map<Stack, StatisticAdder> entry = target.getNextReport();
         assertEquals(7, entry.size());
-        Date time1 = target.getSampleTime();
+        Date time1 = target.getReportTime();
 
-        entry = target.getNextSample();
-        Date time2 = target.getSampleTime();
+        entry = target.getNextReport();
+        Date time2 = target.getReportTime();
         assertEquals(2, entry.size());
         assertTrue(time1.before(time2));
 
-        entry = target.getNextSample();
-        Date time3 = target.getSampleTime();
+        entry = target.getNextReport();
+        Date time3 = target.getReportTime();
         assertEquals(2, entry.size());
         assertTrue(time2.before(time3));
 
-        entry = target.getPreviousSample();
-        Date time4 = target.getSampleTime();
+        entry = target.getPreviousReport();
+        Date time4 = target.getReportTime();
         assertEquals(2, entry.size());
         assertEquals(time2, time4);
 
-        entry = target.getPreviousSample();
+        entry = target.getPreviousReport();
         assertNotNull(entry);
-        assertNotNull(target.getSampleTime());
-        entry = target.getPreviousSample();
+        assertNotNull(target.getReportTime());
+        entry = target.getPreviousReport();
         assertNull(entry);
-        assertNull(target.getSampleTime());
+        assertNull(target.getReportTime());
     }
 
     public void testDump() throws Exception {
         target.parseFile();
-        List<Date> times = new ArrayList<>(target.getSampleTimes());
+        List<Date> times = new ArrayList<>(target.getReportTimes());
         assertEquals(3, times.size());
 
         Date middle = times.get(1);
-        Map<Stack, StatisticAdder> entry = target.getSample(middle);
-        Date time = target.getSampleTime();
+        Map<Stack, StatisticAdder> entry = target.getReport(middle);
+        Date time = target.getReportTime();
         assertEquals(2, entry.size());
         assertEquals(time, middle);
 
-        entry = target.getSample(new Date());
+        entry = target.getReport(new Date());
         assertNull(entry);
-        assertNull(target.getSampleTime());
+        assertNull(target.getReportTime());
     }
 }

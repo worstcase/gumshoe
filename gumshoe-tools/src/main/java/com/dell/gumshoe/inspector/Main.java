@@ -1,5 +1,6 @@
 package com.dell.gumshoe.inspector;
 
+import com.dell.gumshoe.Agent;
 import com.dell.gumshoe.ProbeManager;
 
 import javax.swing.JFrame;
@@ -44,9 +45,9 @@ public class Main {
         }
 
         final boolean forceProbe = Boolean.getBoolean("gumshoe.probe.enabled");
-        final boolean useProbe = forceProbe || hasMain;
-        final ProbeManager probe = useProbe ? new ProbeManager() : null;
-        if(useProbe) { probe.initialize(); }
+        final boolean needProbe = forceProbe || hasMain;
+
+        final ProbeManager probe = needProbe ? ProbeManager.getInstance() : null;
 
         final JFrame frame = new JFrame("Inspector");
         if( ! hasMain) {

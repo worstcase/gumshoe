@@ -1,1 +1,0 @@
-Premain-Class: com.dell.gumshoe.agent.ProbeLoader

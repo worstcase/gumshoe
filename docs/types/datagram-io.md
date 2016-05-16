@@ -8,7 +8,7 @@ For each unique call stack that performs sends or receives a datagram,
 gumshoe reports totals for read, write and combined:
 number of calls, number of bytes, and elapsed time.  
 
-Samples collected can be filtered by IP, mask and port to limit results to only certain systems or services.
+Samples collected can be filtered by IP, mask and port to limit reports to only certain systems or services.
 
 Hooks
 -----
@@ -39,51 +39,5 @@ Limitations
   - While the queue capacity is exceeded, events may be dropped and a message is shown in STDOUT
 
   If this is happening occasionally during peak loads, it may not be an issue.  I/O statistics are still
-  gathered -- it just samples fewer when the queue is full.  If this is happening a lot during the loads
-  being tested then it can be addressed.  
-  
-  The queue will fill if events are produced (individual I/O operations) faster than they are consumed.
-  Some possible reasons:
-  
-  - The target application is performing a lot of small network operations
-  
-    This could be an area to improve the target application.  
-    Lots of small operations are less efficient than fewer large operations.
-       
-    Or this could just be the nature of the expected application load,
-    so increase the gumshoe event queue size and the handler thread priority to accommodate. 
-        
-  - The JVM is CPU bound
-  
-    The event queue may back up if the target application is CPU bound.  This could be
-    an issue in the target application itself, and you may want to look at
-    [processor utilization statistics](../types/cpu-stats.md) before socket I/O.
-    
-    Or it could be due to gumshoe stack filters.  Each stack filter configured has to
-    modify the event call stack on the same event handling thread.  Complex filters
-    (such as the recursion filter) or deep call stacks can result in more load than the
-    thread can handle.  Relax [filters](../filters.md) (at the expense of more memory use) or increase the
-    event handler thread priority.      
-    
-  If the event queue is full:
-  
-  - Ignore it (_really!, it isn't so bad..._)
-  
-    If the problem is intermittent, it may not affect all samples, 
-    and data reported in those affected is still likely a representative subset of all I/O.
-    Total I/O values will not be accurate but the relative I/O comparisons between threads
-    should still provide insight into what the target application is doing to generate the I/O load.
-    
-  - Increase queue size
-  
-    If the problem is intermittent, then a larger queue can let the handler thread
-    catch up after load spikes.  However, if load is consistently over the handler capacity,
-    this will just delay and not fix the problem.  (Requires restart)
-    
-  - Increase handler thread priority
-  
-    Socket and file I/O events perform all filtering and accumulation functions on the
-    handler thread.  The default is to run at Thread.MIN_PRIORITY, reflecting the decision to
-    risk dropping data rather than impact the target application.  This can be changed to a
-    higher value to reduce dropping events even if it means taking some CPU time away from
-    the target application.
+  gathered -- it just samples fewer operations when the queue is full.  If this is happening a lot during the loads
+  being tested then look at then [event handler configuration](../probes/event-handling.md).

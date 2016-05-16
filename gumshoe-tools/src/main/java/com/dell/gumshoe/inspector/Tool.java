@@ -2,7 +2,7 @@ package com.dell.gumshoe.inspector;
 
 import com.dell.gumshoe.inspector.tools.DetailPanel;
 import com.dell.gumshoe.inspector.tools.HasCloseButton;
-import com.dell.gumshoe.inspector.tools.SampleFileChooser;
+import com.dell.gumshoe.inspector.tools.ReportFileChooser;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -18,7 +18,7 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 
 public enum Tool implements ActionListener {
-    CONFIGURE_PROBE("Select samples from this VM", "probe.png", "Manage Probes") {
+    CONFIGURE_PROBE("Select reports from this VM", "probe.png", "Manage Probes") {
         public void setComponents(GUIComponents components) {
             super.setComponents(components);
             if(getPopup()==null) {
@@ -36,15 +36,15 @@ public enum Tool implements ActionListener {
         }
     },
 
-    LOAD_PREVIOUS_SAMPLE("Previous sample", "prev.png") {
+    LOAD_PREVIOUS_REPORT("Previous report", "prev.png") {
         public void actionPerformed(ActionEvent e) {
-            targets.prevSample();
+            targets.prevReport();
         }
     },
 
-    LOAD_NEXT_SAMPLE("Next sample", "next.png") {
+    LOAD_NEXT_REPORT("Next report", "next.png") {
         public void actionPerformed(ActionEvent e) {
-            targets.nextSample();
+            targets.nextReport();
         }
     },
 
@@ -153,8 +153,8 @@ public enum Tool implements ActionListener {
             return popup;
         }
 
-        public SampleFileChooser getFileChooser() {
-            final SampleFileChooser out = gui.getFileControl();
+        public ReportFileChooser getFileChooser() {
+            final ReportFileChooser out = gui.getFileControl();
             setPosition(out);
             return out;
         }
@@ -212,7 +212,7 @@ public enum Tool implements ActionListener {
             return probePopup;
         }
 
-        public void setPosition(SampleFileChooser window) {
+        public void setPosition(ReportFileChooser window) {
             final int index = DIALOG_COUNT++;
             int x = 100+(index%4)*75;
             final int y = 100+ index*50;
@@ -232,14 +232,14 @@ public enum Tool implements ActionListener {
         public void zoomMax() { gui.zoomMax(); }
         public void zoomIn() { gui.zoomIn(); }
         public void zoomOut() { gui.zoomOut(); }
-        public void prevSample() { gui.previousSample(); }
-        public void nextSample() { gui.nextSample(); }
+        public void prevReport() { gui.previousReport(); }
+        public void nextReport() { gui.nextReport(); }
     }
 
     public static interface GUIComponents {
         public JFrame getFrame();
         public JComponent getProbeControl();
-        public SampleFileChooser getFileControl();
+        public ReportFileChooser getFileControl();
         public JComponent getFilterControl();
         public JComponent getStatisticControl();
         public JComponent getGraphControl();
@@ -249,7 +249,7 @@ public enum Tool implements ActionListener {
         public void zoomFit();
         public void zoomIn();
         public void zoomOut();
-        public void previousSample();
-        public void nextSample();
+        public void previousReport();
+        public void nextReport();
     }
 }
