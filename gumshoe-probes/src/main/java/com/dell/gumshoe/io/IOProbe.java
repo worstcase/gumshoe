@@ -44,7 +44,7 @@ public abstract class IOProbe extends Probe implements IOMBean {
 
         // jmx enabled if explicit name, explicit property, or some reporting enabled
         final boolean jmxEnabled =
-                getMBeanName(cfg, null)!=null || cfg.isTrue("mbean", reportEnabled);
+                getMBeanName(cfg)!=null || cfg.isTrue("mbean", reportEnabled);
         final String mbeanName = jmxEnabled ? getMBeanName(cfg, getClass()) : null;
 
         final boolean enabled = cfg.isTrue("enabled", reportEnabled || jmxEnabled);

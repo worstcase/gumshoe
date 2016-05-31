@@ -67,9 +67,13 @@ public abstract class Probe {
         return out;
     }
 
+    protected static String getMBeanName(Configuration p) {
+        return p.getProperty("mean.name");
+    }
+
     protected static String getMBeanName(Configuration p, Class clazz) {
-        final String packageName = clazz==null ? null : clazz.getPackage().getName();
-        final String className = clazz==null ? null : clazz.getSimpleName();
+        final String packageName = clazz.getPackage().getName();
+        final String className = clazz.getSimpleName();
         return p.getProperty("mbean.name", packageName + ":type=" + className);
     }
 
