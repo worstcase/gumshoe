@@ -127,7 +127,7 @@ public class ReportFileChooser extends JFileChooser implements ReportSource {
                 if(report!=null) {
                     final Date time = parser.getReportTime();
                     final String reportTime = hms.format(time);
-                    relayStats(parser.getFilename(), parser.getReportType(), reportTime, report);
+                    relayStats(parser.getFilename(), reportTime, parser.getReportType(), report);
                 }
             } catch(Exception ex) {
                 notifyError("Parse error reading file");
