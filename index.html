@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Gumshoe by newbrough</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/newbrough/gumshoe">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/newbrough/gumshoe/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/newbrough/gumshoe/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Gumshoe</h1>
+          <p></p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/newbrough">newbrough</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="gumshoe-load-investigator-" class="anchor" href="#gumshoe-load-investigator-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Gumshoe Load Investigator </h1>
+
+<h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>Monitor application performance statistics associated with individual calling stacks,
+interactively filter and view as a flame graph or root graph.</p>
+
+<p>Gumshoe was first created initially for internal use in the Dell Cloud Manager application but
+source code has since been released for public use under <a href="LICENSE.rst">these terms</a>.  </p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href="docs/features.md">Features</a>
+</h2>
+
+<ul>
+<li>Analyze resource usage: measure TCP, UDP, filesystem or processor utilization</li>
+<li>Pinpoint lines of code: all statistics are associated with a call stack and individual stack frames</li>
+<li>Capture, filter and visualize as statistics are generated</li>
+<li>Intuitive views: flame graph and root graph</li>
+<li>Filter stack frames at capture and/or during visualization, modify on the fly. </li>
+</ul>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Documentation</h2>
+
+<ul>
+<li>Short intro and demo on youtube: <a href="https://www.youtube.com/watch?v=GGJFZfwXJ44">latest</a> or the original <a href="https://www.youtube.com/watch?v=1M9GX4ENMeI">boring version</a>.</li>
+<li>
+<a href="QUICK-START.md">Quick start guide</a> walks through using with a sample application.</li>
+<li>Full <a href="docs/index.md">user guide</a>
+</li>
+</ul>
+
+<h2>
+<a id="dont-just-measure-and-report--understand" class="anchor" href="#dont-just-measure-and-report--understand" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Don't Just Measure and Report:  Understand</h2>
+
+<p>Looking at stack traces scaled by metrics gives a fast, intuitive way to understand application resource usage.  Consider
+network I/O in a hypothetical application...</p>
+
+<p>Flame graph example:</p>
+
+<p><img src="docs/flame-graph.png" alt="image"></p>
+
+<p>Looking at callers into an application, Invoker.invoke is responsible for &gt;90% of the read operations
+in this application.  It always calls RestRequestHandler.handle which in turn calls three different REST
+operations.  One -- showItemDetails -- is responsible for &gt;80% of read operations as it makes different calls
+into the DAO layer.</p>
+
+<p>Root graph example:</p>
+
+<p><img src="docs/root-graph.png" alt="image"></p>
+
+<p>Grouping now by the last frame where the application calls out to a resource,
+the couchdb Database.getDocument is responsible for over half of the read operations,
+while the JDBC Statement.execute about 25%, the vast majority of those from getItemDetails.</p>
+
+<p>These two examples are completely contrived, but not overly simplified.  The original call stacks in
+your application are generally huge, with hundreds of frames,
+but gumshoe uses <a href="docs/filters.md">stack filters</a> to find
+just the relevant portions and focus the view on just those parts.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
