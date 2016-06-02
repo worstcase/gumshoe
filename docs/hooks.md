@@ -1,3 +1,7 @@
+---
+title: title
+---
+
 Gumshoe Hooks
 =============
 
