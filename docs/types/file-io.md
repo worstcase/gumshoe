@@ -38,5 +38,5 @@ Limitations
 
   If this is happening occasionally during peak loads, it may not be an issue.  I/O statistics are still
   gathered -- report just contain samples fewer when the queue is full.  If this is happening a lot during the loads
-  being tested then look at then [event handler configuration](../probes/event-handling.md).
+  being tested then look at then [event handler configuration](../probe/event-handling.md).
   
