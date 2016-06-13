@@ -9,7 +9,7 @@ Monitor application performance statistics associated with individual calling st
 interactively filter and view as a flame graph or root graph.
 
 Gumshoe was first created initially for internal use in the Dell Cloud Manager application but
-source code has since been released for public use under [these terms](LICENSE.rst).  
+source code has since been released for public use under [these terms](COPYRIGHT).  
 
 [Features](docs/features.md)
 --------

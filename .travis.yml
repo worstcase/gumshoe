@@ -1,0 +1,10 @@
+language: java
+deploy:
+  provider: releases
+  api_key:
+    secure: d/mfau/CalqxVJeGKuFzeHH1aQ+uQL3n1Jj/mGv5NqubkIqKA/G8Fn12NBsVQn+0l9gelEPa9ztfnOYIsbRyTXgR932x/bWrUkrjMG5bmjo60QESfrP9HUiXxWheAqNvuLhoK0s9KxQbKp4lBbRlHlLXMyPT4+Q4SC+4/FYLBWnukoqeur+RDRcJTdpCleEozK1k/T6Rx9hsJnnUcR61kLLxk/tg2GkbhvuASwCHaezaidcJgbsHNrJVwjMebxQyYhYOymPS1h3iFcVg7+WOXSXMnpo5LfYxpdkaYg4gng2NDF5DfGyiT9ssn26OWeYC+rv5DszjqoF1kDzRb7u0k0LIraicjaxSCRBTwq7+Pwzwjzj/5cKLE3nJ+BRw55VfRwBSV9PobmNxdW2C/jwkDpvtp7lk7s9Y+O12Jv+Xqip/iuDUC+oZ1ljykTG7e180/Un5cYeG6D10e69uMpNLmSNrfhg0zoBF07kVJfNmYMyzgik7PDOwBfbKrHafEsHcF5YSuunh2zwbl25J1s0y2AIW6KBvYZr5a4S5ZK0jp8HdqRVp4k5b6CpjhjZi40SZH2z2X1f0gerAezqorZrA42ZJZqQBQsirMpBvVVHZXl0yJw5oKS9pvbXa/0ZUKAKvHO5yt3oNpKYBl676Uo5+UHN1d/v4WEZoYuEcJ+bfjRc=
+  file:
+    - gumshoe-probes/target/gumshoe-agent.jar
+    - gumshoe-tools/target/inspector.jar
+  on:
+    repo: dcm-oss/gumshoe
