@@ -8,3 +8,5 @@ deploy:
     - gumshoe-tools/target/inspector.jar
   on:
     repo: dcm-oss/gumshoe
+    tags: true
+  overwrite: true
