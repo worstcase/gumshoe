@@ -9,4 +9,5 @@ deploy:
   on:
     repo: dcm-oss/gumshoe
     tags: true
+    all_branches: true
   overwrite: true
