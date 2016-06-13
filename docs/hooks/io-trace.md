@@ -6,7 +6,7 @@ Summary
 
 To collect socket or file I/O statistics, the target JVM must include the option:
 
-    -Xbootclasspath/p <gumshoe-hooks.jar>
+    -javaagent <gumshoe-agent.jar>
 
 
 Details

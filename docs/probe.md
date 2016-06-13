@@ -1,22 +1,21 @@
 Gumshoe Probe
 =============
 
-The gumshoe probe is the set of classes that receive, filter and forward information from the gumshoe hooks
-or the JDK itself.  Unlike the hooks, the probe needs only to be in the classpath (not the bootclasspath).  
+A gumshoe probe is the set of classes that receive, filter and forward information from the gumshoe hooks
+or the JDK itself.  Unlike the hooks, the probe needs only to be in the classpath (but is generally included as part of the javaagent).  
 
 Managing Data Collection
 ------------------------
 
-The com.dell.gumshoe.Probe class is a utility class that manages components that listen and forward
+The com.dell.gumshoe.ProbeManager class is a utility class that manages components that listen and forward
 gumshoe data and can be managed directly, using JMX or using Properties.
 
-The Probe is used to initialize and begin monitoring:
-- Use probe as the main class on startup and have it invoke your application's main
-- Add a servlet context listener or other lifecycle callback mechanism to call Probe from within your application
-- Explicitly invoke Probe methods from your application
+The ProbeManager is used to initialize and begin monitoring:
+- Add a servlet context listener or other lifecycle callback mechanism to call ProbeManager from within your application
+- Explicitly invoke ProbeManager methods from your application
 
 It can stop monitoring or update configuration:
-- Explicitly invoke Probe methods from your application
+- Explicitly invoke ProbeManager methods from your application
 - Invoke JMX operations
 
 Handling Data

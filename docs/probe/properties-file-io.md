@@ -1,12 +1,12 @@
 Properties for File I/O Monitoring
 ==================================
 
-These properties are used by the Probe to install the hook, filter and forward file I/O statistics generated.
+These properties are used by the ProbeManager to install the hook, filter and forward file I/O statistics generated.
 
 Configuration Properties
 ------------------------
 
-Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
+Initialization can use system properties by calling ProbeManager.initialize() or with an explicit Properties argument.
 
     gumshoe.file-io.period     Data reports will be reported at regular intervals (in milliseconds)
     gumshoe.file-io.onshutdown If true, data reports will be reported when the JVM exits

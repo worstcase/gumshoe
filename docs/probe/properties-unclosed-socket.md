@@ -1,13 +1,13 @@
 Properties for Unclosed Socket Reporting
 ========================================
 
-These properties are used by the Probe
+These properties are used by the ProbeManager
 to install the hook, filter stacks, and forward information generated about unclosed sockets.
 
 Configuration Properties
 ------------------------
 
-Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
+Initialization can use system properties by calling ProbeManager.initialize() or with an explicit Properties argument.
 
     gumshoe.socket-unclosed.period     Reports will be generated at regular intervals (in milliseconds)
     gumshoe.socket-unclosed.onshutdown If true, a report will be generated when the JVM exits
