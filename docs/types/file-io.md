@@ -15,7 +15,7 @@ Hooks
 
 File I/O collection relies on a callback mechanism defined in [IoTrace](../hooks/io-trace.md).
 To use this mechanism the gumshoe hook must override the JRE version of IoTrace
-using the bootclasspath argument.
+using the gumshoe agent.
 
 Operations are reported as events which are queued and handled off the I/O thread.  
 The [event handler](../probe/event-handling.md) accumulates these events 

@@ -6,8 +6,8 @@ finally reported by probes.  Some probes may share a hook, and some probes may w
 
 List of hooks:
 
-[IoTrace](hooks/io-trace.md) is packaged in its own jar and must be loaded into the
-bootclasspath of the JVM to support socket I/O and file I/O probes.
+[IoTrace](hooks/io-trace.md) is packaged in the agent jar and must be loaded 
+into the JVM to support socket I/O and file I/O probes.
 
 [SelectorProviderImpl](hooks/selector-provider.md) requires a System property
 during startup to override the default factory to support NIO monitoring in

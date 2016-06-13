@@ -1,12 +1,12 @@
 Properties for CPU Stats Reporting
 ==================================
 
-These properties are used by the Probe to install the probe, filter and forward CPU usage statistics collected.
+These properties are used by the ProbeManager to install the probe, filter and forward CPU usage statistics collected.
 
 Configuration Properties
 ------------------------
 
-Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
+Initialization can use system properties by calling ProbeManager.initialize() or with an explicit Properties argument.
 
     gumshoe.cpu-usage.period     Reports will be generated at regular intervals (in milliseconds)
     gumshoe.cpu-usage.onshutdown If true, a report will be generated when the JVM exits

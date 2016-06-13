@@ -16,7 +16,7 @@ Socket I/O collection relies on [IoTrace](../hooks/io-trace.md)
 which provides a callback mechanism
 for all I/O on normal (non-NIO) sockets, all NIO writes and NIO reads when in blocking mode.
 To use this mechanism the gumshoe hook must override the JRE version of IoTrace
-using the bootclasspath argument.
+using the gumshoe agent.
 
 For NIO reads in non-blocking mode, a custom [SelectorProvider](../hooks/selector-provider.md) 
 wraps default implementations and includes these reads using the normal IoTrace mechanism.

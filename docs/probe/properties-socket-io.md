@@ -1,12 +1,12 @@
 Properties for Socket I/O Monitoring
 ====================================
 
-These properties are used by the Probe to install the hook, filter and forward socket I/O information generated.
+These properties are used by the ProbeManager to install the hook, filter and forward socket I/O information generated.
 
 Configuration Properties
 ------------------------
 
-Initialization can use system properties by calling Probe.initialize() or with an explicit Properties argument.
+Initialization can use system properties by calling ProbeManager.initialize() or with an explicit Properties argument.
 
     gumshoe.socket-io.period     Data reports will be generated at regular intervals (in milliseconds)
     gumshoe.socket-io.onshutdown If true, a report will be generated when the JVM exits
